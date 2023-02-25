@@ -1,10 +1,10 @@
-rna-thermonet
-=============
+diurnal
+=======
 
-- :ref:`Ensligh - en <en>`
-- :ref:`Français - fr <fr>`
+- `English - en`_
+- `Français - fr`_
 
-.. _en: # Balise utilisée pour créer l'hyperlien
+.. _English - en: # Balise utilisée pour créer l'hyperlien
 
 Predict RNA Secondary Structure with DL and Thermodynamics
 ----------------------------------------------------------
@@ -14,7 +14,7 @@ networks and thermodynamic models. Reinforcement learning is planned to be
 included to make that combination more effective.
 
 
-.. _fr: # Balise utilisée pour créer l'hyperlien
+.. _Français - fr: # Balise utilisée pour créer l'hyperlien
 
 Prédire des structures secondaires d'ARN avec l'AP et la thermodynamique
 ------------------------------------------------------------------------
