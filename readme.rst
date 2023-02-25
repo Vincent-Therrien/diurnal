@@ -56,8 +56,8 @@ Windows :
 
 .. code-block:: bash
 
-   python -m venv .\\venv # Créer l'environnement virtuel
-   .\\venv\\Scripts\\activate.bat # Activer l'environnement
+   python -m venv .\venv # Créer l'environnement virtuel
+   .\venv\Scripts\activate.bat # Activer l'environnement
    pip install -r requirements.txt # Installer les outils requis
 
 Obtenir l'ensemble de données
@@ -81,6 +81,6 @@ Windows :
 
 .. code-block:: bash
 
-   .\\venv\\Scripts\\activate.bat
-   cd test\\pytorch_validation
-   python .\\cnn_example.py
+   .\venv\Scripts\activate.bat
+   cd test\pytorch_validation
+   python .\cnn_example.py
