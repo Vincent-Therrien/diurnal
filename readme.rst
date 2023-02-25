@@ -4,7 +4,7 @@ diurnal
 - `English - en`_
 - `Français - fr`_
 
-.. _English - en: # Balise utilisée pour créer l'hyperlien
+.. _English - en:
 
 Predict RNA Secondary Structure with DL and Thermodynamics
 ----------------------------------------------------------
@@ -14,7 +14,7 @@ networks and thermodynamic models. Reinforcement learning is planned to be
 included to make that combination more effective.
 
 
-.. _Français - fr: # Balise utilisée pour créer l'hyperlien
+.. _Français - fr:
 
 Prédire des structures secondaires d'ARN avec l'AP et la thermodynamique
 ------------------------------------------------------------------------
