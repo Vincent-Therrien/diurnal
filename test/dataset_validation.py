@@ -5,6 +5,7 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 dataset_path = "../data/archiveII/"
+formatted_path = "../data/archiveII-arrays/"
 
 # Load project code
 import sys
@@ -31,6 +32,21 @@ print(sequence)
 print()
 
 # Tranform the sequences and pairings into a training-ready representation.
-print(datahandler.sequence_to_one_hot(bases))
-print(datahandler.pairings_to_one_hot(pairings))
+b = datahandler.sequence_to_one_hot(bases)
+p = datahandler.pairings_to_one_hot(pairings)
+print(b)
+print(p)
+print()
+
+# Tranform the sequences and pairings into a training-ready representation.
+print(datahandler.pad_one_hot_sequence(b, 512))
+print(datahandler.pad_one_hot_pairing(p, 512))
+print()
+
+# Compare with formatted data
+import numpy as np
+x = np.load(formatted_path + "5s_x.npy")[575]
+y = np.load(formatted_path + "5s_y.npy")[575]
+
+print(datahandler.one_hot_to_sequence(x))
 

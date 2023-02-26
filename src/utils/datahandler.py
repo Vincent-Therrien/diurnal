@@ -8,8 +8,8 @@ IUPAC_ONEHOT = {
     "A": [1, 0, 0, 0],
     "C": [0, 1, 0, 0],
     "G": [0, 0, 1, 0],
-    "T": [0, 0, 0, 1],
     "U": [0, 0, 0, 1],
+    "T": [0, 0, 0, 1],
     "R": [1, 0, 1, 0],
     "Y": [0, 1, 0, 1],
     "S": [0, 1, 1, 0],
@@ -100,8 +100,36 @@ def get_dot_bracket(pairings: list) -> str:
             sequence += "(" if i < p else ")"
     return sequence
 
+def sequence_to_one_hot(sequence: list) -> list:
+    return [IUPAC_ONEHOT[nt] for nt in sequence]
+
+def one_hot_to_sequence(onehot: list) -> list:
+    nt = []
+    for base in onehot:
+        base = list(base)
+        for key, code in IUPAC_ONEHOT.items():
+            if code == base:
+                nt.append(key)
+                break
+    return nt
+
 def pairings_to_one_hot(pairings: list) -> list:
     return [0 if p < 0 else 1 for p in pairings]
 
-def sequence_to_one_hot(sequence: list) -> list:
-    return [IUPAC_ONEHOT[nt] for nt in sequence]
+def pad_one_hot_sequence(sequence: list, total_size: int) -> list:
+    for _ in range(total_size - len(sequence)):
+        sequence.append([0, 0, 0, 0])
+    return sequence
+
+def pad_one_hot_pairing(pairings: list, total_size: int) -> list:
+    for _ in range(total_size - len(pairings)):
+        pairings.append(0)
+    return pairings
+
+def get_rna_x_y(filename: str, max_size: int) -> tuple:
+    _, bases, pairings = read_ct(filename)
+    if len(pairings) > max_size:
+        return None, None
+    x = pad_one_hot_sequence(sequence_to_one_hot(bases), max_size)
+    y = pad_one_hot_pairing(pairings_to_one_hot(pairings), max_size)
+    return x, y
