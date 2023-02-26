@@ -4,6 +4,13 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 
+# Set working directory to the location of the script.
+import os
+
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 # Download training data from open datasets.
 training_data = datasets.FashionMNIST(
     root="data",

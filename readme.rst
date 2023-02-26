@@ -60,27 +60,41 @@ Windows :
    .\venv\Scripts\activate.bat # Activer l'environnement
    pip install -r requirements.txt # Installer les outils requis
 
+Visualisation des données
+`````````````````````````
+
+Vous pouvez utiliser l'outil ``draw_rna`` (https://github.com/DasLab/draw_rna)
+pour lancer l'exemple ``test/visualize_rna``.
+
 Obtenir l'ensemble de données
 `````````````````````````````
 
+Décompressez l'archive ``data/archiveII.tar.gz`` inclue dans le dépôt.
+L'archive a été obtenue du projet ``dl-rna`` à l'adresse
+https://github.com/marcellszi/dl-rna/releases.
 
 Exécuter les tests
 ``````````````````
 
-Pour valider l'installation de ``PyTorch``, exécutez :
+Pour exécuter un test, lancer les commandes suivantes :
 
 Linux :
 
 .. code-block:: bash
 
    source ./venv/bin/activate
-   cd test/pytorch_validation
-   python3 ./cnn_example.py
+   python3 ./test/<NOM_DU_TEST>
 
 Windows :
 
 .. code-block:: bash
 
    .\venv\Scripts\activate.bat
-   cd test\pytorch_validation
-   python .\cnn_example.py
+   python .\test\<NOM_DU_TEST>
+
+où ``<NOM_DU_TEST>`` est l'une des options suivantes :
+
+- ``pytorch_validation/cnn_example.py`` : Validation de l'installation de
+  ``pytorch`` avec un réseau convolutionnel simple.
+- ``dataset_validation.py`` : Vérification du dépaquetage de l'ensemble de
+  données.
