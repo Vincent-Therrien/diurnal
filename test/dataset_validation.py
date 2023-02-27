@@ -21,7 +21,6 @@ print("Validating input file formatting.\n-----------------\n")
 print("Result from a CT file:")
 print(f"Title: {title}")
 print(f"Bases: {''.join(bases)}")
-print(pairings)
 print(f"Secondary structure: {datahandler.get_dot_bracket_from_ct(pairings)}")
 print()
 

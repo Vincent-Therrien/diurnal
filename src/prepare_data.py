@@ -25,7 +25,7 @@ def format_family(filenames: str, max_size: int) -> tuple:
             continue
         X.append(x)
         Y.append(y)
-    return np.asarray(X), np.asarray(Y)
+    return np.asarray(X, dtype=np.float32), np.asarray(Y, dtype=np.float32)
 
 def format_archiveii(input: str, max_size: int) -> None:
     # Fetch all file names
