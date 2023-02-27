@@ -27,7 +27,7 @@ def format_family(filenames: str, max_size: int) -> tuple:
         Y.append(y)
     return np.asarray(X), np.asarray(Y)
 
-def format_archiveii(input: str, output: str, max_size: int) -> None:
+def format_archiveii(input: str, max_size: int) -> None:
     # Fetch all file names
     p = pathlib.Path(input)
     families = {}
@@ -51,12 +51,13 @@ def format_archiveii(input: str, output: str, max_size: int) -> None:
         base_name = output_path + family + "_"
         np.save(base_name + "x", x)
         np.save(base_name + "y", y)
+        names = [f.split("/")[-1] for f in families[family]]
         with open(base_name + "names.txt", "w") as outfile:
-            outfile.write("\n".join(families[family]))
+            outfile.write("\n".join(names))
         print(f"Wrote family {family} in files.")
 
 if os.path.isdir(output_path):
     shutil.rmtree(output_path)
 
 os.makedirs(output_path)
-format_archiveii(dataset_path, output_path, 512)
+format_archiveii(dataset_path, 512)

@@ -1,5 +1,4 @@
 import numpy as np
-import pathlib
 
 # One-hot encoding dictionary for IUPAC symbols
 # See: https://www.bioinformatics.org/sms/iupac.html
@@ -91,13 +90,22 @@ def read_seq(path):
     return title, sequence[:-1]
 
 
-def get_dot_bracket(pairings: list) -> str:
+def get_dot_bracket_from_ct(pairings: list) -> str:
     sequence = ""
     for i, p in enumerate(pairings):
         if p < 0:
             sequence += "."
         else:
             sequence += "(" if i < p else ")"
+    return sequence
+
+def get_dot_bracket_from_matrix(pairings: list) -> str:
+    sequence = ""
+    for p in pairings:
+        if p == 0:
+            sequence += "."
+        else:
+            sequence += "(" if p > 0 else ")"
     return sequence
 
 def sequence_to_one_hot(sequence: list) -> list:
@@ -114,7 +122,24 @@ def one_hot_to_sequence(onehot: list) -> list:
     return nt
 
 def pairings_to_one_hot(pairings: list) -> list:
-    return [0 if p < 0 else 1 for p in pairings]
+    sequence = []
+    for i, p in enumerate(pairings):
+        if p < 0:
+            sequence.append(0)
+        else:
+            sequence.append(1 if i < p else -1)
+    return sequence
+
+def one_hot_to_pairing(onehot: list) -> list:
+    nt = ""
+    for pairing in onehot:
+        if pairing == 0:
+            nt += "."
+        elif pairing == 1:
+            nt += "("
+        else:
+            nt += ")"
+    return nt
 
 def pad_one_hot_sequence(sequence: list, total_size: int) -> list:
     for _ in range(total_size - len(sequence)):
@@ -125,6 +150,29 @@ def pad_one_hot_pairing(pairings: list, total_size: int) -> list:
     for _ in range(total_size - len(pairings)):
         pairings.append(0)
     return pairings
+
+def remove_pairing_padding(pairings: list) -> list:
+    i = len(pairings) - 1
+    while i > 0:
+        if pairings[i] not in [0, "."]:
+            return pairings[0:i+2]
+        i -= 1
+    return None
+
+def remove_sequence_padding(sequence: list) -> list:
+    i = len(sequence) - 1
+    while i > 0:
+        if type(sequence[i]) == str and sequence[i] == ".":
+            return sequence[0:i+1]
+        else:
+            nonzero = False
+            for e in sequence[i]:
+                if e != 0:
+                    nonzero = True
+            if nonzero:
+                return sequence[0:i+1]
+        i -= 1
+    return None
 
 def get_rna_x_y(filename: str, max_size: int) -> tuple:
     _, bases, pairings = read_ct(filename)
