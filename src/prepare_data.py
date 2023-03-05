@@ -39,6 +39,7 @@ def format_archiveii(input: str, max_size: int) -> None:
         if extension != ".ct":
             continue
         # Determine the RNA family
+        name = name.replace("\\", "/") # Use / as the directory separator
         filename = name.split("/")[-1]
         family = filename.split("_")[0]
         if not family in families:

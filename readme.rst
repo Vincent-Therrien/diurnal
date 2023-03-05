@@ -37,9 +37,9 @@ l'outil. Le projet comprend les répertoires suivants :
 Configuration
 `````````````
 
-Le langage ``Python`` doit être installé sur le système (version minimale :
-3.7. version recommandée : 3.11). Une carte graphique NVIDIA est recommandée
-pour entraîner les réseaux neuronaux
+Le langage ``Python`` doit être installé sur le système (version requise :
+3.7). Une carte graphique NVIDIA est recommandée pour entraîner les réseaux
+neuronaux.
 
 Créez d'abord un environnement virtual ``Python`` et installez les outils
 nécessaires.
@@ -56,22 +56,38 @@ Windows :
 
 .. code-block:: bash
 
-   python -m venv .\venv # Créer l'environnement virtuel
+   py -m venv .\venv # Créer l'environnement virtuel
    .\venv\Scripts\activate.bat # Activer l'environnement
    pip install -r requirements.txt # Installer les outils requis
+
+Obtenir l'ensemble de données
+`````````````````````````````
+
+Décompressez l'archive ``data/archiveII.tar.gz`` incluse dans le dépôt.
+L'archive a été obtenue du projet ``dl-rna`` à l'adresse
+https://github.com/marcellszi/dl-rna/releases.
+
+Les données brutes doivent être transformées en une représentation utilisable
+par les outils développés dans le dépôt. Pour y arriver, exécuter le script
+de préparation des données :
+
+Linux :
+
+.. code-block:: bash
+
+   python3 ./src/prepare_data.py
+
+Windows :
+
+.. code-block:: bash
+
+   py .\src\prepare_data.py
 
 Visualisation des données
 `````````````````````````
 
 Vous pouvez utiliser l'outil ``draw_rna`` (https://github.com/DasLab/draw_rna)
 pour lancer l'exemple ``test/visualize_rna``.
-
-Obtenir l'ensemble de données
-`````````````````````````````
-
-Décompressez l'archive ``data/archiveII.tar.gz`` inclue dans le dépôt.
-L'archive a été obtenue du projet ``dl-rna`` à l'adresse
-https://github.com/marcellszi/dl-rna/releases.
 
 Exécuter les tests
 ``````````````````
