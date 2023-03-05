@@ -157,7 +157,7 @@ def remove_pairing_padding(pairings: list) -> list:
         if pairings[i] not in [0, "."]:
             return pairings[0:i+2]
         i -= 1
-    return None
+    return pairings
 
 def remove_sequence_padding(sequence: list) -> list:
     i = len(sequence) - 1

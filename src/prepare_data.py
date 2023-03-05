@@ -19,13 +19,16 @@ import datahandler
 def format_family(filenames: str, max_size: int) -> tuple:
     X = []
     Y = []
+    n_rejected = 0
     for filename in filenames:
         x, y = datahandler.get_rna_x_y(filename, max_size)
         if not x or not y:
+            n_rejected += 1
             continue
         X.append(x)
         Y.append(y)
-    return np.asarray(X, dtype=np.float32), np.asarray(Y, dtype=np.float32)
+    return (np.asarray(X, dtype=np.float32),
+            np.asarray(Y, dtype=np.float32), n_rejected)
 
 def format_archiveii(input: str, max_size: int) -> None:
     # Fetch all file names
@@ -48,14 +51,15 @@ def format_archiveii(input: str, max_size: int) -> None:
     
     # Convert the file content to arrays and write them to files.
     for family in families:
-        x, y = format_family(families[family], max_size)
+        x, y, n_rejected = format_family(families[family], max_size)
         base_name = output_path + family + "_"
         np.save(base_name + "x", x)
         np.save(base_name + "y", y)
         names = [f.split("/")[-1] for f in families[family]]
         with open(base_name + "names.txt", "w") as outfile:
             outfile.write("\n".join(names))
-        print(f"Wrote family {family} in files.")
+        print(f"Wrote family {family} in files. " +
+              f"{len(y)} files included. {n_rejected} files excluded.")
 
 if os.path.isdir(output_path):
     shutil.rmtree(output_path)
