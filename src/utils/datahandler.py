@@ -25,7 +25,6 @@ IUPAC_ONEHOT = {
 }
 IUPAC_MAPPING = {b: np.where(np.array(s) == 1) for b, s in IUPAC_ONEHOT.items()}
 
-
 def read_ct(path: str, number: int = 0) -> tuple:
     bases = []
     pairings = []
@@ -89,7 +88,6 @@ def read_seq(path):
 
     return title, sequence[:-1]
 
-
 def get_dot_bracket_from_ct(pairings: list) -> str:
     sequence = ""
     for i, p in enumerate(pairings):
@@ -121,13 +119,13 @@ def one_hot_to_sequence(onehot: list) -> list:
                 break
     return nt
 
-def pairings_to_one_hot(pairings: list) -> list:
+def pairings_to_one_hot(pairings: list, base=0, left=1, right=-1) -> list:
     sequence = []
     for i, p in enumerate(pairings):
         if p < 0:
-            sequence.append(0)
+            sequence.append(base)
         else:
-            sequence.append(1 if i < p else -1)
+            sequence.append(left if i < p else right)
     return sequence
 
 def one_hot_to_pairing(onehot: list) -> list:
@@ -146,9 +144,9 @@ def pad_one_hot_sequence(sequence: list, total_size: int) -> list:
         sequence.append([0, 0, 0, 0])
     return sequence
 
-def pad_one_hot_pairing(pairings: list, total_size: int) -> list:
+def pad_one_hot_pairing(pairings: list, total_size: int, symbol=0) -> list:
     for _ in range(total_size - len(pairings)):
-        pairings.append(0)
+        pairings.append(symbol)
     return pairings
 
 def remove_pairing_padding(pairings: list) -> list:
@@ -181,3 +179,113 @@ def get_rna_x_y(filename: str, max_size: int) -> tuple:
     x = pad_one_hot_sequence(sequence_to_one_hot(bases), max_size)
     y = pad_one_hot_pairing(pairings_to_one_hot(pairings), max_size)
     return x, y
+
+# Performance metrics, implemented following ATTFold
+def get_true_positive(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the true positive value obtained by comparing two secondary
+    structures.
+    
+    The true positive (TP) value is defined as the number of bases that are
+    correclty predicted to be paired with another base. For example, in the
+    following *demonstrative* secondary structures:
+    - predicton: (..(((....
+    - reference: (.....))))
+    one paired base is correctly predicted, so the function returns 1.
+    """
+    tp = 0
+    for i in range(min(len(prediction), len(reference))):
+        if prediction[i] != unpaired_symbol and prediction[i] == reference[i]:
+            tp += 1
+    return tp
+
+def get_true_negative(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the true negative value obtained by comparing two secondary
+    structures.
+    
+    The true negative (TN) value is defined as the number of bases that are
+    correclty predicted to be unpaired.For example, in the following
+    *demonstrative* secondary structures:
+    - predicton: (..(((....
+    - reference: (.....))))
+    two unpaired base are correctly predicted, so the function returns 2.
+    """
+    tn = 0
+    for i in range(min(len(prediction), len(reference))):
+        if prediction[i] == unpaired_symbol and prediction[i] == reference[i]:
+            tn += 1
+    return tn
+
+def get_false_positive(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the false positive value obtained by comparing two secondary
+    structures.
+    
+    The false positive (FP) value is defined as the number of bases that are
+    predicted to be paired but that are actually unpaired. For example, in the
+    following *demonstrative* secondary structures:
+    - predicton: (..(((....
+    - reference: (.....))))
+    three bases are incorrectly predicted as paired, so the function returns 3.
+    """
+    fp = 0
+    for i in range(min(len(prediction), len(reference))):
+        if prediction[i] != unpaired_symbol and prediction[i] != reference[i]:
+            fp += 1
+    return fp
+
+def get_false_negative(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the false negative value obtained by comparing two secondary
+    structures.
+    
+    The false negative (FN) value is defined as the number of bases that are
+    predicted to be unpaired but that are actually paired. For example, in the
+    following *demonstrative* secondary structures:
+    - predicton: (..(((....
+    - reference: (.....))))
+    four bases are incorrectly predicted as unpaired, so the function returns 4.
+    """
+    fn = 0
+    for i in range(min(len(prediction), len(reference))):
+        if prediction[i] == unpaired_symbol and prediction[i] != reference[i]:
+            fn += 1
+    return fn
+
+def get_sensitivity(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the sensitivity value (SEN) obtained by comparing two secondary
+    structures. The sensitivity is defined as: TP / (TP + FN).
+    """
+    tp = get_true_positive(prediction, reference, unpaired_symbol)
+    fn = get_false_negative(prediction, reference, unpaired_symbol)
+    return tp / (tp + fn)
+
+def get_positive_predictive_value(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the positive predictive value (PPV) obtained by comparing two
+    secondary structures. The PPV is defined as: TP / (TP + FP).
+    """
+    tp = get_true_positive(prediction, reference, unpaired_symbol)
+    fp = get_false_positive(prediction, reference, unpaired_symbol)
+    return tp / (tp + fp)
+
+def get_f1_score(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the F1-score obtained by comparing two secondary structures. The
+    F1-score is define as: 2 * ((SEN*PPV) / (SEN+PPV)).
+    """
+    sen = get_sensitivity(prediction, reference, unpaired_symbol)
+    ppv = get_positive_predictive_value(prediction, reference, unpaired_symbol)
+    f1 = 2 * ((sen*ppv) * (sen+ppv))
+    return f1
+
+def get_evaluation_metrics(prediction, reference, unpaired_symbol="."):
+    """
+    Return the sensitivity, positive predictive value, and f1-score.
+    """
+    sen = get_sensitivity(prediction, reference, unpaired_symbol)
+    ppv = get_positive_predictive_value(prediction, reference, unpaired_symbol)
+    f1 = 2 * ((sen*ppv) * (sen+ppv))
+    return sen, ppv, f1

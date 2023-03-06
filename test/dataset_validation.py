@@ -58,3 +58,9 @@ if print_results:
 # Compare secondary structures from the CT file and the formatted data.
 if secondary_structure_2 != secondary_structure_1:
     print("Discrepency between the CT file and the formatted data.")
+
+# Verify performance evaluation functions
+predicton = "(..(((...."
+reference = "(.....))))"
+s, p, f = datahandler.get_evaluation_metrics(predicton, reference)
+assert(s == 0.2 and p == 0.25)
