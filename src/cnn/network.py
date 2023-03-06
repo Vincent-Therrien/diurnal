@@ -36,47 +36,35 @@ class convolutionalNN(nn.Module):
         x = self.sigmoid(x)
         return x
 
-def train_one_epoch(model, dataloader, size):
+def train_one_epoch(model, dataloader, optimizer):
     model.train()
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
     for batch, (x, y) in enumerate(dataloader):
-        # Compute prediction error
+        optimizer.zero_grad()
         pred = model(x)
         loss = loss_fn(pred, y)
-
-        # Backpropagation
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-        print(batch)
         if batch % 20 == 0:
-            loss, current = loss.item(), (batch + 1) * len(x)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            loss = loss.item(), (batch + 1) * len(x)
+            print(f"loss: {loss}  [{batch * len(x)}/{len(dataloader)}]")
 
 def test(model, dataloader):
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
     model.eval()
     loss_fn = nn.CrossEntropyLoss()
     test_loss, correct = 0, 0
     with torch.no_grad():
         for X, y in dataloader:
-            pred = model(X)
-            print(pred)
-            print(len(pred))
-            if len(pred) < 512:
-                pred += [0 for _ in range(512 - len(pred))]
-            test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
-    test_loss /= num_batches
-    correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+            output = model(X)
+            test_loss += loss_fn(output, y).item()
+            pred = output.argmax(dim=1, keepdim=True)
+            correct += pred.eq(y.view_as(pred)).sum().item()
+    size = len(dataloader.dataset)
+    test_loss /= size
+    print(f"Accuracy: {(100*correct / size):.4f}")
 
-def train(model, train_data, test_data, size, epochs):
+def train(model, train_data, optimizer, epochs):
     for t in range(epochs):
-        print(f"Epoch {t+1}\n-------------------------------")
-        train_one_epoch(model, train_data, size)
-        test(model, test_data)
-    print("Completed")
+        print(f"Epoch {t}\n-------------------------------")
+        train_one_epoch(model, train_data, optimizer)
+    print("Completed training.")

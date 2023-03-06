@@ -1,6 +1,6 @@
 import numpy as np
 from torch.utils.data import DataLoader
-from sklearn.model_selection import train_test_split
+import torch.optim as optim
 import cnn.network as cnn
 
 # Set working directory to the location of the script.
@@ -34,5 +34,9 @@ train_dataloader = DataLoader(training_data, batch_size=batch_size)
 validation_dataloader = DataLoader(validation_data, batch_size=batch_size)
 test_dataloader = DataLoader(test_data, batch_size=batch_size)
 
+print("Beginning the training")
 model = cnn.convolutionalNN()
-cnn.train(model, train_dataloader, test_dataloader, len(training_data), 5)
+optimizer = optim.Adadelta(model.parameters())
+
+cnn.train(model, train_dataloader, optimizer, 5)
+cnn.test(model, test_dataloader)
