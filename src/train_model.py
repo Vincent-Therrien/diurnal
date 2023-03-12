@@ -70,12 +70,7 @@ def test(model: nn, dataloader: DataLoader) -> tuple:
         for x, y in dataloader:
             x, y = x.to(device), y.to(device)
             output = model(x)
-            for i, j in zip(output[10:], y[10:]):
-                print("Prediction:")
-                print(utils.prediction_to_secondary_structure(i.tolist()))
-                print("Label:")
-                print(utils.prediction_to_secondary_structure(j.tolist()))
-                exit()
+            for i, j in zip(output, y):
                 s, p, f = utils.get_evaluation_metrics(
                     utils.prediction_to_secondary_structure(i.tolist()),
                     utils.prediction_to_secondary_structure(j.tolist()))
