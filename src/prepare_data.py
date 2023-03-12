@@ -3,6 +3,7 @@ import os
 import shutil
 import pathlib
 import numpy as np
+import utils.datahandler as datahandler
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -11,17 +12,12 @@ os.chdir(dname)
 dataset_path = "../data/archiveII/"
 output_path = "../data/archiveII-arrays/"
 
-# Load project code
-import sys
-sys.path.insert(1, './utils/')
-import datahandler
-
 def format_family(filenames: str, max_size: int) -> tuple:
     X = []
     Y = []
     n_rejected = 0
     for filename in filenames:
-        x, y = datahandler.get_rna_x_y(filename, max_size)
+        x, y = datahandler.get_rna_x_y(filename, max_size, [0, 1, 1])
         if not x or not y:
             n_rejected += 1
             continue

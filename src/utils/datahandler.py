@@ -172,12 +172,18 @@ def remove_sequence_padding(sequence: list) -> list:
         i -= 1
     return None
 
-def get_rna_x_y(filename: str, max_size: int) -> tuple:
+def prediction_to_secondary_structure(prediction) -> str:
+    values = [round(n) for n in prediction]
+    values = remove_pairing_padding(values)
+    return one_hot_to_pairing(values)
+
+def get_rna_x_y(filename: str, max_size: int, code: list=[0, 1, -1]) -> tuple:
     _, bases, pairings = read_ct(filename)
     if len(pairings) > max_size:
         return None, None
     x = pad_one_hot_sequence(sequence_to_one_hot(bases), max_size)
-    y = pad_one_hot_pairing(pairings_to_one_hot(pairings), max_size)
+    y = pad_one_hot_pairing(
+        pairings_to_one_hot(pairings, code[0], code[1], code[2]), max_size)
     return x, y
 
 # Performance metrics, implemented following ATTFold
@@ -287,5 +293,59 @@ def get_evaluation_metrics(prediction, reference, unpaired_symbol="."):
     """
     sen = get_sensitivity(prediction, reference, unpaired_symbol)
     ppv = get_positive_predictive_value(prediction, reference, unpaired_symbol)
-    f1 = 2 * ((sen*ppv) * (sen+ppv))
+    f1 = 2 * ((sen*ppv) / (sen+ppv))
     return sen, ppv, f1
+
+# Dataset operations
+def split_data(data, fractions: list, offset: int = 0) -> list:
+    """
+    Split data in subsets according to the specified fractions.
+    
+    Args:
+        data: Array-like object containing the data to split.
+        fractions: Proportion of each subset. For instance, to use 80% of the
+            data for training and 20% for testing, use [0.8, 0.2].
+        offset: Number of indices to offset to assemble the subsets. Used for
+            K-fold data splits.
+
+    Returns:
+        A list containing the split data object.
+    """
+    if sum(fractions) != 1.0:
+        raise "Invalid data split proportions."
+    subarrays = []
+    index = int(offset)
+    n = len(data)
+    for f in fractions:
+        # Determine the indices to use.
+        index2 = (index + int(n*f))
+        if index2 > n:
+            index2 %= n
+        # Make the subarray according to the indices.
+        if index < index2:
+            subarrays.append(data[index:index2])
+        else:
+            tmp = data[index:]
+            tmp += data[:index2]
+            subarrays.append(tmp)
+        index = index2
+    return subarrays
+
+def k_fold_split(data, fractions: list, k: int, i: int) -> list:
+    """
+    Split the data to make a K-fold split.
+    
+    Args:
+        data: Array-like object containing the data to split.
+        fractions: Proportion of each subset. For instance, to use 80% of the
+            data for training and 20% for testing, use [0.8, 0.2].
+        k: Number of folds.
+        i: Zero-based index of the fold.
+    
+    Returns:
+        A tuple containing the split data object.
+    """
+    if k <= 0 or i >= k:
+        raise "Invalid K-fold parameters."
+    offset = (len(data) / k) * i
+    return split_data(data, fractions, offset)
