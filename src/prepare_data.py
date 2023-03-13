@@ -10,14 +10,21 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 dataset_path = "../data/archiveII/"
-output_path = "../data/archiveII-arrays/"
+
+#output_path = "../data/archiveII-shadows/"
+#code = [0, 1, 1]
+#size = 512
+
+output_path = "../data/archiveII-structures/"
+code = [0, 1, -1]
+size = 512
 
 def format_family(filenames: str, max_size: int) -> tuple:
     X = []
     Y = []
     n_rejected = 0
     for filename in filenames:
-        x, y = datahandler.get_rna_x_y(filename, max_size, [0, 1, 1])
+        x, y = datahandler.get_rna_x_y(filename, max_size, code)
         if not x or not y:
             n_rejected += 1
             continue
@@ -61,4 +68,4 @@ if os.path.isdir(output_path):
     shutil.rmtree(output_path)
 
 os.makedirs(output_path)
-format_archiveii(dataset_path, 512)
+format_archiveii(dataset_path, size)
