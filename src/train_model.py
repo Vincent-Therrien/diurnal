@@ -17,9 +17,12 @@ os.chdir(dname)
 # Parameters
 #formatted_path = "../data/archiveII-shadows/"
 #model = cnn.RNA_CNN_shadow
-formatted_path = "../data/archiveII-structures/"
-model = cnn.RNA_CNN
-batch_size = 64
+formatted_path = "../data/archiveII-classes/"
+model = cnn.RNA_CNN_classes
+batch_size = 2
+optimizer = optim.Adam
+loss_fn = nn.MSELoss()
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 family = "5s"
 
@@ -27,7 +30,7 @@ family = "5s"
 def train(model: nn, dataloader: DataLoader, optimizer: optim, loss_fn,
         n_epochs: int,
         validation: DataLoader = None,
-        verbose = True) -> None:
+        verbose = 1) -> None:
     """
     Train a model with the specified parameters.
     
@@ -46,13 +49,14 @@ def train(model: nn, dataloader: DataLoader, optimizer: optim, loss_fn,
     threshold = 1 if threshold < 1 else threshold
     for epoch in tqdm(range(n_epochs)) if verbose else range(n_epochs):
         for batch, (x, y) in enumerate(dataloader):
+            x, y = x.to(device), y.to(device)
             optimizer.zero_grad()
             pred = model(x)
             loss = loss_fn(pred, y)
             loss.backward()
             optimizer.step()
-            loss = loss.item()
-            if verbose and batch % threshold == 0:
+            if verbose > 1 and batch % threshold == 0:
+                loss = loss.item()
                 print(f"Loss: {loss:.4f}    Batch {batch} / {len(dataloader)}")
         if verbose and validation:
             _, _, f1 = test(model, validation)
@@ -90,6 +94,15 @@ def test(model: nn, dataloader: DataLoader) -> tuple:
                 sensitivity.append(s)
                 ppv.append(p)
                 f1.append(f)
+
+                if len(f1) == 1:
+                    print(f"{s}    {p}    {f}")
+                    ref = utils.prediction_to_secondary_structure(j.tolist())
+                    print(f"R: {ref}")
+                    pred = utils.prediction_to_secondary_structure(i.tolist())
+                    print(f"P: {pred[:len(ref)]}")
+                    print()
+
     return np.mean(sensitivity), np.mean(ppv), np.mean(f1)
 
 def load_data(family: str) -> list:
@@ -107,8 +120,8 @@ def load_data(family: str) -> list:
     data = []
     for i in range(len(x)):
         data.append([
-            torch.tensor(x[i].T, dtype=torch.float32).to(device),
-            torch.tensor(y[i], dtype=torch.float32).to(device)])
+            torch.tensor(x[i].T, dtype=torch.float32),
+            torch.tensor(y[i], dtype=torch.float32)])
     return data
 
 def k_fold_benchmark(model_type: nn,
@@ -119,7 +132,7 @@ def k_fold_benchmark(model_type: nn,
         optimizer_type: optim,
         n_epochs: int,
         use_validation: bool = True,
-        verbose: bool = True) -> tuple:
+        verbose: int = 1) -> tuple:
     """
     Use K-fold to successively train and test the model on different parts
     of the dataset.
@@ -168,8 +181,6 @@ def k_fold_benchmark(model_type: nn,
 # Usage
 data = load_data(family)
 rna_length = len(data[0][0].T)
-optimizer = optim.Adam
-loss_fn = nn.CrossEntropyLoss()
 
 print(k_fold_benchmark(model, rna_length, data, 5,
-    loss_fn, optimizer, 5, False, verbose=True))
+    loss_fn, optimizer, n_epochs=5, use_validation=False, verbose=1))

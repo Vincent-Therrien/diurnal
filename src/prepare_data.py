@@ -12,12 +12,16 @@ os.chdir(dname)
 dataset_path = "../data/archiveII/"
 
 #output_path = "../data/archiveII-shadows/"
-#code = [0, 1, 1]
+#code = [0, 1, 1, 0]
 #size = 512
 
-output_path = "../data/archiveII-structures/"
-code = [0, 1, -1]
-size = 512
+#output_path = "../data/archiveII-structures/"
+#code = [0, 1, -1, 0]
+#size = 512
+
+output_path = "../data/archiveII-classes/"
+code = [[0, 1, 0], [0, 0, 1], [1, 0, 0], [0, 0, 0]]
+size = 256
 
 def format_family(filenames: str, max_size: int) -> tuple:
     X = []

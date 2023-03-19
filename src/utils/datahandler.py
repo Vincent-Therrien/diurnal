@@ -173,17 +173,24 @@ def remove_sequence_padding(sequence: list) -> list:
     return None
 
 def prediction_to_secondary_structure(prediction) -> str:
-    values = [round(n) for n in prediction]
+    if type(prediction) is float:
+        values = [round(n) for n in prediction]
+    elif type(prediction) in [list, tuple]:
+        values = [n.index(max(n)) - 1 for n in prediction]
+        # Remove the tail
+        for i, p in enumerate(prediction):
+            if sum(p) == 0:
+                values[i] = 0
     values = remove_pairing_padding(values)
     return one_hot_to_pairing(values)
 
-def get_rna_x_y(filename: str, max_size: int, code: list=[0, 1, -1]) -> tuple:
+def get_rna_x_y(filename: str, max_size: int, code: list=[0, 1, -1, 0]) -> tuple:
     _, bases, pairings = read_ct(filename)
     if len(pairings) > max_size:
         return None, None
     x = pad_one_hot_sequence(sequence_to_one_hot(bases), max_size)
     y = pad_one_hot_pairing(
-        pairings_to_one_hot(pairings, code[0], code[1], code[2]), max_size)
+        pairings_to_one_hot(pairings, code[0], code[1], code[2]), max_size, code[3])
     return x, y
 
 # Performance metrics, implemented following ATTFold
@@ -266,7 +273,10 @@ def get_sensitivity(prediction, reference, unpaired_symbol="."):
     """
     tp = get_true_positive(prediction, reference, unpaired_symbol)
     fn = get_false_negative(prediction, reference, unpaired_symbol)
-    return tp / (tp + fn)
+    if tp + fn:
+        return tp / (tp + fn)
+    else:
+        return 0.0
 
 def get_positive_predictive_value(prediction, reference, unpaired_symbol="."):
     """
@@ -275,7 +285,10 @@ def get_positive_predictive_value(prediction, reference, unpaired_symbol="."):
     """
     tp = get_true_positive(prediction, reference, unpaired_symbol)
     fp = get_false_positive(prediction, reference, unpaired_symbol)
-    return tp / (tp + fp)
+    if tp + fp:
+        return tp / (tp + fp)
+    else:
+        return 0.0
 
 def get_f1_score(prediction, reference, unpaired_symbol="."):
     """
@@ -293,8 +306,11 @@ def get_evaluation_metrics(prediction, reference, unpaired_symbol="."):
     """
     sen = get_sensitivity(prediction, reference, unpaired_symbol)
     ppv = get_positive_predictive_value(prediction, reference, unpaired_symbol)
-    f1 = 2 * ((sen*ppv) / (sen+ppv))
-    return sen, ppv, f1
+    if sen + ppv:
+        f1 = 2 * ((sen*ppv) / (sen+ppv))
+        return sen, ppv, f1
+    else:
+        return sen, ppv, 0.0
 
 # Dataset operations
 def split_data(data, fractions: list, offset: int = 0) -> list:
