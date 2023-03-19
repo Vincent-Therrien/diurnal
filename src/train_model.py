@@ -4,6 +4,7 @@ import torch.optim as optim
 from torch import nn
 import torch
 from tqdm import tqdm
+from sklearn.metrics import confusion_matrix, f1_score
 
 import utils.datahandler as utils
 import networks.cnn as cnn
@@ -74,26 +75,21 @@ def test(model: nn, dataloader: DataLoader) -> tuple:
         tuple: Performances metric organized as: sensitivity, ppv, f1-score.
     """
     model.eval()
-    sensitivity, ppv, f1 = [], [], []
+    sensitivity, ppv, f1, f2 = [], [], [], []
     with torch.no_grad():
         for x, y in dataloader:
             x, y = x.to(device), y.to(device)
             output = model(x)
             for i, j in zip(output, y):
-
-                # Test results
-                # print(i.tolist())
-                # print(utils.prediction_to_secondary_structure(i.tolist()))
-                # print()
-                # print(utils.prediction_to_secondary_structure(j.tolist()))
-                # exit()
-
                 s, p, f = utils.get_evaluation_metrics(
                     utils.prediction_to_secondary_structure(i.tolist()),
                     utils.prediction_to_secondary_structure(j.tolist()))
                 sensitivity.append(s)
                 ppv.append(p)
                 f1.append(f)
+                y_pred = utils.prediction_to_classes(i.tolist(), j.tolist())
+                y_true = utils.prediction_to_classes(j.tolist(), j.tolist())
+                f2.append(f1_score(y_true, y_pred, average='weighted'))
 
                 if len(f1) == 1:
                     print(f"{s}    {p}    {f}")
@@ -103,7 +99,7 @@ def test(model: nn, dataloader: DataLoader) -> tuple:
                     print(f"P: {pred[:len(ref)]}")
                     print()
 
-    return np.mean(sensitivity), np.mean(ppv), np.mean(f1)
+    return np.mean(sensitivity), np.mean(ppv), np.mean(f1), np.mean(f2)
 
 def load_data(family: str) -> list:
     """
@@ -152,7 +148,7 @@ def k_fold_benchmark(model_type: nn,
         tuple: Performances metric organized as the average of k-fold attempts
             for sensitivity, ppv, and f1-score.
     """
-    sensitivity, ppv, f1 = [], [], []
+    sensitivity, ppv, f1, F = [], [], [], []
     for k in range(K):
         model = model_type(sequence_len).to(device)
         optimizer = optimizer_type(model.parameters())
@@ -172,11 +168,12 @@ def k_fold_benchmark(model_type: nn,
         train(model, train_dataloader, optimizer, loss_fn, n_epochs,
             valid_dataloader, verbose)
         # Collect performance metric for the current fold.
-        s, p, f = test(model, test_dataloader)
+        s, p, f, f2 = test(model, test_dataloader)
         sensitivity.append(s)
         ppv.append(p)
         f1.append(f)
-    return np.mean(sensitivity), np.mean(ppv), np.mean(f1)
+        F.append(f2)
+    return np.mean(sensitivity), np.mean(ppv), np.mean(f1), np.mean(F)
 
 # Usage
 data = load_data(family)

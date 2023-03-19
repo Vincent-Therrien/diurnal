@@ -172,6 +172,14 @@ def remove_sequence_padding(sequence: list) -> list:
         i -= 1
     return None
 
+def prediction_to_classes(prediction, y_true) -> list:
+    values = [n.index(max(n)) for n in prediction]
+    # Remove the tail
+    for i, y in enumerate(y_true):
+        if sum(y) == 0:
+            return values[:i]
+    return values
+
 def prediction_to_secondary_structure(prediction) -> str:
     if type(prediction) is float:
         values = [round(n) for n in prediction]
