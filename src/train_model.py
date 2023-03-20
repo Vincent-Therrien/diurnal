@@ -4,7 +4,8 @@ import torch.optim as optim
 from torch import nn
 import torch
 from tqdm import tqdm
-from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.metrics import f1_score
+import statistics
 
 import utils.datahandler as utils
 import networks.cnn as cnn
@@ -19,8 +20,10 @@ os.chdir(dname)
 #formatted_path = "../data/archiveII-shadows/"
 #model = cnn.RNA_CNN_shadow
 formatted_path = "../data/archiveII-classes/"
+families = {'A': {'x': "../data/archiveII-classes/5s_x.npy", 'y': "../data/archiveII-classes/5s_y.npy"}}
+families = utils.getDatasetFilesnames(formatted_path)
 model = cnn.RNA_CNN_classes
-batch_size = 2
+batch_size = 16
 optimizer = optim.Adam
 loss_fn = nn.MSELoss()
 
@@ -50,7 +53,7 @@ def train(model: nn, dataloader: DataLoader, optimizer: optim, loss_fn,
     threshold = 1 if threshold < 1 else threshold
     for epoch in tqdm(range(n_epochs)) if verbose else range(n_epochs):
         for batch, (x, y) in enumerate(dataloader):
-            x, y = x.to(device), y.to(device)
+            x, y = x.to(device).half(), y.to(device).half()
             optimizer.zero_grad()
             pred = model(x)
             loss = loss_fn(pred, y)
@@ -75,33 +78,26 @@ def test(model: nn, dataloader: DataLoader) -> tuple:
         tuple: Performances metric organized as: sensitivity, ppv, f1-score.
     """
     model.eval()
-    sensitivity, ppv, f1, f2 = [], [], [], []
+    f1 = []
     with torch.no_grad():
         for x, y in dataloader:
-            x, y = x.to(device), y.to(device)
+            x, y = x.to(device).half(), y.to(device).half()
             output = model(x)
             for i, j in zip(output, y):
-                s, p, f = utils.get_evaluation_metrics(
-                    utils.prediction_to_secondary_structure(i.tolist()),
-                    utils.prediction_to_secondary_structure(j.tolist()))
-                sensitivity.append(s)
-                ppv.append(p)
-                f1.append(f)
                 y_pred = utils.prediction_to_classes(i.tolist(), j.tolist())
                 y_true = utils.prediction_to_classes(j.tolist(), j.tolist())
-                f2.append(f1_score(y_true, y_pred, average='weighted'))
-
+                f1.append(f1_score(y_true, y_pred, average='weighted'))
+                # Debugging
                 if len(f1) == 1:
-                    print(f"{s}    {p}    {f}")
+                    print(f"{f1[-1]}")
                     ref = utils.prediction_to_secondary_structure(j.tolist())
                     print(f"R: {ref}")
                     pred = utils.prediction_to_secondary_structure(i.tolist())
                     print(f"P: {pred[:len(ref)]}")
                     print()
+    return f1
 
-    return np.mean(sensitivity), np.mean(ppv), np.mean(f1), np.mean(f2)
-
-def load_data(family: str) -> list:
+def load_data(families: str) -> list:
     """
     Read data files formatted by the script `prepare_data.py`.
 
@@ -111,8 +107,23 @@ def load_data(family: str) -> list:
     Returns:
         list: Loaded data represented as [x, y].
     """
-    x = np.load(formatted_path + family + "_x.npy")
-    y = np.load(formatted_path + family + "_y.npy")
+    # Load data.
+    x, y = None, None
+    for family in families:
+        if x is not None:
+            new = np.load(families[family]['x'])
+            if new.shape[0]:
+                x = np.concatenate((x, new))
+        else:
+            x = np.load(families[family]['x'])
+        if y is not None:
+            new = np.load(families[family]['y'])
+            if new.shape[0]:
+                y = np.concatenate((y, new))
+        else:
+            y = np.load(families[family]['y'])
+    # Format data into tensors.
+    x, y = utils.shuffle_x_y(x, y)
     data = []
     for i in range(len(x)):
         data.append([
@@ -148,10 +159,10 @@ def k_fold_benchmark(model_type: nn,
         tuple: Performances metric organized as the average of k-fold attempts
             for sensitivity, ppv, and f1-score.
     """
-    sensitivity, ppv, f1, F = [], [], [], []
+    f1 = []
     for k in range(K):
-        model = model_type(sequence_len).to(device)
-        optimizer = optimizer_type(model.parameters())
+        model = model_type(sequence_len).to(device).half()
+        optimizer = optimizer_type(model.parameters(), eps=1e-04)
         # Split the data for the current fold.
         train_f = 0.8
         valid_f = 0.1 if use_validation else 0.0
@@ -168,15 +179,11 @@ def k_fold_benchmark(model_type: nn,
         train(model, train_dataloader, optimizer, loss_fn, n_epochs,
             valid_dataloader, verbose)
         # Collect performance metric for the current fold.
-        s, p, f, f2 = test(model, test_dataloader)
-        sensitivity.append(s)
-        ppv.append(p)
-        f1.append(f)
-        F.append(f2)
-    return np.mean(sensitivity), np.mean(ppv), np.mean(f1), np.mean(F)
+        f1 += test(model, test_dataloader)
+    return statistics.harmonic_mean(f1)
 
 # Usage
-data = load_data(family)
+data = load_data(families)
 rna_length = len(data[0][0].T)
 
 print(k_fold_benchmark(model, rna_length, data, 5,

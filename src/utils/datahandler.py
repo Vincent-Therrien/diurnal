@@ -1,4 +1,7 @@
+import pathlib
+import os
 import numpy as np
+from random import shuffle
 
 # One-hot encoding dictionary for IUPAC symbols
 # See: https://www.bioinformatics.org/sms/iupac.html
@@ -373,3 +376,33 @@ def k_fold_split(data, fractions: list, k: int, i: int) -> list:
         raise "Invalid K-fold parameters."
     offset = (len(data) / k) * i
     return split_data(data, fractions, offset)
+
+def getDatasetFilesnames(root: str) -> tuple:
+    """
+    """
+    p = pathlib.Path(root)
+    families = {}
+    for file in p.iterdir():
+        if file.is_dir():
+            continue
+        name, extension = os.path.splitext(file)
+        if extension != ".npy":
+            continue
+        name = name.replace("\\", "/") # Use / as the directory separator
+        filename = name.split("/")[-1]
+        family = filename.split("_")[0]
+        if not family in families:
+            families[family] = {}
+        if filename.endswith("_x"):
+            families[family]['x'] = root + '/' + file.name
+        elif filename.endswith("_y"):
+            families[family]['y'] = root + '/' + file.name
+    return families
+
+def shuffle_x_y(x, y) -> tuple:
+    """
+    """
+    tmp = list(zip(x, y))
+    shuffle(tmp)
+    x, y = zip(*tmp)
+    return x, y

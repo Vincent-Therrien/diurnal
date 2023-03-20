@@ -95,8 +95,8 @@ class RNA_CNN_classes(nn.Module):
         self.conv1 = nn.Conv1d(one_hot_dim, width, kernel, padding="same")
         self.conv2 = nn.Conv1d(width, n, kernel, padding="same")
         self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(width * n, n * 3)
-        self.output = nn.Sigmoid()
+        self.fc1 = nn.Linear(n * n, n * 3)
+        self.output = nn.Softmax(2)
 
     def forward(self, x):
         x = self.conv1(x)
