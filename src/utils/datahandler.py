@@ -394,9 +394,9 @@ def getDatasetFilesnames(root: str) -> tuple:
         if not family in families:
             families[family] = {}
         if filename.endswith("_x"):
-            families[family]['x'] = root + '/' + file.name
+            families[family]['x'] = root + file.name
         elif filename.endswith("_y"):
-            families[family]['y'] = root + '/' + file.name
+            families[family]['y'] = root + file.name
     return families
 
 def shuffle_x_y(x, y) -> tuple:

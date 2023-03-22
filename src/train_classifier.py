@@ -4,11 +4,11 @@ import torch.optim as optim
 from torch import nn
 import torch
 from tqdm import tqdm
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, confusion_matrix
 import statistics
 
 import utils.datahandler as utils
-import networks.cnn as cnn
+import networks.mlp as mlp
 
 # Set working directory to the location of the script to retrieve files.
 import os
@@ -17,12 +17,10 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 # Parameters
-#formatted_path = "../data/archiveII-shadows/"
-#model = cnn.RNA_CNN_shadow
 formatted_path = "../data/archiveII-classes/"
 families = utils.getDatasetFilesnames(formatted_path)
-model = cnn.RNA_CNN_classes
-batch_size = 8
+model = mlp.RNA_MLP_classifier
+batch_size = 32
 optimizer = optim.Adam
 loss_fn = nn.MSELoss()
 
@@ -76,24 +74,29 @@ def test(model: nn, dataloader: DataLoader) -> tuple:
         tuple: Performances metric organized as: sensitivity, ppv, f1-score.
     """
     model.eval()
-    f1 = []
+    y_pred = []
+    y_true = []
     with torch.no_grad():
         for x, y in dataloader:
             x, y = x.to(device).half(), y.to(device).half()
             output = model(x)
             for i, j in zip(output, y):
-                y_pred = utils.prediction_to_classes(i.tolist(), j.tolist())
-                y_true = utils.prediction_to_classes(j.tolist(), j.tolist())
-                f1.append(f1_score(y_true, y_pred, average='weighted'))
-                # Debugging
-                if len(f1) == 1:
-                    ref = utils.prediction_to_secondary_structure(j.tolist())
-                    print(f"R: {ref}")
-                    pred = utils.prediction_to_secondary_structure(i.tolist())
-                    print(f"P: {pred[:len(ref)]}")
-                    print(f"F1-score for the predicted structure: {f1[-1]}")
-                    print()
-    return f1
+                pred = i.tolist()
+                y_pred.append(pred.index(max(pred)))
+                true = j.tolist()
+                y_true.append(true.index(max(true)))
+    print(confusion_matrix(y_true, y_pred))
+    print(f1_score(y_true, y_pred, average='weighted'))
+    return f1_score(y_true, y_pred, average='weighted')
+
+def get_family_one_hot(families, family):
+    one_hot = []
+    for f in families:
+        if f == family:
+            one_hot.append(1)
+        else:
+            one_hot.append(0)
+    return one_hot
 
 def load_data(families: str) -> list:
     """
@@ -108,18 +111,23 @@ def load_data(families: str) -> list:
     # Load data.
     x, y = None, None
     for family in families:
+        input = np.load(families[family]['x'])
+        size = len(input)
+        if size < 1:
+            continue
+        # x
         if x is not None:
-            new = np.load(families[family]['x'])
-            if new.shape[0]:
-                x = np.concatenate((x, new))
+            x = np.concatenate((x, input))
         else:
-            x = np.load(families[family]['x'])
+            x = input
+        # y
+        label_value = get_family_one_hot(list(families.keys()), family)
+        print(f"{label_value}    {family}")
+        label = np.array([label_value for _ in range(size)])
         if y is not None:
-            new = np.load(families[family]['y'])
-            if new.shape[0]:
-                y = np.concatenate((y, new))
+            y = np.concatenate((y, label))
         else:
-            y = np.load(families[family]['y'])
+            y = label
     # Format data into tensors.
     if len(x) < 1 or len(y) < 1:
         return []
@@ -193,7 +201,7 @@ def k_fold_benchmark(model_type: nn,
     """
     f1 = []
     for k in range(K):
-        model = model_type(sequence_len).to(device).half()
+        model = model_type(sequence_len, len(families)).to(device).half()
         optimizer = optimizer_type(model.parameters(), eps=1e-04)
         # Split the data for the current fold.
         train_f = 0.8
@@ -211,7 +219,8 @@ def k_fold_benchmark(model_type: nn,
         train(model, train_dataloader, optimizer, loss_fn, n_epochs,
             valid_dataloader, verbose)
         # Collect performance metric for the current fold.
-        f1 += test(model, test_dataloader)
+        f1.append(test(model, test_dataloader))
+    print(f1)
     return statistics.harmonic_mean(f1)
 
 def inter_family_benchmark(model_type: nn,
@@ -243,24 +252,8 @@ def inter_family_benchmark(model_type: nn,
         del model
 
 # Usage
-inter_family_benchmark(model, families, loss_fn, optimizer, 5)
-exit()
-
 data = load_data(families)
 rna_length = len(data[0][0].T)
 
 print(k_fold_benchmark(model, rna_length, data, 5,
-    loss_fn, optimizer, n_epochs=5, use_validation=False, verbose=1))
-
-"""
-F1-score with family 16s (67 samples): 0.4274904819443681
-F1-score with family 23s (15 samples): 0.42571868133414276
-F1-score with family 5s (1283 samples): 0.46542208054459
-F1-score with family grp1 (74 samples): 0.4046830391814072
-Family grp2 is empty. Cannot test.
-F1-score with family RNaseP (454 samples): 0.41030305339320533
-F1-score with family srp (918 samples): 0.4373253793615782
-F1-score with family telomerase (35 samples): 0.42221828099033387
-F1-score with family tmRNA (462 samples): 0.41678871678540724
-F1-score with family tRNA (557 samples): 0.4857507636848714
-"""
+    loss_fn, optimizer, n_epochs=15, use_validation=False, verbose=1))

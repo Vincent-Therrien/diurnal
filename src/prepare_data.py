@@ -21,21 +21,21 @@ dataset_path = "../data/archiveII/"
 
 output_path = "../data/archiveII-classes/"
 code = [[0, 1, 0], [0, 0, 1], [1, 0, 0], [0, 0, 0]]
-size = 256
+size = 512
 
 def format_family(filenames: str, max_size: int) -> tuple:
     X = []
     Y = []
-    n_rejected = 0
+    names = []
     for filename in filenames:
         x, y = datahandler.get_rna_x_y(filename, max_size, code)
         if not x or not y:
-            n_rejected += 1
             continue
         X.append(x)
         Y.append(y)
+        names.append(filename.split('/')[-1])
     return (np.asarray(X, dtype=np.float32),
-            np.asarray(Y, dtype=np.float32), n_rejected)
+            np.asarray(Y, dtype=np.float32), names)
 
 def format_archiveii(input: str, max_size: int) -> None:
     # Fetch all file names
@@ -58,13 +58,16 @@ def format_archiveii(input: str, max_size: int) -> None:
     
     # Convert the file content to arrays and write them to files.
     for family in families:
-        x, y, n_rejected = format_family(families[family], max_size)
+        x, y, names = format_family(families[family], max_size)
+        if len(names) < 1:
+            print(f"Family {family} ({len(families[family])} samples) excluded.")
+            continue
         base_name = output_path + family + "_"
         np.save(base_name + "x", x)
         np.save(base_name + "y", y)
-        names = [f.split("/")[-1] for f in families[family]]
         with open(base_name + "names.txt", "w") as outfile:
             outfile.write("\n".join(names))
+        n_rejected = len(families[family]) - len(names)
         print(f"Wrote family {family} in files. " +
               f"{len(y)} files included. {n_rejected} files excluded.")
 
