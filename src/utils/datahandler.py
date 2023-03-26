@@ -406,3 +406,11 @@ def shuffle_x_y(x, y) -> tuple:
     shuffle(tmp)
     x, y = zip(*tmp)
     return x, y
+
+def shuffle_x_y_f(x, y, f) -> tuple:
+    """
+    """
+    tmp = list(zip(x, y, f))
+    shuffle(tmp)
+    x, y, f = zip(*tmp)
+    return x, y, f

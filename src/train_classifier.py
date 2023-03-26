@@ -85,6 +85,9 @@ def test(model: nn, dataloader: DataLoader) -> tuple:
                 y_pred.append(pred.index(max(pred)))
                 true = j.tolist()
                 y_true.append(true.index(max(true)))
+                if len(y_pred) == 1:
+                    print(f"P: {pred}: {pred.index(max(pred))}")
+                    print(f"R: {true}: {true.index(max(true))}")
     print(confusion_matrix(y_true, y_pred))
     print(f1_score(y_true, y_pred, average='weighted'))
     return f1_score(y_true, y_pred, average='weighted')
@@ -220,6 +223,8 @@ def k_fold_benchmark(model_type: nn,
             valid_dataloader, verbose)
         # Collect performance metric for the current fold.
         f1.append(test(model, test_dataloader))
+        del model
+        del optimizer
     print(f1)
     return statistics.harmonic_mean(f1)
 
@@ -256,4 +261,4 @@ data = load_data(families)
 rna_length = len(data[0][0].T)
 
 print(k_fold_benchmark(model, rna_length, data, 5,
-    loss_fn, optimizer, n_epochs=15, use_validation=False, verbose=1))
+    loss_fn, optimizer, n_epochs=40, use_validation=False, verbose=1))
