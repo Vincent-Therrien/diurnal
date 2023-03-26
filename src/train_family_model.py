@@ -133,6 +133,7 @@ def k_fold_benchmark(
             for sensitivity, ppv, and f1-score.
     """
     f1 = []
+    rna_length = len(data[0][0].T)
     for k in range(K):
         # Split the data for the current fold.
         train_f = 0.8
@@ -148,8 +149,11 @@ def k_fold_benchmark(
         test_dataloader = DataLoader(test_data, batch_size=batch_size)
         # Training and testing
         model = SimilarityModel(rna_length, n_families, device)
-        model.train(train_dataloader, test_dataloader, n_epochs)
-        f1 += model.test(test_dataloader)
+        model.train(train_dataloader, n_epochs)
+        f1_tmp = model.test(test_dataloader)
+        if verbose:
+            print(f"K={k}: {np.mean(f1_tmp)}")
+        f1 += f1_tmp
     return statistics.harmonic_mean(f1)
 
 def inter_family_benchmark(
@@ -175,9 +179,6 @@ def inter_family_benchmark(
         print(f"F1-score with family {family} ({n_samples} samples): {f1}")
 
 # Usage
-inter_family_benchmark(families, 5)
-exit()
-
+#inter_family_benchmark(families, 10)
 data = load_data(families)
-rna_length = len(data[0][0].T)
-
+print(k_fold_benchmark(data, 5, 10, len(families), False))

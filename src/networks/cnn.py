@@ -1,4 +1,5 @@
-from torch import nn, reshape
+import torch
+from torch import nn, reshape, cat
 import torch.nn.functional as F
 
 class RNA_CNN_shadow(nn.Module):
@@ -131,10 +132,13 @@ class RNA_CNN_family_aware(nn.Module):
         one_hot_dim = 4
         kernel = 3
         self.n = n
+        self.m = 1
         self.conv1 = nn.Conv1d(one_hot_dim, width, kernel, padding="same")
         self.conv2 = nn.Conv1d(width, n, kernel, padding="same")
         self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(n * n, n * 3)
+        self.fc1 = nn.Linear(width * n, n * self.m)
+        self.conv3 = nn.Conv1d(n * self.m, n * (n_families + 1) * self.m, kernel, padding="same")
+        self.fc2 = nn.Linear(n * (n_families + 1) * self.m * (n_families + 1), n * 3)
         self.output = nn.Softmax(2)
 
     def forward(self, x, family):
@@ -144,8 +148,18 @@ class RNA_CNN_family_aware(nn.Module):
         x = self.conv2(x)
         x = F.relu(x)
         x = self.flatten(x)
-        # Inject the family into the transformed input.
         x = self.fc1(x)
+        # Inject the family into the transformed input.
+        f = family.repeat(1, self.n * self.m)
+        f = reshape(f, (f.shape[0], self.n * self.m, self.n_families))
+        x = reshape(x, (x.shape[0], self.n * self.m, 1))
+        x = cat((x, f), 2)
+        x = F.relu(x)
+        x = self.conv3(x)
+        x = F.relu(x)
+        x = self.flatten(x)
+        x = self.fc2(x)
+        # Format output
         x = reshape(x, (x.shape[0], self.n, 3))
         x = self.output(x)
         return x
