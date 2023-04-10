@@ -7,7 +7,7 @@ ATTFold: https://www.frontiersin.org/articles/10.3389/fgene.2020.612086/full#B17
 
 UFold: https://academic.oup.com/nar/article/50/3/e14/6430845
 
-MXFols2: https://www.nature.com/articles/s41467-021-21194-4
+MXFolx2: https://www.nature.com/articles/s41467-021-21194-4
 
 CDPFold: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6540740/
 

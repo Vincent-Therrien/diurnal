@@ -211,7 +211,10 @@ def k_fold_benchmark(model_type: nn,
         train(model, train_dataloader, optimizer, loss_fn, n_epochs,
             valid_dataloader, verbose)
         # Collect performance metric for the current fold.
-        f1 += test(model, test_dataloader)
+        f1_tmp = test(model, test_dataloader)
+        if verbose:
+            print(f"K={k}: {np.mean(f1_tmp)}")
+        f1 += f1_tmp
     return statistics.harmonic_mean(f1)
 
 def inter_family_benchmark(model_type: nn,
@@ -243,9 +246,6 @@ def inter_family_benchmark(model_type: nn,
         del model
 
 # Usage
-inter_family_benchmark(model, families, loss_fn, optimizer, 5)
-exit()
-
 data = load_data(families)
 rna_length = len(data[0][0].T)
 
@@ -253,6 +253,7 @@ print(k_fold_benchmark(model, rna_length, data, 5,
     loss_fn, optimizer, n_epochs=5, use_validation=False, verbose=1))
 
 """
+Inter-family testing
 F1-score with family 16s (67 samples): 0.4274904819443681
 F1-score with family 23s (15 samples): 0.42571868133414276
 F1-score with family 5s (1283 samples): 0.46542208054459
@@ -263,4 +264,12 @@ F1-score with family srp (918 samples): 0.4373253793615782
 F1-score with family telomerase (35 samples): 0.42221828099033387
 F1-score with family tmRNA (462 samples): 0.41678871678540724
 F1-score with family tRNA (557 samples): 0.4857507636848714
+
+Omni-family testing
+K=0: 0.8933596157291852
+K=1: 0.8909089869833738
+K=2: 0.8769196932433203
+K=3: 0.8825623680353792
+K=4: 0.9083502525299767
+Harmonic mean: 0.8436663994854746
 """

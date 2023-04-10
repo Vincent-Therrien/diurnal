@@ -142,6 +142,10 @@ class RNA_CNN_family_aware(nn.Module):
         self.output = nn.Softmax(2)
 
     def forward(self, x, family):
+        """
+        x: [[0, 1, 0, 0], ...]      2 X 512
+        family: [0, 0, 0, 1, 0, 0]  1 X 512
+        """
         # Use convolution to transform the input.
         x = self.conv1(x)
         x = F.relu(x)
