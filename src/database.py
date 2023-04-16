@@ -15,14 +15,12 @@
             from diurnal.encoding import SecondaryStructure as s2
             
             diurnal.database.download_all("./data/")
-            diurnal.database.summarize("./data/")
             diurnal.database.format(
-                "./data/", # Directory of the raw data to format.
-                s1.IUPAC_ONEHOT, # RNA encoding scheme.
-                s2.DOT_BRACKET_ONEHOT, # RNA encoding scheme.
-                "./data/formatted" # Formatted data output directory.
+                "./data/", # Raw data input directory.
+                "./data/formatted", # Formatted data output directory.
+                s1.iupac_onehot, # RNA encoding scheme.
+                s2.bracket_onehot, # RNA encoding scheme.
             )
-            diurnal.database.summarize("./data/formatted")
             diurnal.database.visualize("./data/formatted")
 
     Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
@@ -35,6 +33,7 @@ import os
 import pathlib
 import numpy as np
 import inspect
+from datetime import datetime
 
 from .utils import file_io
 
@@ -288,7 +287,7 @@ def format(src: str,
         file_io.log(f"Encoded {i} files. Rejected {r} files.", 1)
     # Write the encoded file content into Numpy files.
     if X:
-        if verbosity: file_io.log("Writing primary structures.", 1)
+        if verbosity: file_io.log(f"Writing primary structures.", 1)
         np.save(dst + "primary_structures", np.asarray(X, dtype=np.float32))
     if Y:
         if verbosity: file_io.log("Writing secondary structures.", 1)
@@ -298,13 +297,79 @@ def format(src: str,
         np.save(dst + "families", np.asarray(F, dtype=np.float32))
     if names:
         if verbosity: file_io.log("Writing names.", 1)
-        with open(dst+"names.txt", "w") as outfile:
+        with open(dst + "names.txt", "w") as outfile:
             outfile.write("\n".join(names))
+    # Write an informative file to sum up the content of the formatted folder.
+    with open(dst + "info.rst", "w") as outfile:
+        outfile.write(summarize(dst, primary_structure_map,
+                                secondary_structure_map, family_map))
 
-def summarize(path: str):
+def summarize(path: str,
+              primary_structure_map,
+              secondary_structure_map,
+              family_map) -> str:
     """
+    Summarize the content of the formatted file directory.
+
+    Args:
+        path (str): File path of the formatted data.
+    
+    Returns (str): Informative file containing:
+        - Title
+        - Generation date and time
+        - Number of structures
+        - Structure size (number of nucleotides)
+        - Primary structure encoding example
+        - Secondary structure encoding example
+        - Family encoding example
     """
-    pass
+    content =  "[> DIURNAL] RNA Database File Formatting\n"
+    content += "========================================\n\n"
+    content += f"Generation timestamp: {datetime.utcnow()} UTC\n\n"
+    X = np.load(path + "primary_structures.npy")
+    content += f"Number of structures: {X.shape[0]}\n\n\n"
+    if X.any():
+        content += "Primary Structure Encoding\n"
+        content += "--------------------------\n\n"
+        content += f"File: `{path + 'primary_structures.npy'}`\n\n"
+        content += f"Shape: {X.shape}\n\n"
+        content += "Encoding:\n"
+        example = "ACGU-"
+        code = _encode_primary_structure(example, 0, primary_structure_map)
+        for i in range(len(example)):
+            content += f"    {example[i]} -> {code[i]}\n"
+        content += "\nExample:\n"
+        content += str(X[0])
+        content += "\n\n\n"
+    Y = np.load(path + "secondary_structures.npy")
+    if Y.any():
+        content += "Secondary Structure Encoding\n"
+        content += "----------------------------\n\n"
+        content += f"File: `{path + 'secondary_structures.npy'}`\n\n"
+        content += f"Shape: {Y.shape}\n\n"
+        content += "Encoding:\n"
+        example = [2, -1, 0] # Corresponds to `(.)` in bracket notation.
+        code =_encode_secondary_structure(example,4,secondary_structure_map)
+        for i in range(len(example)):
+            content += f"    {example[i]} -> {code[i]}\n"
+        content += "\nExample:\n"
+        content += str(Y[0])
+        content += "\n\n\n"
+    F = np.load(path + "families.npy")
+    if F.any():
+        content += "Family Encoding\n"
+        content += "---------------\n\n"
+        content += f"File: `{path + 'families.npy'}`\n\n"
+        content += f"Shape: {F.shape}\n\n"
+        content += "Encoding:\n"
+        example = "5s"
+        for family in FAMILIES:
+            content+=f"    {family[0]} -> {_encode_family(example, family_map)}"
+            content += "\n"
+        content += "\nExample: \n"
+        content += str(F[0])
+        content += "\n"
+    return content
 
 def visualize(path: str):
     """
