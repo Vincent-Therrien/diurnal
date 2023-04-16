@@ -32,17 +32,130 @@ class PrimaryStructure:
         "-": [0, 0, 0, 0],
     }
 
+    def iupac_onehot(bases: list, size: int):
+        """
+        Convert pairings returned by `diurnal.utils.read_ct_file` into
+        a secondary structure, e.g. `[[1,0,0,0], [0,1,0,0]]`.
+        
+        Args:
+            bases (list(str)): A list of nucleotide pairings.
+            size (int): Output size. `0` for no padding.
+        
+        Returns (list(list(int))): One-hot encoded primary structure.
+        """
+        encoding = [PrimaryStructure.IUPAC_ONEHOT[base] for base in bases]
+        if len(bases) < size:
+            for _ in range(size - len(bases)):
+                encoding.append(PrimaryStructure.IUPAC_ONEHOT['.'])
+        return encoding
+
 class SecondaryStructure:
     # One-hot encoding dictionary for secondary structure bracket notation.
-    DOT_BRACKET_ONEHOT = {
+    BRACKET_ONEHOT = {
         "(": [1, 0, 0],
         ".": [0, 1, 0],
         ")": [0, 0, 1],
         " ": [0, 0, 0],
     }
 
+    SHADOW_ENCODING = {
+        "(" : 1,
+        "." : 0,
+        ")" : 1,
+        " " : 0
+    }
+
+    def bracket(pairings: list, size: int):
+        """
+        Convert pairings returned by `diurnal.utils.read_ct_file` into
+        a bracket notation, e.g. `(((...)))`.
+        
+        Args:
+            pairings (list(int)): A list of nucleotide pairings.
+            size (int): Output size. `0` for no padding.
+        
+        Returns (str): Secondary structure bracket notation.
+        """
+        encoding = ""
+        for i, p in enumerate(pairings):
+            if p < 0:
+                encoding += '.'
+            elif i < p:
+                encoding += '('
+            else:
+                encoding += ')'
+        if len(pairings) < size:
+            encoding += ' ' * (size - len(pairings))
+        return encoding
+    
+    def shadow(pairings: list, size: int):
+        """
+        Convert pairings returned by `diurnal.utils.read_ct_file` into
+        a secondary structure, e.g. `111000111`.
+        
+        Args:
+            pairings (list(int)): A list of nucleotide pairings.
+            size (int): Output size. `0` for no padding.
+        
+        Returns (str): Secondary structure shadow.
+        """
+        encoding = []
+        for p in pairings:
+            if p < 0:
+                encoding.append(SecondaryStructure.SHADOW_ENCODING['.'])
+            else:
+                encoding.append(SecondaryStructure.SHADOW_ENCODING['('])
+        if len(pairings) < size:
+            for _ in range(size - len(pairings)):
+                encoding.append(SecondaryStructure.SHADOW_ENCODING[' '])
+        return encoding
+    
+    def bracket_onehot(pairings: list, size: int):
+        """
+        Convert pairings returned by `diurnal.utils.read_ct_file` into
+        a secondary structure, e.g. `[[1,0,0], [0,1,0], [0,0,1]]`.
+        
+        Args:
+            pairings (list(int)): A list of nucleotide pairings.
+            size (int): Output size. `0` for no padding.
+        
+        Returns (list(list(int))): One-hot encoded secondary structure.
+        """
+        encoding = []
+        for i, p in enumerate(pairings):
+            if p < 0:
+                encoding.append(SecondaryStructure.BRACKET_ONEHOT['.'])
+            elif i < p:
+                encoding.append(SecondaryStructure.BRACKET_ONEHOT['('])
+            else:
+                encoding.append(SecondaryStructure.BRACKET_ONEHOT[')'])
+        if len(pairings) < size:
+            for _ in range(size - len(pairings)):
+                encoding.append(SecondaryStructure.BRACKET_ONEHOT[' '])
+        return encoding
+
 class Family:
     # One-hot encoding for RNA families.
-    FAMILY_ONEHOT = {
-        #
+    ONEHOT = {
+        "5s"         : [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        "16s"        : [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        "23s"        : [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+        "grp1"       : [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        "grp2"       : [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+        "RNaseP"     : [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+        "SRP"        : [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+        "telomerase" : [0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+        "tmRNA"      : [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+        "tRNA"       : [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
     }
+
+    def onehot(family: str):
+        """
+        Encode a family into a vector.
+        
+        Args:
+            family (str): RNA family.
+        
+            Returns (list(int)): One-hot encoded family.
+        """
+        return Family.ONEHOT[family]

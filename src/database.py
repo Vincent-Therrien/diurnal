@@ -33,7 +33,8 @@
 
 import os
 import pathlib
-import shutil
+import numpy as np
+import inspect
 
 from .utils import file_io
 
@@ -45,11 +46,11 @@ ALLOWED_DATASETS = [
     "RNASTRalign"
 ]
 FAMILIES = [
-    ["5s"], # 5s ribosomal RNA (rRNA)
+    ["5s"],  # 5s ribosomal RNA (rRNA)
     ["16s"], # 16s ribosomal RNA (rRNA)
-    ["23s"],
-    ["group_I_introns", "grp1"],
-    ["group_II_introns", "grp2"],
+    ["23s"], # 23s ribosomal RNA (rRNA)
+    ["grp1", "group_I_introns"],
+    ["grp2", "group_II_introns"],
     ["RNaseP"],
     ["SRP"],
     ["telomerase"],
@@ -127,7 +128,7 @@ def get_rna_family(path: str) -> str:
     for family in FAMILIES:
         for alias in family:
             if alias.upper() in path.upper():
-                candidates.append(family)
+                candidates.append(family[0])
                 break
     if not candidates:
         file_io.log(f"Unknown family for `{path}`.", -1)
@@ -141,53 +142,60 @@ def get_rna_family(path: str) -> str:
             c[path.upper().find(candidate.upper())] = candidate
         return c[max(c.keys())]
 
-def _encode_primary_structure(bases: list,
-        pairings: list,
-        target_size: int,
-        map) -> tuple:
+def _encode_primary_structure(bases: list, target_size: int, map) -> tuple:
     """
     Encode a primary structure into a matrix.
 
     Args:
         bases list(str): List of nucleotides (i.e. 'A', 'C', 'G', 'U').
-        pairings list(int): Paired nucleotide index, -1 is unpaired.
         target_size (int): Size of the encoded structure. Padding is
             determined by the `map` argument.
-        map: A dictionary or function that maps a base pair to a value.
-            - Dictionaries must be of the form: {'base': element}.
-            - Functions must be of the form: def map(base) -> element.
+        map: A function that maps a base pair to a value.
     """
-    pass
+    if inspect.isfunction(map):
+        return map(bases, target_size)
+    else:
+        message = (f"Type `{type(map)}` is not allowed for primary "
+            + " structure encoding. Use a mapping function instead, "
+            + "e.g. `diurnal.encoding.PrimaryStructure.iupac_onehot(bases)`.")
+        file_io.log(message, -1)
+        raise RuntimeError
 
-def _encode_secondary_structure(bases: list,
-        pairings: list,
-        target_size: int,
-        map) -> tuple:
+def _encode_secondary_structure(pairings: list, target_size: int, map) -> tuple:
     """
     Encode a secondary structure into a matrix.
 
     Args:
-        bases list(str): List of nucleotides (i.e. 'A', 'C', 'G', 'U').
         pairings list(int): Paired nucleotide index, -1 is unpaired.
         target_size (int): Size of the encoded structure. Padding is
             determined by the `map` argument.
-        map: A dictionary or function that maps a base pair to a value.
-            - Dictionaries must be of the form: {'base': element}.
-            - Functions must be of the form: def map(base) -> element.
+        map: A function that maps a base pair to a value.
     """
-    pass
+    if inspect.isfunction(map):
+        return map(pairings, target_size)
+    else:
+        message = (f"Type `{type(map)}` is not allowed for secondary "
+            + " structure encoding. Use a mapping function instead, "
+            + "e.g. `diurnal.encoding.PrimaryStructure.iupac_onehot(bases)`.")
+        file_io.log(message, -1)
+        raise RuntimeError
 
-def _encode_family(path: str, map) -> tuple:
+def _encode_family(family: str, map) -> tuple:
     """
     Encode an RNA family into a matrix.
 
     Args:
-        path (str): Name of the file from which data were retrieved.
-        map: A dictionary or function that maps a family to a value.
-            - Dictionaries must be of the form: {'family': element}.
-            - Functions must be of the form: def map(base) -> element.
+        family (str): Family name.
+        map: A function that maps a family to a value.
     """
-    pass
+    if inspect.isfunction(map):
+        return map(family)
+    else:
+        message = (f"Type `{type(map)}` is not allowed for family encoding. "
+            + "Use a mapping function instead, "
+            + "e.g. `diurnal.encoding.Family.onehot(bases)`.")
+        file_io.log(message, -1)
+        raise RuntimeError
 
 def format(src: str,
           dst: str,
@@ -237,6 +245,7 @@ def format(src: str,
     """
     if verbosity: file_io.log("Encode RNA data into Numpy files.")
     # Create the directory if it des not exist.
+    if dst[-1] != '/': dst += '/'
     if not os.path.exists(dst):
         os.makedirs(dst)
     # Obtain the list of files to read.
@@ -244,11 +253,11 @@ def format(src: str,
     for path in pathlib.Path(src).rglob('*.ct'):
         paths.append(path)
     # Encode the content of each file.
-    primary_structure = []
-    secondary_structure = []
-    families = []
-    names = []
-    rejected_names = []
+    names = [] # RNA molecule names included in the dataset.
+    rejected_names = [] # RNA molecule names excluded from the dataset.
+    X = [] # Primary structure
+    Y = [] # Secondary structure
+    F = [] # Family
     for i, path in enumerate(paths):
         # Read the file.
         _, bases, pairings = file_io.read_ct_file(str(path))
@@ -256,14 +265,18 @@ def format(src: str,
         # Add the file to the dataset or not depending on its size.
         if len(bases) > max_size:
             rejected_names.append(str(path))
+            continue
         else:
             names.append(str(path))
         # Encode the data.
-        primary_structure.append(_encode_primary_structure(
-            bases, pairings, max_size, primary_structure_map))
-        secondary_structure.append(_encode_secondary_structure(
-            bases, pairings, max_size, secondary_structure_map))
-        families.append(_encode_family(family, family_map))
+        if primary_structure_map:
+            X.append(_encode_primary_structure(bases, max_size,
+                                               primary_structure_map))
+        if secondary_structure_map:
+            Y.append(_encode_secondary_structure(pairings, max_size,
+                                                 secondary_structure_map))
+        if family_map:
+            F.append(_encode_family(family, family_map))
         if verbosity:
             prefix = f"    Encoding {len(paths)} files "
             suffix = f" {path.name}"
@@ -274,6 +287,19 @@ def format(src: str,
         r = len(rejected_names)
         file_io.log(f"Encoded {i} files. Rejected {r} files.", 1)
     # Write the encoded file content into Numpy files.
+    if X:
+        if verbosity: file_io.log("Writing primary structures.", 1)
+        np.save(dst + "primary_structures", np.asarray(X, dtype=np.float32))
+    if Y:
+        if verbosity: file_io.log("Writing secondary structures.", 1)
+        np.save(dst + "secondary_structures", np.asarray(Y, dtype=np.float32))
+    if F:
+        if verbosity: file_io.log("Writing families.", 1)
+        np.save(dst + "families", np.asarray(F, dtype=np.float32))
+    if names:
+        if verbosity: file_io.log("Writing names.", 1)
+        with open(dst+"names.txt", "w") as outfile:
+            outfile.write("\n".join(names))
 
 def summarize(path: str):
     """
