@@ -32,6 +32,8 @@
 """
 
 import os
+import pathlib
+import shutil
 
 from .utils import file_io
 
@@ -98,13 +100,47 @@ def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     """
     download(dst, ALLOWED_DATASETS, cleanup, verbosity)
 
-def format_dataset(src: str,
-                   dst: str,
-                   max_size: int,
-                   primary_structure_encoding,
-                   secondary_structure_encoding,
-                   family_encoding=None,
-                   verbosity: int=1) -> None:
+def _encode_primary_structure(bases: list,
+        pairings: list,
+        path: str,
+        map) -> tuple:
+    """
+    Encode a primary structure into a matrix.
+
+    Args:
+        bases list(str): List of nucleotides (i.e. 'A', 'C', 'G', 'U').
+        pairings list(int): Paired nucleotide index, -1 is unpaired.
+        path (str): Name of the file from which data were retrieved.
+        map: A dictionary or function that maps a base pair to a value.
+            - Dictionaries must be of the form: {'base': element}.
+            - Function must be of the form: def map(base) -> element.
+    """
+    pass
+
+def _encode_secondary_structure(bases: list,
+        pairings: list,
+        path: str,
+        map) -> tuple:
+    """
+    Encode a primary structure into a matrix.
+
+    Args:
+        bases list(str): List of nucleotides (i.e. 'A', 'C', 'G', 'U').
+        pairings list(int): Paired nucleotide index, -1 is unpaired.
+        path (str): Name of the file from which data were retrieved.
+        map: A dictionary or function that maps a base pair to a value.
+            - Dictionaries must be of the form: {'base': element}.
+            - Function must be of the form: def map(base) -> element.
+    """
+    pass
+
+def format(src: str,
+          dst: str,
+          max_size: int,
+          primary_structure_map,
+          secondary_structure_map,
+          family_map=None,
+          verbosity: int=1) -> None:
     """
     Transform the original datasets into the representation provided by
     the arguments.
@@ -117,31 +153,60 @@ def format_dataset(src: str,
 
     The function writes four files:
     - `info.rst` describes the data.
-    - `x.np` contains the encoded primary structures of the molecules.
-    - `y.np` contains the encoded secondary structures of the molecules.
-    - `family.np` contains the encoded family of the molecules.
-    - `name.txt` contains the newline-delimited names of the molecules.
+    - `primary_structure.np` contains the encoded primary structures of
+        the molecules.
+    - `secondary_structure.np` contains the encoded secondary structures
+        of the molecules.
+    - `families.np` contains the encoded family of the molecules.
+    - `names.txt` contains the newline-delimited names of the molecules.
 
     Args:
-        src (str): The directory in which RNA datasets are located.
+        src (str): The directory in which RNA datasets are located. The
+            function searches for RNA files recursively.
         dst (str): The directory in which the encoded RNA structures
-            are written.
+            are written. If the directory does not exist, it is created.
         max_size (int): Maximal number of nucleotides in an RNA
             structure. If an RNA structure has more nucleotides than
             `max_size`, it is not included in the formatted dataset.
-        primary_structure_encoding: A dictionary or function that maps
+        primary_structure_map: A dictionary or function that maps
             an RNA primary structure symbol to a vector (e.g. map A to
             [1, 0, 0, 0]). If None, the file `x.np` is not written.
-        secondary_structure_encoding: A dictionary or function that maps
+        secondary_structure_map: A dictionary or function that maps
             an RNA secondary structure symbol to a vector (e.g. map '.'
             to [0, 1, 0]). If None, the file `y.np` is not written.
-        family_encoding: A dictionary or function that maps an RNA
+        family_map: A dictionary or function that maps an RNA
             family name (e.g. '5s') to a vector (e.g. '[1, 0, 0]).
             If None, the file `family.np` is not written.
         verbosity (int): Verbosity level of the function. 1 (default)
             prints informative messages. 0 silences the function.
     """
-    pass
+    if verbosity: print("[> DIURNAL]: Encode RNA data into Numpy files.")
+    # Create the directory if it des not exist.
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+    # Obtain the list of files to read.
+    paths = []
+    for path in pathlib.Path(src).rglob('*.ct'):
+        paths.append(path)
+    # Encode the content of each file.
+    primary_structure = []
+    secondary_structure = []
+    families = []
+    names = []
+    for i, path in enumerate(paths):
+        _, bases, pairings = file_io.read_ct_file(str(path))
+        primary_structure.append(_encode_primary_structure(
+            bases, pairings, str(path), primary_structure_map))
+        secondary_structure.append(_encode_secondary_structure(
+            bases, pairings, str(path), secondary_structure_map))
+        if verbosity:
+            prefix = f"    Encoding {len(paths)} files "
+            suffix = f" {path.name}"
+            file_io.progress_bar(len(paths), i, prefix, suffix)
+
+    # Write the encoded file content into Numpy files.
+
+    if verbosity: print()
 
 def summarize(path: str):
     """

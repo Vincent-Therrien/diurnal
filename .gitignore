@@ -1,5 +1,7 @@
 draw_rna/
-data/
+data/archiveII/
+data/RNASTRalign/
+data/*.tar.gz
 .vscode/
 
 # Byte-compiled / optimized / DLL files

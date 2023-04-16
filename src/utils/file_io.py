@@ -12,6 +12,24 @@ import tarfile
 import requests
 import os
 
+def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
+    """
+    Print a progress bar in the standard output.
+
+    Args:
+        N (int): Total number of elements to process.
+        n (int): Number of elements that have been processed.
+        prefix (str): A text to display before the progress bar.
+        suffix (str): A text to display after the progress bar.
+    """
+    if n == N - 1:
+        done = 50
+    else:
+        done = int(50 * n / N)
+    bar = f"[{'=' * done}{' ' * (50-done)}]"
+    sys.stdout.write('\r' + prefix + bar + suffix)
+    sys.stdout.flush()
+
 def download(url: str, dst: str, verbosity: int, name: str="") -> None:
     """
     Download a file through HTTPS.
@@ -21,7 +39,7 @@ def download(url: str, dst: str, verbosity: int, name: str="") -> None:
         dst (str): File path of the downloaded content.
         verbosity (int): Verbosity level of the function. `0` silences
             the function. `1` prints a loading bar.
-        name (str): Name of the downloaded file.
+        name (str): Name of the downloaded file - used for logging.
     """
     if verbosity > 1:
         print(f"Downloading the file `{url}` in `{dst}`.")
@@ -37,11 +55,7 @@ def download(url: str, dst: str, verbosity: int, name: str="") -> None:
                 dl += len(data)
                 f.write(data)
                 if verbosity:
-                    done = int(50 * dl / total_length)
-                    prefix = f"    Downloading   {name} "
-                    bar = f"[{'=' * done}{' ' * (50-done)}]"
-                    sys.stdout.write('\r' + prefix + bar)
-                    sys.stdout.flush()
+                    progress_bar(total_length, dl, f"    Downloading   {name} ")
     if verbosity:
         print()
 
@@ -55,22 +69,73 @@ def decompress(filename: str, mode: str, dst: str,
         mode (str): Decompression mode (e.g. `r:gz`).
         dst (str): Output directory.
         verbosity (int): Verbosity level. `0` silences the function.
-        name (str): 
+        name (str): Decompressed file name - used for logging.
     """
     tar = tarfile.open(filename, mode=mode)
     if verbosity:
         members = tar.getmembers()
         for i, member in enumerate(members):
             tar.extract(member, path=dst)
-            prefix = f"    Decompressing {name} "
-            if i == len(members) - 1:
-                done = 50
-            else:
-                done = int(50 * i / len(members))
-            bar = f"[{'=' * done}{' ' * (50-done)}]"
-            sys.stdout.write('\r' + prefix + bar)
-            sys.stdout.flush()
-        print()
+            if verbosity:
+                progress_bar(len(members), i, f"    Decompressing {name} ")
     else:
         tar.extractall(dst)
     tar.close()
+    if verbosity:
+        print()
+
+def read_ct_file(path: str) -> tuple:
+    """
+    Read a CT (Connect table) file and return its information.
+
+    Args:
+        path (str): File path of the CT file.
+
+    Returns (tuple):
+        The returned tuple contains the following data:
+        - RNA molecule title.
+        - Primary structure (i.e. a list of 'A', 'C', 'G', and 'U').
+        - Pairings (i.e. a list of integers indicating the index of the
+            paired based, with `-1` indicating unpaired bases).
+    """
+    bases = []
+    pairings = []
+    with open(path) as f:
+        header = f.readline()
+        if header[0] == ">":
+            length = int(header.split()[2])
+        else:
+            length = int(header.split()[0])
+
+        title = " ".join(header.split()[1:])
+        f.seek(0)
+
+        for i, line in enumerate(f):
+            # deal w/ header for nth structure
+            if i == 0:
+                if header[0] == ">":
+                    length = int(line.split()[2])
+                else:
+                    length = int(header.split()[0])
+
+                title = " ".join(line.split()[1:])
+                continue
+
+            bn, b, _, _, p, _ = line.split()
+
+            if int(bn) != i:
+                raise NotImplementedError(
+                    "Skipping indices in CT files is not supported."
+                )
+
+            bases.append(b)
+            pairings.append(int(p) - 1)
+
+            if i == length:
+                break
+
+    # this shouldn't really ever happen, probs unnecessary check
+    if length != len(bases) and length != len(pairings):
+        raise RuntimeError("Length of parsed RNA does not match expected length.")
+
+    return title, bases, pairings
