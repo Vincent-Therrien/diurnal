@@ -40,7 +40,22 @@ from .utils import file_io
 # Constant values.
 URL_PREFIX ="https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/"
 FILE_ENDING = ".tar.gz"
-ALLOWED_DATASETS = ["archiveII", "RNASTRalign"]
+ALLOWED_DATASETS = [
+    "archiveII",
+    "RNASTRalign"
+]
+FAMILIES = [
+    ["5s"], # 5s ribosomal RNA (rRNA)
+    ["16s"], # 16s ribosomal RNA (rRNA)
+    ["23s"],
+    ["group_I_introns", "grp1"],
+    ["group_II_introns", "grp2"],
+    ["RNaseP"],
+    ["SRP"],
+    ["telomerase"],
+    ["tmRNA"],
+    ["tRNA"]
+]
 
 # Installation functions.
 def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
@@ -62,7 +77,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         verbosity (int): Verbosity of the function. 1 (default) prints
             informative messages. 0 silences the function.
     """
-    if verbosity: print("[> DIURNAL]: Download and install an RNA database.")
+    if verbosity: file_io.log("Download and install an RNA database.")
     if dst[-1] != '/':
         dst += '/'
     # Data validation.
@@ -70,8 +85,8 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         datasets = [datasets]
     for dataset in datasets:
         if dataset not in ALLOWED_DATASETS:
-            print(f"    The dataset `{dataset}` is not allowed. ", end="")
-            print(f"Allowed databases are {ALLOWED_DATASETS}.")
+            file_io.log(f"The dataset `{dataset}` is not allowed. "
+                + f"Allowed databases are {ALLOWED_DATASETS}.")
             raise FileNotFoundError
     # Data obtention.
     for dataset in datasets:
@@ -82,8 +97,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         if cleanup:
             os.remove(file_name)
         if verbosity:
-            print(f"    Files installed in the directory `{dst + dataset}`.")
-            print()
+            file_io.log(f"Files installed in the directory `{dst + dataset}`.")
 
 def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     """
@@ -100,9 +114,36 @@ def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     """
     download(dst, ALLOWED_DATASETS, cleanup, verbosity)
 
+def get_rna_family(path: str) -> str:
+    """
+    Determine the RNA family from the file path. For archiveII, the
+    family is indicated in the file name. For RNASTRalign, it is
+    indicated is the directory name.
+    
+    Args:
+        path (str): Complete name of the file.
+    """
+    candidates = []
+    for family in FAMILIES:
+        for alias in family:
+            if alias.upper() in path.upper():
+                candidates.append(family)
+                break
+    if not candidates:
+        file_io.log(f"Unknown family for `{path}`.", -1)
+        raise RuntimeError
+    if len(candidates) == 1:
+        return candidates[0]
+    # If several families are comprised in the file name, return the last one.
+    else:
+        c = {}
+        for candidate in candidates:
+            c[path.upper().find(candidate.upper())] = candidate
+        return c[max(c.keys())]
+
 def _encode_primary_structure(bases: list,
         pairings: list,
-        path: str,
+        target_size: int,
         map) -> tuple:
     """
     Encode a primary structure into a matrix.
@@ -110,27 +151,41 @@ def _encode_primary_structure(bases: list,
     Args:
         bases list(str): List of nucleotides (i.e. 'A', 'C', 'G', 'U').
         pairings list(int): Paired nucleotide index, -1 is unpaired.
-        path (str): Name of the file from which data were retrieved.
+        target_size (int): Size of the encoded structure. Padding is
+            determined by the `map` argument.
         map: A dictionary or function that maps a base pair to a value.
             - Dictionaries must be of the form: {'base': element}.
-            - Function must be of the form: def map(base) -> element.
+            - Functions must be of the form: def map(base) -> element.
     """
     pass
 
 def _encode_secondary_structure(bases: list,
         pairings: list,
-        path: str,
+        target_size: int,
         map) -> tuple:
     """
-    Encode a primary structure into a matrix.
+    Encode a secondary structure into a matrix.
 
     Args:
         bases list(str): List of nucleotides (i.e. 'A', 'C', 'G', 'U').
         pairings list(int): Paired nucleotide index, -1 is unpaired.
-        path (str): Name of the file from which data were retrieved.
+        target_size (int): Size of the encoded structure. Padding is
+            determined by the `map` argument.
         map: A dictionary or function that maps a base pair to a value.
             - Dictionaries must be of the form: {'base': element}.
-            - Function must be of the form: def map(base) -> element.
+            - Functions must be of the form: def map(base) -> element.
+    """
+    pass
+
+def _encode_family(path: str, map) -> tuple:
+    """
+    Encode an RNA family into a matrix.
+
+    Args:
+        path (str): Name of the file from which data were retrieved.
+        map: A dictionary or function that maps a family to a value.
+            - Dictionaries must be of the form: {'family': element}.
+            - Functions must be of the form: def map(base) -> element.
     """
     pass
 
@@ -180,7 +235,7 @@ def format(src: str,
         verbosity (int): Verbosity level of the function. 1 (default)
             prints informative messages. 0 silences the function.
     """
-    if verbosity: print("[> DIURNAL]: Encode RNA data into Numpy files.")
+    if verbosity: file_io.log("Encode RNA data into Numpy files.")
     # Create the directory if it des not exist.
     if not os.path.exists(dst):
         os.makedirs(dst)
@@ -193,20 +248,32 @@ def format(src: str,
     secondary_structure = []
     families = []
     names = []
+    rejected_names = []
     for i, path in enumerate(paths):
+        # Read the file.
         _, bases, pairings = file_io.read_ct_file(str(path))
+        family = get_rna_family(str(path))
+        # Add the file to the dataset or not depending on its size.
+        if len(bases) > max_size:
+            rejected_names.append(str(path))
+        else:
+            names.append(str(path))
+        # Encode the data.
         primary_structure.append(_encode_primary_structure(
-            bases, pairings, str(path), primary_structure_map))
+            bases, pairings, max_size, primary_structure_map))
         secondary_structure.append(_encode_secondary_structure(
-            bases, pairings, str(path), secondary_structure_map))
+            bases, pairings, max_size, secondary_structure_map))
+        families.append(_encode_family(family, family_map))
         if verbosity:
             prefix = f"    Encoding {len(paths)} files "
             suffix = f" {path.name}"
             file_io.progress_bar(len(paths), i, prefix, suffix)
-
+    if verbosity:
+        print() # Change the line after the progress bar.
+        i = len(names)
+        r = len(rejected_names)
+        file_io.log(f"Encoded {i} files. Rejected {r} files.", 1)
     # Write the encoded file content into Numpy files.
-
-    if verbosity: print()
 
 def summarize(path: str):
     """

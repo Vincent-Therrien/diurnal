@@ -10,7 +10,22 @@
 import sys
 import tarfile
 import requests
-import os
+
+def log(message: str, level: int = 0) -> None:
+    """
+    Print information about the execution of the program.
+
+    Args:
+        message (str): Message to display.
+        level (int): Logging level. `0` is a general message. `1` is a
+            nested message. `-1` is an error message.
+    """
+    if level == 0:
+        print(f"[> DIURNAL] Info: {message}")
+    elif level == -1:
+        print(f"[> DIURNAL] Error: {message}")
+    else:
+        print(f"    {message}")
 
 def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
     """
@@ -27,7 +42,7 @@ def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
     else:
         done = int(50 * n / N)
     bar = f"[{'=' * done}{' ' * (50-done)}]"
-    sys.stdout.write('\r' + prefix + bar + suffix)
+    sys.stdout.write('\033[K\r' + prefix + bar + suffix)
     sys.stdout.flush()
 
 def download(url: str, dst: str, verbosity: int, name: str="") -> None:
@@ -133,9 +148,5 @@ def read_ct_file(path: str) -> tuple:
 
             if i == length:
                 break
-
-    # this shouldn't really ever happen, probs unnecessary check
-    if length != len(bases) and length != len(pairings):
-        raise RuntimeError("Length of parsed RNA does not match expected length.")
 
     return title, bases, pairings
