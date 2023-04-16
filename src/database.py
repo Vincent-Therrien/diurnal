@@ -31,9 +31,7 @@
     License: MIT
 """
 
-import shutil
 import os
-import pathlib
 
 from .utils import file_io
 
@@ -100,11 +98,12 @@ def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     """
     download(dst, ALLOWED_DATASETS, cleanup, verbosity)
 
-def format_dataset(database_path: str,
-                   primary_structure_format,
-                   secondary_structure_format,
-                   formatted_path: str,
+def format_dataset(src: str,
+                   dst: str,
                    max_size: int,
+                   primary_structure_encoding,
+                   secondary_structure_encoding,
+                   family_encoding=None,
                    verbosity: int=1) -> None:
     """
     Transform the original datasets into the representation provided by
@@ -113,25 +112,34 @@ def format_dataset(database_path: str,
     This function reads the RNA dataset files comprised in the directory
     `dataset_path`, applies the encoding schemes defined by the
     arguments, and writes the result in the `formatted_path` directory.
+    All encoded elements are zero-padded to obtain elements of
+    dimensions [1 X max_size].
+
+    The function writes four files:
+    - `info.rst` describes the data.
+    - `x.np` contains the encoded primary structures of the molecules.
+    - `y.np` contains the encoded secondary structures of the molecules.
+    - `family.np` contains the encoded family of the molecules.
+    - `name.txt` contains the newline-delimited names of the molecules.
 
     Args:
-        database_path (str): The directory in which RNA datasets are
-            located. If you used `./data/` as the storage path of the
-            `download` function, then the directory `./data/` must be
-            provided to this function.
-        primary_structure_format: A dictionary or function that maps an
-            RNA primary structure symbol ('A', 'C', 'G', 'U') to a
-            numeric value (e.g. map A to [1, 0, 0, 0]).
-        secondary_structure_format: A dictionary or function that maps
-            an RNA secondary structure symbol ('(', '.', ')') to a
-            numeric value (e.g. map '.' to [0, 1, 0]).
-        formatted_path (str): The directory in which the encoded RNA
-            structures are written.
+        src (str): The directory in which RNA datasets are located.
+        dst (str): The directory in which the encoded RNA structures
+            are written.
         max_size (int): Maximal number of nucleotides in an RNA
-            structure. If an RNA structure has more bases than this
-            number, it is not included in the formatted dataset.
-        verbosity (int): Verbosity of the function. 1 (default) prints
-            informative messages. 0 silences the function.
+            structure. If an RNA structure has more nucleotides than
+            `max_size`, it is not included in the formatted dataset.
+        primary_structure_encoding: A dictionary or function that maps
+            an RNA primary structure symbol to a vector (e.g. map A to
+            [1, 0, 0, 0]). If None, the file `x.np` is not written.
+        secondary_structure_encoding: A dictionary or function that maps
+            an RNA secondary structure symbol to a vector (e.g. map '.'
+            to [0, 1, 0]). If None, the file `y.np` is not written.
+        family_encoding: A dictionary or function that maps an RNA
+            family name (e.g. '5s') to a vector (e.g. '[1, 0, 0]).
+            If None, the file `family.np` is not written.
+        verbosity (int): Verbosity level of the function. 1 (default)
+            prints informative messages. 0 silences the function.
     """
     pass
 

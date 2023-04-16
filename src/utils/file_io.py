@@ -38,7 +38,7 @@ def download(url: str, dst: str, verbosity: int, name: str="") -> None:
                 f.write(data)
                 if verbosity:
                     done = int(50 * dl / total_length)
-                    prefix = f"    Downloading {name} "
+                    prefix = f"    Downloading   {name} "
                     bar = f"[{'=' * done}{' ' * (50-done)}]"
                     sys.stdout.write('\r' + prefix + bar)
                     sys.stdout.flush()
@@ -63,7 +63,10 @@ def decompress(filename: str, mode: str, dst: str,
         for i, member in enumerate(members):
             tar.extract(member, path=dst)
             prefix = f"    Decompressing {name} "
-            done = int(50 * i / len(members))
+            if i == len(members) - 1:
+                done = 50
+            else:
+                done = int(50 * i / len(members))
             bar = f"[{'=' * done}{' ' * (50-done)}]"
             sys.stdout.write('\r' + prefix + bar)
             sys.stdout.flush()
