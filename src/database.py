@@ -362,9 +362,8 @@ def summarize(path: str,
         content += f"File: `{path + 'families.npy'}`\n\n"
         content += f"Shape: {F.shape}\n\n"
         content += "Encoding:\n"
-        example = "5s"
-        for family in FAMILIES:
-            content+=f"    {family[0]} -> {_encode_family(example, family_map)}"
+        for f in FAMILIES:
+            content+=f"    {f[0]} -> {_encode_family(f[0], family_map)}"
             content += "\n"
         content += "\nExample: \n"
         content += str(F[0])
