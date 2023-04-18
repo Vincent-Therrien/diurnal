@@ -10,13 +10,6 @@
     License: MIT
 """
 
-# Padding removal.
-def _remove_sequence_padding(sequence, none_value):
-    pass
-
-def remove_padding(sequence, prediction, none_value):
-    pass
-
 # Evaluation based on paired / unpaired sensitivity.
 def get_true_positive(prediction, reference, unpaired_symbol="."):
     """

@@ -32,13 +32,13 @@ class PrimaryStructure:
         "-": [0, 0, 0, 0],
     }
 
-    def iupac_onehot(bases: list, size: int):
+    def iupac_to_onehot(bases: list, size: int):
         """
         Convert pairings returned by `diurnal.utils.read_ct_file` into
-        a secondary structure, e.g. `[[1,0,0,0], [0,1,0,0]]`.
+        a primary structure, e.g. `[[1,0,0,0], [0,1,0,0]]`.
         
         Args:
-            bases (list(str)): A list of nucleotide pairings.
+            bases (list(str)): A list of nucleotides.
             size (int): Output size. `0` for no padding.
         
         Returns (list(list(int))): One-hot encoded primary structure.
@@ -48,6 +48,29 @@ class PrimaryStructure:
             for _ in range(size - len(bases)):
                 encoding.append(PrimaryStructure.IUPAC_ONEHOT['.'])
         return encoding
+
+    def onehot_to_iupac(onehot: list):
+        """
+        Convert one-hot encoding into a sequence of nucleotides.
+        
+        Args:
+            (list(list(int))): One-hot encoded primary structure.
+        
+        Returns (list(str)): A list of nucleotide.
+        """
+        nt = []
+        for base in onehot:
+            base = list(base)
+            for key, code in PrimaryStructure.IUPAC_ONEHOT.items():
+                if code == base:
+                    nt.append(key)
+                    break
+        i = len(nt) - 1
+        while i > 0:
+            if nt[i] != ".":
+                break
+            i -= 1
+        return nt[:i]
 
 class SecondaryStructure:
     # One-hot encoding dictionary for secondary structure bracket notation.
@@ -65,7 +88,7 @@ class SecondaryStructure:
         " " : 0
     }
 
-    def bracket(pairings: list, size: int):
+    def pairings_to_bracket(pairings: list, size: int):
         """
         Convert pairings returned by `diurnal.utils.read_ct_file` into
         a bracket notation, e.g. `(((...)))`.
@@ -88,7 +111,7 @@ class SecondaryStructure:
             encoding += ' ' * (size - len(pairings))
         return encoding
     
-    def shadow(pairings: list, size: int):
+    def pairings_to_shadow(pairings: list, size: int):
         """
         Convert pairings returned by `diurnal.utils.read_ct_file` into
         a secondary structure, e.g. `111000111`.
@@ -110,7 +133,7 @@ class SecondaryStructure:
                 encoding.append(SecondaryStructure.SHADOW_ENCODING[' '])
         return encoding
     
-    def bracket_onehot(pairings: list, size: int):
+    def pairings_to_onehot(pairings: list, size: int):
         """
         Convert pairings returned by `diurnal.utils.read_ct_file` into
         a secondary structure, e.g. `[[1,0,0], [0,1,0], [0,0,1]]`.
@@ -133,6 +156,11 @@ class SecondaryStructure:
             for _ in range(size - len(pairings)):
                 encoding.append(SecondaryStructure.BRACKET_ONEHOT[' '])
         return encoding
+    
+    def onehot_to_bracket(onehot):
+        """
+        """
+        pass
 
 class Family:
     # One-hot encoding for RNA families.

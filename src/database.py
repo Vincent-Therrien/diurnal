@@ -97,7 +97,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         if cleanup:
             os.remove(file_name)
         if verbosity:
-            file_io.log(f"Files installed in the directory `{dst + dataset}`.")
+            file_io.log(f"Files installed in `{dst + dataset}`.", 1)
 
 def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     """
