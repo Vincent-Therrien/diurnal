@@ -3,6 +3,9 @@
 """
 
 from random import shuffle
+import numpy as np
+import torch
+import os.path
 
 from .utils import file_io
 
@@ -22,7 +25,8 @@ def split_data(data, fractions: list, offset: int = 0) -> list:
         A list containing the split data object.
     """
     if sum(fractions) != 1.0:
-        raise "Invalid data split proportions."
+        file_io.log("Invalid data split proportions.", -1)
+        raise RuntimeError
     subarrays = []
     index = int(offset)
     n = len(data)
@@ -62,8 +66,23 @@ def k_fold_split(data, fractions: list, k: int, i: int) -> list:
 
 def shuffle_data(*args) -> tuple:
     """
+    Shuffle vectors to preserve one-to-one original pairings.
+
+    For instance, consider
+    - a = [ 0,   1,   2 ]
+    - b = ['a', 'b', 'c']
+    Shuffling lists `a` and `b` may result in:
+    - a = [ 2,   1,   0 ]
+    - b = ['c', 'b', 'a']
+
+    Args:
+        args: List-like elements to be shuffled. They need to be of the
+            same dimensions.
+    
+    Returns (tuple): Shuffled data. The vector are returned in the same
+        order as they were provided.
     """
-    # Validation
+    # Parameter validation
     lengths = []
     for a in args:
         lengths.append(len(a))
@@ -75,3 +94,102 @@ def shuffle_data(*args) -> tuple:
     shuffle(tmp)
     args = zip(*tmp)
     return args
+
+# Training functions
+def load_data(path: str, randomize: bool = True) -> list:
+    """
+    Read formatted data into tensors.
+
+    Args:
+        path (str): Name of the directory that contains the Numpy files
+            written by the function `diurnal.database.format`.
+        randomize (bool): Randomize data if set to True.
+    
+    Returns:
+        list: Loaded data represented as
+            [primary structure, secondary structure, family].
+    """
+    if path[-1] != '/': path += '/'
+    # Load data.
+    relative_paths = [
+        "primary_structures.npy",
+        "secondary_structures.npy",
+        "families.npy"]
+    data = []
+    for p in relative_paths:
+        array = np.load(path + p) if os.path.isfile(path) else None
+        if array:
+            data.append(array)
+    # Validate the loaded data.
+    if data:
+        lengths = [len(d) for d in data]
+        if lengths.count(lengths[0]) != len(lengths):
+            file_io.log(f"load_data: Inhomogeneous sequences: {lengths}", -1)
+            raise RuntimeError
+    else:
+        file_io.log(f"load_data: path {path} is empty.", -1)
+        raise RuntimeError
+    # Shuffle data.
+    if randomize:
+        data = shuffle_data(*data)
+    tensors = []
+    for i in range(len(data[0])):
+        tensor = [
+            torch.tensor(data[0][i].T, dtype=torch.float32),
+            torch.tensor(data[1][i],   dtype=torch.float32)
+        ]
+        # Add the family if it is used.
+        if len(data) > 2:
+            tensor.append(torch.tensor(data[2][i], dtype=torch.float32))
+        tensors.append(tensor)
+    return tensors
+
+def load_inter_family_data(path: str, family, randomize:bool=True) -> tuple:
+    """
+    Read formatted data into tensors and return a dataset related to one
+    family and another dataset comprising the other families.
+
+    Args:
+        path (str): Name of the directory that contains the Numpy files
+            written by the function `diurnal.database.format`.
+        family: A identifier for the family to place in a specific set.
+        randomize (bool): Randomize data if set to True.
+    
+    Returns:
+        tuple(list): Loaded datasets represented as
+            [primary structure, secondary structure, family].
+    """
+    if path[-1] != '/': path += '/'
+    # Load data.
+    relative_paths = [
+        "primary_structures.npy",
+        "secondary_structures.npy",
+        "families.npy"]
+    data = []
+    for p in relative_paths:
+        data.append(np.load(path + p))
+    # Validate the loaded data.
+    if data:
+        lengths = [len(d) for d in data]
+        if lengths.count(lengths[0]) != len(lengths):
+            file_io.log(f"load_data: Inhomogeneous sequences: {lengths}", -1)
+            raise RuntimeError
+    else:
+        file_io.log(f"load_data: path {path} is empty.", -1)
+        raise RuntimeError
+    # Shuffle data.
+    if randomize:
+        data = shuffle_data(*data)
+    family_tensors = []
+    other_tensors = []
+    for i in range(len(data[0])):
+        tensor = [
+            torch.tensor(data[0][i].T, dtype=torch.float32),
+            torch.tensor(data[1][i],   dtype=torch.float32),
+            torch.tensor(data[2][i],   dtype=torch.float32)
+        ]
+        if list(data[2][i]) == family:
+            family_tensors.append(tensor)
+        else:
+            other_tensors.append(tensor)
+    return family_tensors, other_tensors

@@ -133,7 +133,7 @@ class SecondaryStructure:
                 encoding.append(SecondaryStructure.SHADOW_ENCODING[' '])
         return encoding
     
-    def pairings_to_onehot(pairings: list, size: int):
+    def pairings_to_onehot(pairings: list, size: int = 0):
         """
         Convert pairings returned by `diurnal.utils.read_ct_file` into
         a secondary structure, e.g. `[[1,0,0], [0,1,0], [0,0,1]]`.
@@ -152,6 +152,7 @@ class SecondaryStructure:
                 encoding.append(SecondaryStructure.BRACKET_ONEHOT['('])
             else:
                 encoding.append(SecondaryStructure.BRACKET_ONEHOT[')'])
+        # Remove the padding
         if len(pairings) < size:
             for _ in range(size - len(pairings)):
                 encoding.append(SecondaryStructure.BRACKET_ONEHOT[' '])
@@ -159,8 +160,22 @@ class SecondaryStructure:
     
     def onehot_to_bracket(onehot):
         """
+        Convert a one-hot-encoded pairing sequence into bracket
+        notation, e.g. `(((...)))`.
+
+        Args:
+            onehot (list-like): A one-hot encoded secondary structure,
+                e.g. `[[1,0,0], [0,1,0], [0,0,1]]`
+
+        Returns (str): A bracket notation secondary structure,
+            e.g. `(((...)))`
         """
-        pass
+        values = [n.index(max(n)) for n in onehot]
+        encoding = ""
+        characters = list(SecondaryStructure.BRACKET_ONEHOT.keys())
+        for value in values:
+            encoding += characters[value]
+        return encoding
 
 class Family:
     # One-hot encoding for RNA families.

@@ -122,5 +122,3 @@ def get_sen_PPV_f1(prediction, reference, unpaired_symbol="."):
         return sen, ppv, f1
     else:
         return sen, ppv, 0.0
-
-# Evaluation based on the confusion matrix.
