@@ -152,7 +152,7 @@ class SecondaryStructure:
                 encoding.append(SecondaryStructure.BRACKET_ONEHOT['('])
             else:
                 encoding.append(SecondaryStructure.BRACKET_ONEHOT[')'])
-        # Remove the padding
+        # Add padding
         if len(pairings) < size:
             for _ in range(size - len(pairings)):
                 encoding.append(SecondaryStructure.BRACKET_ONEHOT[' '])
@@ -176,6 +176,40 @@ class SecondaryStructure:
         for value in values:
             encoding += characters[value]
         return encoding
+    
+    def remove_onehot_padding(sequence):
+        """
+        Remove zero-valued elements at the end of a one-hot encoded
+        secondary structure.
+
+        Args:
+            sequence (list-like): One-hot encoded secondary structure.
+        """
+        i = len(sequence) - 1
+        while i > 0:
+            nonzero = False
+            for e in sequence[i]:
+                if e != 0:
+                    nonzero = True
+            if nonzero:
+                return sequence[0:i+1]
+            i -= 1
+        return None
+    
+    def remove_bracket_padding(sequence):
+        """
+        Remove zero-valued elements at the end of a bracket-notation
+        encoded secondary structure.
+
+        Args:
+            sequence (str): Bracket-encoded secondary structure.
+        """
+        i = len(sequence) - 1
+        while i > 0:
+            if sequence[i] == ".":
+                return sequence[0:i+1]
+            i -= 1
+        return None
 
 class Family:
     # One-hot encoding for RNA families.

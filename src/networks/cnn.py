@@ -99,7 +99,7 @@ class RNA_CNN_classes(nn.Module):
         self.fc1 = nn.Linear(n * n, n * 3)
         self.output = nn.Softmax(2)
 
-    def forward(self, x):
+    def forward(self, x, f):
         x = self.conv1(x)
         x = F.relu(x)
         x = self.conv2(x)

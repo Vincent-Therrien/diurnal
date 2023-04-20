@@ -8,8 +8,9 @@ import torch
 import os.path
 
 from .utils import file_io
+from .coding import SecondaryStructure
 
-# Data transformation
+# Input data transformation
 def split_data(data, fractions: list, offset: int = 0) -> list:
     """
     Split data in subsets according to the specified fractions.
@@ -117,8 +118,8 @@ def load_data(path: str, randomize: bool = True) -> list:
         "families.npy"]
     data = []
     for p in relative_paths:
-        array = np.load(path + p) if os.path.isfile(path) else None
-        if array:
+        array = np.load(path + p) if os.path.isfile(path + p) else None
+        if array.any():
             data.append(array)
     # Validate the loaded data.
     if data:
@@ -127,11 +128,11 @@ def load_data(path: str, randomize: bool = True) -> list:
             file_io.log(f"load_data: Inhomogeneous sequences: {lengths}", -1)
             raise RuntimeError
     else:
-        file_io.log(f"load_data: path {path} is empty.", -1)
+        file_io.log(f"load_data: path `{path}` is empty.", -1)
         raise RuntimeError
     # Shuffle data.
     if randomize:
-        data = shuffle_data(*data)
+        data = list(shuffle_data(*data))
     tensors = []
     for i in range(len(data[0])):
         tensor = [
@@ -193,3 +194,35 @@ def load_inter_family_data(path: str, family, randomize:bool=True) -> tuple:
         else:
             other_tensors.append(tensor)
     return family_tensors, other_tensors
+
+# Output data manipulation
+def prediction_to_onehot(prediction: list) -> list:
+    """
+    Convert a one-hot encoded secondary structure prediction to a
+    sequence of indices. For instance, the value `prediction`
+    [[0.9, 0.5, 0.1], [0.0, 0.5, 0.1]] is converted to
+    [[1, 0, 0, [0, 1, 0]].
+
+    Args:
+        prediction (list-like): Secondary structure prediction.
+
+    Returns: Reformatted secondary structure.
+    """
+    indices = [n.index(max(n)) for n in prediction]
+    vectors = list(SecondaryStructure.BRACKET_ONEHOT.values())
+    return [vectors[i] for i in indices]
+
+def clean_true_pred(true: list, pred: list) -> tuple:
+    """
+    Remove the padding from the reference value of the secondary
+    structure and the predicted sequence.
+
+    Args:
+        true (list): True secondary structure.
+        pred (list): Predicted secondary structure.
+    
+    Returns (tuple(list)): True and pred values with their padding
+        removed.
+    """
+    cleaned_true = SecondaryStructure.remove_onehot_padding(true)
+    return cleaned_true, pred[:len(cleaned_true)]

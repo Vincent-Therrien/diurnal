@@ -2,12 +2,15 @@
     Basic model used by the library/
 """
 
+import torch
 from torch import nn, cuda, no_grad
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from .utils import file_io
 from .evaluate import get_sen_PPV_f1
+from .train import prediction_to_onehot, clean_true_pred
+from .coding import SecondaryStructure as s2
 from sklearn.metrics import f1_score
 
 class DiurnalBasicModel():
@@ -17,11 +20,11 @@ class DiurnalBasicModel():
     This class defines training and testing functions common to
     different neural networks.
     """
-    def __init__(self, nn, optimizer, optim_args, loss_fn) -> None:
-        self.nn = nn
-        self.optimiser: optim = optimizer(self.nn.parameters(), *optim_args)
-        self.loss_fn = loss_fn
+    def __init__(self, nn, nn_args, optimizer, optim_args, loss_fn) -> None:
         self.device = "cuda" if cuda.is_available() else "cpu"
+        self.nn = nn(512).to(self.device).half()
+        self.optimizer = optimizer(self.nn.parameters(), eps=1e-4)
+        self.loss_fn = loss_fn
 
     def train(self,
               dataloader: DataLoader,
@@ -29,7 +32,7 @@ class DiurnalBasicModel():
               validation: DataLoader = None,
               verbosity: int = 1) -> tuple:
         """
-        Train a model.
+        Train a model with primary structure only.
 
         Args:
             dataloader (DataLoader): Input data.
@@ -69,7 +72,7 @@ class DiurnalBasicModel():
             validation: DataLoader = None,
             verbosity: int = 1) -> tuple:
         """
-        Train a model.
+        Train a model with primary structure and family.
 
         Args:
             dataloader (DataLoader): Input data.
@@ -83,7 +86,6 @@ class DiurnalBasicModel():
             threshold = int(len(dataloader) * 0.05)
             threshold = 1 if threshold < 1 else threshold
             file_io.log("Beginning training.")
-
         for epoch in range(n_epochs):
             for batch, (x, y, f) in enumerate(dataloader):
                 x, y = x.to(self.device).half(), y.to(self.device).half()
@@ -97,15 +99,26 @@ class DiurnalBasicModel():
                 if verbosity > 1 and batch % threshold == 0:
                     progress = f"{batch} / {len(dataloader)}"
                     file_io.log(f"Loss: {loss:.4f}    Batch {progress}", 1)
-            if verbosity and validation:
+            if verbosity:
                 prefix = f"{epoch} / {n_epochs} "
-                suffix = f"{self.get_f1(validation)}" if validation else ""
+                if validation is not None:
+                    suffix = f"{self.get_f1(validation)}"
+                else:
+                    suffix = ""
                 file_io.progress_bar(n_epochs, epoch, prefix, suffix)
+        if verbosity:
+            print()
         
         return losses
 
-    def test(self, dataloader: DataLoader) -> tuple:
+    def test(self, dataloader: DataLoader) -> list:
         """
+        Test a model with a dataset.
+
+        Args:
+            dataloader (Dataloader): Test data.
+
+        Returns (list): F1-score of each prediction-true value pairs.
         """
         self.nn.eval()
         y_pred = []
@@ -123,24 +136,49 @@ class DiurnalBasicModel():
     
     def test_with_family(self, dataloader: DataLoader) -> tuple:
         """
+        Test a model with a dataset.
+
+        Args:
+            dataloader (Dataloader): Test data.
+
+        Returns (list): F1-score of each prediction-true value pairs.
         """
         self.nn.eval()
-        y_pred = []
-        y_true = []
+        f1 = []
         with no_grad():
             for x, y, f in dataloader:
                 x, y = x.to(self.device).half(), y.to(self.device).half()
                 f = f.to(self.device).half()
                 output = self.nn(x, f)
                 for i, j in zip(output, y):
-                    pred = i.tolist()
-                    y_pred.append(pred.index(max(pred)))
+                    pred = prediction_to_onehot(i.tolist())
                     true = j.tolist()
-                    y_true.append(true.index(max(true)))
-        return f1_score(y_true, y_pred, average='weighted')
+                    true, pred = clean_true_pred(true, pred)
+                    y_pred = [n.index(max(n)) for n in pred]
+                    y_true = [n.index(max(n)) for n in true]
+                    f1.append(f1_score(y_true, y_pred, average='weighted'))
+        return f1
 
     def predict(self, input) -> list:
         """
         Predict values from an input array.
         """
         return self.nn(input)
+    
+    def save(self, path: str) -> None:
+        """
+        Save the model in a .pt file.
+
+        Args:
+            path (str): File path of the file to save. Must end in `pt`.
+        """
+        torch.save(self.nn.state_dict(), path)
+    
+    def load(self, path: str) -> None:
+        """
+        Load a model from a .pt file.
+
+        Args:
+            path (str): File path of the file to load. Must end in `pt`.
+        """
+        self.nn.load_state_dict(torch.load(path))
