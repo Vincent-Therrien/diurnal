@@ -42,7 +42,8 @@ URL_PREFIX ="https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/"
 FILE_ENDING = ".tar.gz"
 ALLOWED_DATASETS = [
     "archiveII",
-    "RNASTRalign"
+    "RNASTRalign",
+    "RNA_STRAND"
 ]
 FAMILIES = [
     ["5s"],  # 5s ribosomal RNA (rRNA)

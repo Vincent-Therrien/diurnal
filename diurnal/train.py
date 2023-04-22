@@ -224,5 +224,8 @@ def clean_true_pred(true: list, pred: list) -> tuple:
     Returns (tuple(list)): True and pred values with their padding
         removed.
     """
-    cleaned_true = SecondaryStructure.remove_onehot_padding(true)
+    if type(true) == str:
+        cleaned_true = SecondaryStructure.remove_bracket_padding(true)
+    else:
+        cleaned_true = SecondaryStructure.remove_onehot_padding(true)
     return cleaned_true, pred[:len(cleaned_true)]

@@ -32,7 +32,7 @@ class PrimaryStructure:
         "-": [0, 0, 0, 0],
     }
 
-    def iupac_to_onehot(bases: list, size: int):
+    def iupac_to_onehot(bases: list, size: int = 0):
         """
         Convert pairings returned by `diurnal.utils.read_ct_file` into
         a primary structure, e.g. `[[1,0,0,0], [0,1,0,0]]`.
@@ -206,7 +206,7 @@ class SecondaryStructure:
         """
         i = len(sequence) - 1
         while i > 0:
-            if sequence[i] == ".":
+            if sequence[i] != " ":
                 return sequence[0:i+1]
             i -= 1
         return None

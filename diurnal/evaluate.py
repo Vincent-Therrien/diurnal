@@ -10,6 +10,8 @@
     License: MIT
 """
 
+from sklearn.metrics import f1_score
+
 # Evaluation based on paired / unpaired sensitivity.
 def get_true_positive(prediction, reference, unpaired_symbol="."):
     """
@@ -25,7 +27,7 @@ def get_true_positive(prediction, reference, unpaired_symbol="."):
     """
     tp = 0
     for i in range(min(len(prediction), len(reference))):
-        if prediction[i] != unpaired_symbol and prediction[i] == reference[i]:
+        if prediction[i] != unpaired_symbol and reference[i] != unpaired_symbol:
             tp += 1
     return tp
 
@@ -44,7 +46,7 @@ def get_true_negative(prediction, reference, unpaired_symbol="."):
     """
     tn = 0
     for i in range(min(len(prediction), len(reference))):
-        if prediction[i] == unpaired_symbol and prediction[i] == reference[i]:
+        if prediction[i] == unpaired_symbol and reference[i] == unpaired_symbol:
             tn += 1
     return tn
 
@@ -63,7 +65,7 @@ def get_false_positive(prediction, reference, unpaired_symbol="."):
     """
     fp = 0
     for i in range(min(len(prediction), len(reference))):
-        if prediction[i] != unpaired_symbol and prediction[i] != reference[i]:
+        if prediction[i] != unpaired_symbol and reference[i] == unpaired_symbol:
             fp += 1
     return fp
 
@@ -122,3 +124,18 @@ def get_sen_PPV_f1(prediction, reference, unpaired_symbol="."):
         return sen, ppv, f1
     else:
         return sen, ppv, 0.0
+
+# Evaluation based on 3-class f1-score.
+def three_class_f1_score(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the F1-score by considering the secondary structure symbols
+    '(', '.', and ')' as three different classes.
+    """
+    # Convert the arguments to integer classes.
+    symbols = set(prediction + reference)
+    digits = {}
+    for i, s in enumerate(symbols):
+        digits[s] = i
+    pred = [digits[e] for e in prediction]
+    true = [digits[e] for e in reference]
+    return f1_score(pred, true, average='weighted')
