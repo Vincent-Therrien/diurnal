@@ -1,6 +1,7 @@
 draw_rna/
 data/archiveII/
 data/RNASTRalign/
+data/formatted/
 data/*.tar.gz
 .vscode/
 

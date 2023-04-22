@@ -8,7 +8,7 @@ import torch
 import os.path
 
 from .utils import file_io
-from .coding import SecondaryStructure
+from .transform import SecondaryStructure
 
 # Input data transformation
 def split_data(data, fractions: list, offset: int = 0) -> list:

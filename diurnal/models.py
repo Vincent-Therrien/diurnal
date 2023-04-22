@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from .utils import file_io
 from .evaluate import get_sen_PPV_f1
 from .train import prediction_to_onehot, clean_true_pred
-from .coding import SecondaryStructure as s2
+from .transform import SecondaryStructure as s2
 from sklearn.metrics import f1_score
 
 class DiurnalBasicModel():
