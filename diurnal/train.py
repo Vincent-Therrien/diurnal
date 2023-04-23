@@ -115,12 +115,16 @@ def load_data(path: str, randomize: bool = True) -> list:
     relative_paths = [
         "primary_structures.npy",
         "secondary_structures.npy",
-        "families.npy"]
+        "families.npy",
+        "names.txt"]
     data = []
     for p in relative_paths:
-        array = np.load(path + p) if os.path.isfile(path + p) else None
-        if array.any():
-            data.append(array)
+        if p.endswith(".npy"):
+            array = np.load(path + p) if os.path.isfile(path + p) else None
+            if array.any():
+                data.append(array)
+        elif p.endswith(".txt"):
+            pass
     # Validate the loaded data.
     if data:
         lengths = [len(d) for d in data]

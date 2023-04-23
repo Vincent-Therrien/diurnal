@@ -10,7 +10,11 @@
     License: MIT
 """
 
+import statistics
+import numpy as np
 from sklearn.metrics import f1_score
+
+from diurnal.utils import file_io
 
 # Evaluation based on paired / unpaired sensitivity.
 def get_true_positive(prediction, reference, unpaired_symbol="."):
@@ -115,7 +119,8 @@ def get_PPV(prediction, reference, unpaired_symbol="."):
 def get_sen_PPV_f1(prediction, reference, unpaired_symbol="."):
     """
     Compute the F1-score obtained by comparing two secondary structures.
-    The f1-score is defined as: 2 * ((SEN*PPV) / (SEN+PPV)).
+    The f1-score is defined as: 2 * ((SEN*PPV) / (SEN+PPV)). Also return
+    the sensitivity and precision.
     """
     sen = get_sensitivity(prediction, reference, unpaired_symbol)
     ppv = get_PPV(prediction, reference, unpaired_symbol)
@@ -125,17 +130,52 @@ def get_sen_PPV_f1(prediction, reference, unpaired_symbol="."):
     else:
         return sen, ppv, 0.0
 
+def _convert_to_scalars(pred, true) -> tuple:
+    symbols = set(pred + true)
+    digits = {}
+    for i, s in enumerate(symbols):
+        digits[s] = i
+    pred = [digits[e] for e in pred]
+    true = [digits[e] for e in true]
+    return pred, true
+
+def two_class_f1(prediction, reference, unpaired_symbol="."):
+    """
+    Compute the F1-score obtained by comparing two secondary structures.
+    The f1-score is defined as: 2 * ((SEN*PPV) / (SEN+PPV)).
+    """
+    if type(prediction[0]) != str:
+        prediction, reference = _convert_to_scalars(prediction, reference)
+        unpaired_symbol = 1
+    sen = get_sensitivity(prediction, reference, unpaired_symbol)
+    ppv = get_PPV(prediction, reference, unpaired_symbol)
+    if sen + ppv:
+        return 2 * ((sen*ppv) / (sen+ppv))
+    else:
+        return 0.0
+
 # Evaluation based on 3-class f1-score.
-def three_class_f1(prediction, reference, unpaired_symbol="."):
+def three_class_f1(prediction, reference):
     """
     Compute the F1-score by considering the secondary structure symbols
     '(', '.', and ')' as three different classes.
     """
-    # Convert the arguments to integer classes.
-    symbols = set(prediction + reference)
-    digits = {}
-    for i, s in enumerate(symbols):
-        digits[s] = i
-    pred = [digits[e] for e in prediction]
-    true = [digits[e] for e in reference]
+    pred, true = _convert_to_scalars(prediction, reference)
     return f1_score(pred, true, average='micro')
+
+# Result presentation
+def summarize_results(f1_scores: list, name: str) -> None:
+    """
+    Summarize the f1-scores.
+    
+    Args:
+        f1_scores (list(float)): List of f1-scores.
+        name (str): Name of the results printed along with the summary.
+    """
+    file_io.log(f"Results for `{name}`:")
+    file_io.log(f"Number of elements: {len(f1_scores)}", 1)
+    file_io.log(f"Mean: {np.mean(f1_scores)}", 1)
+    file_io.log(f"Harmonic mean: {statistics.harmonic_mean(f1_scores)}", 1)
+    file_io.log(f"Maximum: {max(f1_scores)}")
+    file_io.log(f"Mdian:   {np.median(f1_scores)}") 
+    file_io.log(f"Minimum: {min(f1_scores)}")
