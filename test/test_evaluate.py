@@ -35,11 +35,11 @@ def test_sen_PPV_f1(pred, true, S, P, F):
     "pred, true, F",
     [
         ("(((...)))", "(((...)))", 1.0),
-        ("(((...(((", "(((...)))", 7/9),
-        ("(((......", "(((...)))", 7/9),
+        ("(((...(((", "(((...)))", 2/3),
+        ("(((......", "(((...)))", 2/3),
     ]
 )
-def test_three_class_f1_score(pred, true, F):
+def test_three_class_f1(pred, true, F):
     """
     Test the validity of sensitivity and positive predictive value
     evaluation criteria.
@@ -49,5 +49,5 @@ def test_three_class_f1_score(pred, true, F):
         true: True secondary structure.
         F: Expected F-score.
     """
-    f = evaluate.three_class_f1_score(pred, true)
+    f = evaluate.three_class_f1(pred, true)
     assert f == F

@@ -19,7 +19,7 @@ def get_true_positive(prediction, reference, unpaired_symbol="."):
     structures.
     
     The true positive (TP) value is defined as the number of bases that
-    are correclty predicted to be paired with another base. For example,
+    are correctly predicted to be paired with another base. For example,
     in the following *demonstrative* secondary structures:
     - predicton: (..(((....
     - reference: (.....))))
@@ -126,7 +126,7 @@ def get_sen_PPV_f1(prediction, reference, unpaired_symbol="."):
         return sen, ppv, 0.0
 
 # Evaluation based on 3-class f1-score.
-def three_class_f1_score(prediction, reference, unpaired_symbol="."):
+def three_class_f1(prediction, reference, unpaired_symbol="."):
     """
     Compute the F1-score by considering the secondary structure symbols
     '(', '.', and ')' as three different classes.
@@ -138,4 +138,4 @@ def three_class_f1_score(prediction, reference, unpaired_symbol="."):
         digits[s] = i
     pred = [digits[e] for e in prediction]
     true = [digits[e] for e in reference]
-    return f1_score(pred, true, average='weighted')
+    return f1_score(pred, true, average='micro')
