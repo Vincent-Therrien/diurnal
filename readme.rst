@@ -13,6 +13,84 @@ This project aims at predicting RNA secondary structures by combining neural
 networks and thermodynamic models. Reinforcement learning is planned to be
 included to make that combination more effective.
 
+- ``demo`` : Python scripts that illustrate the usage of the library.
+- ``docs`` : Documentation file written with ``Sphinx``.
+- ``models`` : Trained models.
+- ``diurnal`` : Library source code.
+- ``test`` : Automated test framework written with ``pytest``.
+
+Install with pip
+````````````````
+
+Execute the following instruction to install the library with pip.
+
+.. code-block:: bash
+
+   cd diurnal
+   pip install .
+
+Demonstration Scripts
+`````````````````````
+
+The directory  ``./demo`` comprises commented usages of the library.
+
+Alternative Installation
+````````````````````````
+
+You can also install the library with ``venv``.
+
+Linux :
+
+.. code-block:: bash
+
+   python3 -m venv ./venv
+   source ./venv/bin/activate
+   pip install -r requirements.txt
+   py setup.py install
+
+Windows :
+
+.. code-block:: bash
+
+   py -m venv .\venv
+   .\venv\Scripts\activate.bat
+   pip install -r requirements.txt
+   py setup.py install
+
+Dataset Obtention
+`````````````````````````````
+
+The library allows you to downlaod the following datasets:
+
+- ArchiveII
+- RNASTRalign
+- RNA_STRAND
+
+Execute the following Python script to download the data:
+
+.. code-block:: python
+
+   import diurnal.database as db
+   db.download_all("./data/")
+
+Test Framwork
+`````````````
+
+The repository contains an automated test framework developed with the
+``pytest`` library. Launch the following command to run it.
+
+Linux :
+
+.. code-block:: python
+
+   python3 pytest
+
+Windows :
+
+.. code-block:: python
+
+   py pytest
+
 
 .. _Français - fr:
 
@@ -39,7 +117,7 @@ Exécutez la commande suivante pour installer la bibliothèque:
 .. code-block:: bash
 
    cd diurnal
-   pip install . # Installation avec pip (recommandé)
+   pip install .
 
 Scripts de démonstration
 ````````````````````````
