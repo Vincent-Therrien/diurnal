@@ -6,8 +6,8 @@ diurnal
 
 .. _English - en:
 
-Predict RNA Secondary Structure with DL and Thermodynamics
-----------------------------------------------------------
+Predict RNA Secondary Structure
+-------------------------------
 
 This project aims at predicting RNA secondary structures by combining neural
 networks and thermodynamic models. Reinforcement learning is planned to be
@@ -16,101 +16,92 @@ included to make that combination more effective.
 
 .. _Français - fr:
 
-Prédire des structures secondaires d'ARN avec l'AP et la thermodynamique
-------------------------------------------------------------------------
+Prédire des structures secondaires d'ARN
+----------------------------------------
 
-Ce projet vise à prédire la structure secondaire de molécules d'ARN en
-combinant des réseaux neuronaux avec des modèles thermodynamiques. On prévoit
-utiliser l'apprentissage par renforcement pour améliorer la performance de
-l'outil. Le projet comprend les répertoires suivants :
+Ce projet vise à prédire la structure secondaire de molécules d'ARN avec des
+réseaux neuronaux. Le projet comprend les répertoires suivants :
 
-- ``data`` : Ensemble de donnée qui regroupe des descriptions de molécules
-  d'ARN.
+- ``demo`` : Scripts Python qui illustrent l'utilisation de la bibliothèque.
 - ``docs`` : Fichiers de documentation réalisés avec l'outil ``Sphinx``.
 - ``models`` : Modèles déjà entraînés qui peuvent être utilisés pour effectuer
   des prédictions.
-- ``src`` : Fichiers sources des modèles. Le projet ùtilise le langage
+- ``diurnal`` : Fichiers sources des modèles. Le projet ùtilise le langage
   ``Python`` et la bibliothèque ``PyTorch``.
 - ``test`` : Scripts utilisés pour valider le format des données et les
-  modèles. Ils utilisent ``Python`` et la bibliothèque ``unittest``.
+  modèles. Ils utilisent ``Python`` et la bibliothèque ``pytest``.
 
-Configuration
-`````````````
+Installation avec pip
+`````````````````````
 
-Le langage ``Python`` doit être installé sur le système (version requise :
-3.7). Une carte graphique NVIDIA est recommandée pour entraîner les réseaux
-neuronaux.
+Exécutez la commande suivante pour installer la bibliothèque:
 
-Créez d'abord un environnement virtual ``Python`` et installez les outils
-nécessaires.
+.. code-block:: bash
+
+   cd diurnal
+   pip install . # Installation avec pip (recommandé)
+
+Scripts de démonstration
+````````````````````````
+
+Consultez le répertoire ``./demo`` pour voir des exemples commentés
+d'utilisation de la bibliothèque.
+
+Installation alternative
+````````````````````````
+
+Il est aussi possible d'installer la bibliothèque avec ``venv``.
 
 Linux :
 
 .. code-block:: bash
 
-   python3 -m venv ./venv # Créer l'environnement virtuel
-   source ./venv/bin/activate # Activer l'environnement
-   pip install -r requirements.txt # Installer les outils requis
+   python3 -m venv ./venv # Créer l'environnement virtuel.
+   source ./venv/bin/activate # Activer l'environnement.
+   pip install -r requirements.txt # Installer les outils requis.
+   py setup.py install # Installer la bibliothèque diurnal.
 
 Windows :
 
 .. code-block:: bash
 
-   py -m venv .\venv # Créer l'environnement virtuel
-   .\venv\Scripts\activate.bat # Activer l'environnement
-   pip install -r requirements.txt # Installer les outils requis
+   py -m venv .\venv # Créer l'environnement virtuel.
+   .\venv\Scripts\activate.bat # Activer l'environnement.
+   pip install -r requirements.txt # Installer les outils requis.
+   py setup.py install # Installer la bibliothèque diurnal.
 
 Obtenir l'ensemble de données
 `````````````````````````````
 
-Décompressez l'archive ``data/archiveII.tar.gz`` incluse dans le dépôt.
-L'archive a été obtenue du projet ``dl-rna`` à l'adresse
-https://github.com/marcellszi/dl-rna/releases.
+La bibliothèque permet de télécharger et de décompresser trois ensembles de
+données :
 
-Les données brutes doivent être transformées en une représentation utilisable
-par les outils développés dans le dépôt. Pour y arriver, exécuter le script
-de préparation des données :
+- ArchiveII
+- RNASTRalign
+- RNA_STRAND
 
-Linux :
+Exécutez le script suivant pour obtenir les données :
 
-.. code-block:: bash
+.. code-block:: python
 
-   python3 ./src/prepare_data.py
+   import diurnal.database as db
+   db.download_all("./data/")
 
-Windows :
+Cadre de tests
+``````````````
 
-.. code-block:: bash
-
-   py .\src\prepare_data.py
-
-Visualisation des données
-`````````````````````````
-
-Vous pouvez utiliser l'outil ``draw_rna`` (https://github.com/DasLab/draw_rna)
-pour lancer l'exemple ``test/visualize_rna``.
-
-Exécuter les tests
-``````````````````
-
-Pour exécuter un test, lancer les commandes suivantes :
+Le dépôt contient un cadre de tests automatisés développé avec la bibliothèque
+``pytest``. Lancez la commande suivante pour l'exécuter.
 
 Linux :
 
-.. code-block:: bash
+.. code-block:: python
 
-   source ./venv/bin/activate
-   python3 ./test/<NOM_DU_TEST>
+   python3 pytest
 
 Windows :
 
-.. code-block:: bash
+.. code-block:: python
 
-   .\venv\Scripts\activate.bat
-   python .\test\<NOM_DU_TEST>
+   py pytest
 
-où ``<NOM_DU_TEST>`` est l'une des options suivantes :
-
-- ``pytorch_validation/cnn_example.py`` : Validation de l'installation de
-  ``pytorch`` avec un réseau convolutionnel simple.
-- ``dataset_validation.py`` : Vérification du dépaquetage de l'ensemble de
-  données.
