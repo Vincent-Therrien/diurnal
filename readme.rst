@@ -1,8 +1,8 @@
 diurnal
 =======
 
-- English: :ref:`Predict RNA Secondary Structure` (en)
-- Français: :ref:`Prédire des structures secondaires d'ARN` (fr)
+- `English (en) <#Predict-RNA-Secondary-Structure>`_
+- `Français (fr) <#Prédire-des-structures-secondaires-d'ARN>`_
 
 Predict RNA Secondary Structure
 -------------------------------
