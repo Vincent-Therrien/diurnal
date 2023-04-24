@@ -1,11 +1,11 @@
 diurnal
 =======
 
-- `English (en) <#Predict-RNA-Secondary-Structure>`_
+- `English (en) <#Predict-RNA-Secondary-Structures>`_
 - `Français (fr) <#Prédire-des-structures-secondaires-dARN>`_
 
-Predict RNA Secondary Structure
--------------------------------
+Predict RNA Secondary Structures
+--------------------------------
 
 This project aims at predicting RNA secondary structures by combining neural
 networks and thermodynamic models. Reinforcement learning is planned to be
@@ -20,17 +20,12 @@ included to make that combination more effective.
 Install with pip
 ````````````````
 
-Execute the following instruction to install the library with pip.
+Execute the following command to install the library with pip.
 
 .. code-block:: bash
 
    cd diurnal
    pip install .
-
-Demonstration Scripts
-`````````````````````
-
-The directory  ``./demo`` comprises commented usages of the library.
 
 Alternative Installation
 ````````````````````````
@@ -55,10 +50,15 @@ Windows :
    pip install -r requirements.txt
    py setup.py install
 
-Dataset Obtention
-`````````````````````````````
+Demonstration Scripts
+`````````````````````
 
-The library allows you to downlaod the following datasets:
+The directory  ``./demo`` comprises commented usages of the library.
+
+Dataset Obtention
+`````````````````
+
+The library allows you to download the following datasets:
 
 - ArchiveII
 - RNASTRalign
@@ -117,12 +117,6 @@ Exécutez la commande suivante pour installer la bibliothèque:
    cd diurnal
    pip install .
 
-Scripts de démonstration
-````````````````````````
-
-Consultez le répertoire ``./demo`` pour voir des exemples commentés
-d'utilisation de la bibliothèque.
-
 Installation alternative
 ````````````````````````
 
@@ -145,6 +139,12 @@ Windows :
    .\venv\Scripts\activate.bat # Activer l'environnement.
    pip install -r requirements.txt # Installer les outils requis.
    py setup.py install # Installer la bibliothèque diurnal.
+
+Scripts de démonstration
+````````````````````````
+
+Consultez le répertoire ``./demo`` pour voir des exemples commentés
+d'utilisation de la bibliothèque.
 
 Obtenir l'ensemble de données
 `````````````````````````````

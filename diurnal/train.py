@@ -8,7 +8,7 @@ import torch
 import os.path
 
 from .utils import file_io
-from .transform import SecondaryStructure
+from .transform import SecondaryStructure, Family
 
 # Input data transformation
 def split_data(data, fractions: list, offset: int = 0) -> list:
@@ -97,18 +97,8 @@ def shuffle_data(*args) -> tuple:
     return args
 
 # Training functions
-def load_data(path: str, randomize: bool = True) -> list:
+def _read_npy_files(path: str) -> tuple:
     """
-    Read formatted data into tensors.
-
-    Args:
-        path (str): Name of the directory that contains the Numpy files
-            written by the function `diurnal.database.format`.
-        randomize (bool): Randomize data if set to True.
-    
-    Returns:
-        list: Loaded data represented as
-            [primary structure, secondary structure, family].
     """
     if path[-1] != '/': path += '/'
     # Load data.
@@ -124,7 +114,9 @@ def load_data(path: str, randomize: bool = True) -> list:
             if array.any():
                 data.append(array)
         elif p.endswith(".txt"):
-            pass
+            f = open(path + p, "r")
+            names = f.read().split('\n')
+            data.append(names)
     # Validate the loaded data.
     if data:
         lengths = [len(d) for d in data]
@@ -134,10 +126,14 @@ def load_data(path: str, randomize: bool = True) -> list:
     else:
         file_io.log(f"load_data: path `{path}` is empty.", -1)
         raise RuntimeError
-    # Shuffle data.
-    if randomize:
-        data = list(shuffle_data(*data))
+    return data
+
+def _convert_to_tensor(data: list) -> torch.Tensor:
+    """
+    """
     tensors = []
+    if len(data) < 1:
+        return None
     for i in range(len(data[0])):
         tensor = [
             torch.tensor(data[0][i].T, dtype=torch.float32),
@@ -148,6 +144,66 @@ def load_data(path: str, randomize: bool = True) -> list:
             tensor.append(torch.tensor(data[2][i], dtype=torch.float32))
         tensors.append(tensor)
     return tensors
+
+def load_data(path: str, randomize: bool = True) -> tuple:
+    """
+    Read formatted data into tensors.
+
+    Args:
+        path (str): Name of the directory that contains the Numpy files
+            written by the function `diurnal.database.format`.
+        randomize (bool): Randomize data if set to True.
+    
+    Returns:
+        list: Loaded data represented as
+            [primary structure, secondary structure, family].
+    """
+    data = _read_npy_files(path)
+    # Shuffle data.
+    if randomize:
+        data = list(shuffle_data(*data))
+    return _convert_to_tensor(data[:3]), data[-1]
+
+def load_inter_family(path: str, family: str, randomize: bool = True) -> list:
+    """
+    Read formatted data into a tensor that contains the specified family and
+    another tensor that contains all the other families.
+
+    Args:
+        path (str): Name of the directory that contains the Numpy files
+            written by the function `diurnal.database.format`.
+        family (str): Family to place in a different tensor.
+        randomize (bool): Randomize data if set to True.
+    
+    Returns:
+        tuple: Loaded data represented as
+            [primary structure, secondary structure, family].
+            The first element is the test family. The second element comprises
+            all other families.
+    """
+    data = _read_npy_files(path)
+    if family not in list(Family.ONEHOT.keys()):
+        file_io.log(f"Family `{family}` not recognized.", -1)
+        raise ValueError
+    family_vector = Family.ONEHOT[family]
+    k = [[], [], [], []] # Test family
+    n = [[], [], [], []] # Other families
+    for i in range(len(data[0])):
+        if np.array_equal(data[2][i], family_vector):
+            for j in range(4):
+                k[j].append(data[j][i])
+        else:
+            for j in range(4):
+                n[j].append(data[j][i])
+    # Shuffle data.
+    if randomize:
+        k = list(shuffle_data(*k))
+        n = list(shuffle_data(*n))
+    K = _convert_to_tensor(k[:3]) if k else None
+    N = _convert_to_tensor(n[:3]) if n else None
+    k_names = k[-1] if k else None
+    n_names = n[-1] if n else None
+    return K, N, k_names, n_names
 
 def load_inter_family_data(path: str, family, randomize:bool=True) -> tuple:
     """

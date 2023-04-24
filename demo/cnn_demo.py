@@ -5,7 +5,6 @@
 
 import torch
 from torch.utils.data import DataLoader
-import numpy as np
 
 from diurnal import database, train, evaluate
 from diurnal.transform import PrimaryStructure as s1
@@ -15,7 +14,7 @@ from diurnal.models import DiurnalBasicModel
 from diurnal.networks import cnn as diurnalCNN
 
 # Load data from `.npy` files.
-data = train.load_data("./data/formatted/")
+data, names = train.load_data("./data/formatted/")
 
 # Split the data in training and test sets.
 train_set, test_set = train.split_data(data, [0.8, 0.2])

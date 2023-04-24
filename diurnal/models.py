@@ -3,14 +3,12 @@
 """
 
 import torch
-from torch import nn, cuda, no_grad
+from torch import cuda, no_grad
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from .utils import file_io
 from .train import prediction_to_onehot, clean_true_pred
-from .transform import SecondaryStructure as s2
-from sklearn.metrics import f1_score
 
 class DiurnalBasicModel():
     """
