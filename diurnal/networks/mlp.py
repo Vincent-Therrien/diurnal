@@ -60,23 +60,20 @@ class RNA_MLP_classes(nn.Module):
     """
     def __init__(self, n: int):
         super().__init__()
-        width = n
-        one_hot_dim = 4
-        kernel = 3
         self.n = n
-        self.conv1 = nn.Conv1d(one_hot_dim, width, kernel, padding="same")
-        self.conv2 = nn.Conv1d(width, n, kernel, padding="same")
+        self.fc1 = nn.Linear(n, n * 2)
+        self.fc2 = nn.Linear(n * 2, n * 2)
         self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(n * n, n * 3)
+        self.fc3 = nn.Linear(n * 2 * 4, n * 3)
         self.output = nn.Softmax(2)
 
     def forward(self, x, f):
-        x = self.conv1(x)
+        x = self.fc1(x)
         x = F.relu(x)
-        x = self.conv2(x)
+        x = self.fc2(x)
         x = F.relu(x)
         x = self.flatten(x)
-        x = self.fc1(x)
+        x = self.fc3(x)
         x = reshape(x, (x.shape[0], self.n, 3))
         x = self.output(x)
         return x

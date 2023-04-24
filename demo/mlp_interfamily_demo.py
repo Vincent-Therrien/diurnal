@@ -1,6 +1,6 @@
 """
-    Demonstration for a simple CNN that predicts RNA secondary
-    structures.
+    Demonstration for a simple MLP that predicts RNA secondary
+    structures with inter-family tests.
 """
 
 import numpy as np
@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 
 from diurnal import train, evaluate
 from diurnal.models import DiurnalBasicModel
-from diurnal.networks import cnn as diurnalCNN
+from diurnal.networks import mlp as diurnalMLP
 from diurnal.utils import file_io
 from diurnal import transform
 
@@ -27,13 +27,13 @@ for family in families:
 
     # Build the model.
     model = DiurnalBasicModel(
-        diurnalCNN.RNA_CNN_classes, [512],
+        diurnalMLP.RNA_MLP_classes, [512],
         torch.optim.Adam, [1e-04],
         torch.nn.MSELoss()
     )
 
     # Train the model.
-    model.train_with_families(DataLoader(train_set, batch_size=32), 1)
+    model.train_with_families(DataLoader(train_set, batch_size=32), 5)
     
     # Evaluate the model.
     f1 = model.test_with_family(DataLoader(test_set, batch_size=32),
@@ -44,4 +44,5 @@ for family in families:
     # Erase the model before the next iteration to avoid wasting memory.
     del model
 
+print("Resulting F1-scores for each family:")
 print(families)
