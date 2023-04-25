@@ -1,1 +1,1 @@
-__all__ = ["database", "evaluate", "models", "train", "transform"]
+__all__ = ["database", "evaluate", "models", "train", "transform", "visualize"]

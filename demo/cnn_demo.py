@@ -23,8 +23,8 @@ model = DiurnalBasicModel(
         torch.nn.MSELoss()
     )
 
-model.train_with_families(DataLoader(train_set, batch_size=32), 5)
-f1 = model.test_with_family(DataLoader(test_set, batch_size=32),
+model.train(DataLoader(train_set, batch_size=32), 5)
+f1 = model.test(DataLoader(test_set, batch_size=32),
     evaluate.three_class_f1)
 
 # Display performances.

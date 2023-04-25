@@ -226,7 +226,7 @@ class Family:
         "tRNA"       : [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
     }
 
-    def onehot(family: str):
+    def onehot(family: str) -> list:
         """
         Encode a family into a vector.
         
@@ -236,3 +236,19 @@ class Family:
             Returns (list(int)): One-hot encoded family.
         """
         return Family.ONEHOT[family]
+
+    def onehot_to_family(vector: list) -> str:
+        """
+        Convert a one-hot-encoded family back into its name.
+
+        Args:
+            vector (list): A one-hot encoded family.
+
+        Returns (str): Family name.
+        """
+        v = list(vector)
+        index = v.index(max(v))
+        for family, onehot in Family.ONEHOT.items():
+            if onehot[index]:
+                return family
+        return ""

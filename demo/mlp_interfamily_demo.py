@@ -33,11 +33,10 @@ for family in families:
     )
 
     # Train the model.
-    model.train_with_families(DataLoader(train_set, batch_size=32), 5)
+    model.train(DataLoader(train_set, batch_size=32), 5)
     
     # Evaluate the model.
-    f1 = model.test_with_family(DataLoader(test_set, batch_size=32),
-        evaluate.three_class_f1)
+    f1 = model.test(DataLoader(test_set, batch_size=32),evaluate.three_class_f1)
     families[family] = np.mean(f1)
     evaluate.summarize_results(f1, f"CNN, inter-family test {family}")
 

@@ -1,5 +1,10 @@
 """
-    Basic model used by the library/
+    Basic model used by the library.
+
+    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    Affiliation: Département d'informatique, UQÀM
+    File creation date: April 2023
+    License: MIT
 """
 
 import torch
@@ -17,13 +22,18 @@ class DiurnalBasicModel():
     This class defines training and testing functions common to
     different neural networks.
     """
-    def __init__(self, nn, nn_args, optimizer, optim_args, loss_fn) -> None:
+    def __init__(self, nn, nn_args, optimizer, optim_args, loss_fn,
+                 use_half: bool = True) -> None:
         self.device = "cuda" if cuda.is_available() else "cpu"
-        self.nn = nn(512).to(self.device).half()
+        self.use_half = use_half
+        if self.use_half:
+            self.nn = nn(512).to(self.device).half()
+        else:
+            self.nn = nn(512).to(self.device).half()
         self.optimizer = optimizer(self.nn.parameters(), eps=1e-4)
         self.loss_fn = loss_fn
     
-    def train_with_families(self,
+    def train(self,
             dataloader: DataLoader,
             n_epochs: int,
             validation: DataLoader = None,
@@ -45,8 +55,14 @@ class DiurnalBasicModel():
             file_io.log("Beginning training.")
         for epoch in range(n_epochs):
             for batch, (x, y, f) in enumerate(dataloader):
-                x, y = x.to(self.device).half(), y.to(self.device).half()
-                f = f.to(self.device).half()
+                if self.use_half:
+                    x = x.to(self.device).half()
+                    y = y.to(self.device).half()
+                    f = f.to(self.device).half()
+                else:
+                    x = x.to(self.device)
+                    y = y.to(self.device)
+                    f = f.to(self.device)
                 self.optimizer.zero_grad()
                 pred = self.nn(x, f)
                 loss = self.loss_fn(pred, y)
@@ -68,7 +84,7 @@ class DiurnalBasicModel():
         
         return losses
     
-    def test_with_family(self, dataloader: DataLoader, evaluate) -> tuple:
+    def test(self, dataloader: DataLoader, evaluate) -> tuple:
         """
         Test a model with a dataset.
 
@@ -81,8 +97,14 @@ class DiurnalBasicModel():
         f1 = []
         with no_grad():
             for batch, (x, y, f) in enumerate(dataloader):
-                x, y = x.to(self.device).half(), y.to(self.device).half()
-                f = f.to(self.device).half()
+                if self.use_half:
+                    x = x.to(self.device).half()
+                    y = y.to(self.device).half()
+                    f = f.to(self.device).half()
+                else:
+                    x = x.to(self.device).half()
+                    y = y.to(self.device).half()
+                    f = f.to(self.device).half()
                 output = self.nn(x, f)
                 for i, j in zip(output, y):
                     pred = prediction_to_onehot(i.tolist())

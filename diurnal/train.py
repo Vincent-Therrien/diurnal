@@ -1,5 +1,10 @@
 """
     RNA secondary structure training utility module.
+
+    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    Affiliation: Département d'informatique, UQÀM
+    File creation date: April 2023
+    License: MIT
 """
 
 from random import shuffle
