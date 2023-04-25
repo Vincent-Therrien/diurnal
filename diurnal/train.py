@@ -99,6 +99,14 @@ def shuffle_data(*args) -> tuple:
 # Training functions
 def _read_npy_files(path: str) -> tuple:
     """
+    Read an RNA dataset encoded into .npy Numpy files.
+
+    Args:
+        path (str): Directory path of the folder containing the dataset
+            files.
+    
+    Returns (tuple(list)):  List-converted file content in the following
+        order: (primary structure, secondary structure, families, names)
     """
     if path[-1] != '/': path += '/'
     # Load data.
@@ -130,6 +138,12 @@ def _read_npy_files(path: str) -> tuple:
 
 def _convert_to_tensor(data: list) -> torch.Tensor:
     """
+    Convert matrix-like objects into pyTorch tensors.
+
+    Args:
+        data (list-like): Array of number to convert into a tensor.
+    
+    Returns (torch.Tensor): Tensor-converted data.
     """
     tensors = []
     if len(data) < 1:

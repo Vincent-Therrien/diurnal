@@ -39,7 +39,8 @@ from .utils import file_io
 
 # Constant values.
 URL_PREFIX ="https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/"
-FILE_ENDING = ".tar.gz"
+DATA_FILE_ENDING = ".tar.gz"
+INFO_FILE_ENDING = ".rst"
 ALLOWED_DATASETS = [
     "archiveII",
     "RNASTRalign",
@@ -81,6 +82,8 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
     if verbosity: file_io.log("Download and install an RNA database.")
     if dst[-1] != '/':
         dst += '/'
+    if not os.path.exists(dst):
+        os.makedirs(dst)
     # Data validation.
     if type(datasets) is str:
         datasets = [datasets]
@@ -91,8 +94,13 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
             raise FileNotFoundError
     # Data obtention.
     for dataset in datasets:
-        url = URL_PREFIX + "/" + dataset + FILE_ENDING
-        file_name = dst + dataset + FILE_ENDING
+        # Information file.
+        url = URL_PREFIX + "/" + dataset + INFO_FILE_ENDING
+        file_name = dst + dataset + INFO_FILE_ENDING
+        file_io.download(url, file_name, 0, dataset)
+        # Data file.
+        url = URL_PREFIX + "/" + dataset + DATA_FILE_ENDING
+        file_name = dst + dataset + DATA_FILE_ENDING
         file_io.download(url, file_name, verbosity, dataset)
         file_io.decompress(file_name, "r:gz", dst, verbosity, dataset)
         if cleanup:

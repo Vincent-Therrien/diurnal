@@ -6,10 +6,7 @@
 import torch
 from torch.utils.data import DataLoader
 
-from diurnal import database, train, evaluate
-from diurnal.transform import PrimaryStructure as s1
-from diurnal.transform import SecondaryStructure as s2
-from diurnal.transform import Family as f
+from diurnal import train, evaluate
 from diurnal.models import DiurnalBasicModel
 from diurnal.networks import cnn as diurnalCNN
 
@@ -29,4 +26,6 @@ model = DiurnalBasicModel(
 model.train_with_families(DataLoader(train_set, batch_size=32), 5)
 f1 = model.test_with_family(DataLoader(test_set, batch_size=32),
     evaluate.three_class_f1)
+
+# Display performances.
 evaluate.summarize_results(f1, "CNN, Three-class evaluation")

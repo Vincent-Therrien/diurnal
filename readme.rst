@@ -20,7 +20,7 @@ included to make that combination more effective.
 Install with pip
 ````````````````
 
-Execute the following command to install the library with pip.
+Execute the following commands to install the library with pip.
 
 .. code-block:: bash
 
@@ -30,23 +30,19 @@ Execute the following command to install the library with pip.
 Alternative Installation
 ````````````````````````
 
-You can also install the library with ``venv``.
+You can also install the library with setup script.
 
 Linux :
 
 .. code-block:: bash
 
-   python3 -m venv ./venv
-   source ./venv/bin/activate
    pip install -r requirements.txt
-   py setup.py install
+   python3 setup.py install
 
 Windows :
 
 .. code-block:: bash
 
-   py -m venv .\venv
-   .\venv\Scripts\activate.bat
    pip install -r requirements.txt
    py setup.py install
 
@@ -110,7 +106,7 @@ réseaux neuronaux. Le projet comprend les répertoires suivants :
 Installation avec pip
 `````````````````````
 
-Exécutez la commande suivante pour installer la bibliothèque:
+Exécutez les commandes suivantes pour installer la bibliothèque:
 
 .. code-block:: bash
 
@@ -120,23 +116,19 @@ Exécutez la commande suivante pour installer la bibliothèque:
 Installation alternative
 ````````````````````````
 
-Il est aussi possible d'installer la bibliothèque avec ``venv``.
+Il est aussi possible d'installer la bibliothèque avec le script ``setup.py``.
 
 Linux :
 
 .. code-block:: bash
 
-   python3 -m venv ./venv # Créer l'environnement virtuel.
-   source ./venv/bin/activate # Activer l'environnement.
    pip install -r requirements.txt # Installer les outils requis.
-   py setup.py install # Installer la bibliothèque diurnal.
+   python3 setup.py install # Installer la bibliothèque diurnal.
 
 Windows :
 
 .. code-block:: bash
 
-   py -m venv .\venv # Créer l'environnement virtuel.
-   .\venv\Scripts\activate.bat # Activer l'environnement.
    pip install -r requirements.txt # Installer les outils requis.
    py setup.py install # Installer la bibliothèque diurnal.
 
