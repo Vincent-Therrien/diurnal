@@ -8,8 +8,7 @@ Predict RNA Secondary Structures
 --------------------------------
 
 This project aims at predicting RNA secondary structures with neural networks.
-Reinforcement learning is planned to be included to make that combination more
-effective.
+The project comprises the following subdirectories.
 
 - ``demo`` : Python scripts that illustrate the usage of the library.
 - ``docs`` : Documentation file written with ``Sphinx``.
