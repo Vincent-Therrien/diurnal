@@ -7,9 +7,9 @@ diurnal
 Predict RNA Secondary Structures
 --------------------------------
 
-This project aims at predicting RNA secondary structures by combining neural
-networks and thermodynamic models. Reinforcement learning is planned to be
-included to make that combination more effective.
+This project aims at predicting RNA secondary structures with neural networks.
+Reinforcement learning is planned to be included to make that combination more
+effective.
 
 - ``demo`` : Python scripts that illustrate the usage of the library.
 - ``docs`` : Documentation file written with ``Sphinx``.
