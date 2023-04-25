@@ -67,6 +67,17 @@ Execute the following Python script to download the data:
    import diurnal.database as db
    db.download_all("./data/")
 
+Documentation
+``````````````
+
+The following commands generate the documentation. The SPhinx library has to be
+installed.
+
+.. code-block:: bash
+
+   cd docs
+   make html
+
 Test Framwork
 `````````````
 
@@ -155,6 +166,17 @@ Exécutez le script suivant pour obtenir les données :
    import diurnal.database as db
    db.download_all("./data/")
 
+Documentation
+``````````````
+
+La commande suivante génère la documentation. La bibliothèque Sphinx doit être
+installée.
+
+.. code-block:: bash
+
+   cd docs
+   make html
+
 Cadre de tests
 ``````````````
 
@@ -163,13 +185,13 @@ Le dépôt contient un cadre de tests automatisés développé avec la biblioth�
 
 Linux :
 
-.. code-block:: python
+.. code-block:: bash
 
    python3 pytest
 
 Windows :
 
-.. code-block:: python
+.. code-block:: bash
 
    py pytest
 
