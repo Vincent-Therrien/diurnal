@@ -12,7 +12,6 @@ The project comprises the following subdirectories.
 
 - ``demo`` : Python scripts that illustrate the usage of the library.
 - ``docs`` : Documentation file written with ``Sphinx``.
-- ``models`` : Trained models.
 - ``diurnal`` : Library source code.
 - ``test`` : Automated test framework written with ``pytest``.
 
@@ -106,8 +105,6 @@ réseaux neuronaux. Le projet comprend les répertoires suivants :
 
 - ``demo`` : Scripts Python qui illustrent l'utilisation de la bibliothèque.
 - ``docs`` : Fichiers de documentation réalisés avec l'outil ``Sphinx``.
-- ``models`` : Modèles déjà entraînés qui peuvent être utilisés pour effectuer
-  des prédictions.
 - ``diurnal`` : Fichiers sources des modèles. Le projet ùtilise le langage
   ``Python`` et la bibliothèque ``PyTorch``.
 - ``test`` : Scripts utilisés pour valider le format des données et les
