@@ -202,7 +202,7 @@ class SimilarityModel():
 
     def train(self, data, epochs: int) -> None:
         self.train_classifier(data, 1)
-        self.test_classifier(data)
+        #self.test_classifier(data)
         self.train_predictor(data, epochs)
 
     def predict(self, x) -> tuple:
