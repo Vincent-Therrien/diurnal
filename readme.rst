@@ -2,7 +2,7 @@ diurnal
 =======
 
 - `English (en) <#Predict-RNA-Secondary-Structures>`_
-- `Français (fr) <#Prédire-des-structures-secondaires-dARN>`_
+- `Français (fr) <#Prédire-les-structures-secondaires-de-lARN>`_
 
 Predict RNA Secondary Structures
 --------------------------------
