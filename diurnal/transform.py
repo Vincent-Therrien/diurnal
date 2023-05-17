@@ -211,6 +211,42 @@ class SecondaryStructure:
             i -= 1
         return None
 
+class Structure:
+    """
+    Representations that combine the primary and secondary structures
+    into a single data structure.
+    """
+
+    def structure_to_2D_matrix(bases: list, pairings: list, size: int) -> list:
+        """
+        Convert pairings returned by `diurnal.utils.read_ct_file` into
+        a 2D matrix of one-hot-encoded pairing. For instance, the
+        molecule `AAACCUUU` with secondary structure `(((...)))` will
+        be represented as:
+
+            [0 0 0 0 0 0 0 0 y]
+            [0 0 0 0 0 0 0 y 0]
+            [0 0 0 0 0 0 y 0 0]
+            [0 0 0 0 0 0 0 0 0]
+            [0 0 0 0 0 0 0 0 0]
+            [0 0 0 0 0 0 0 0 0]
+            [0 0 x 0 0 0 0 0 0]
+            [0 x 0 0 0 0 0 0 0]
+            [x 0 0 0 0 0 0 0 0]
+
+        where `x` is the vector `[1 0 0 0 0 0]`, a one-hot encoded
+        representation of the `AU`, and `y` is the vector
+        `[0 1 0 0 0 0]`, a one-hot encoded representation of `UA`.
+
+        Args:
+            bases (list(str)): A list of nucleotides.
+            pairings (list(int)): A list of nucleotide pairings.
+            size (int): Output size. `0` for no padding.
+
+        Returns (str): RNA structure.
+        """
+        pass
+
 class Family:
     # One-hot encoding for RNA families.
     ONEHOT = {
