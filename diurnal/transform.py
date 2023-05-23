@@ -216,13 +216,22 @@ class Structure:
     Representations that combine the primary and secondary structures
     into a single data structure.
     """
+    IUPAC_ONEHOT_PAIRINGS = {
+        "AU": [1, 0, 0, 0, 0, 0],
+        "UA": [0, 1, 0, 0, 0, 0],
+        "CG": [0, 0, 1, 0, 0, 0],
+        "GC": [0, 0, 0, 1, 0, 0],
+        "GU": [0, 0, 0, 0, 1, 0],
+        "UG": [0, 0, 0, 0, 0, 1],
+        "-":  [0, 0, 0, 0, 0, 0]
+    }
 
     def structure_to_2D_matrix(bases: list, pairings: list, size: int) -> list:
         """
         Convert pairings returned by `diurnal.utils.read_ct_file` into
-        a 2D matrix of one-hot-encoded pairing. For instance, the
-        molecule `AAACCUUU` with secondary structure `(((...)))` will
-        be represented as:
+        a 2D anti-diagonal matrix of one-hot-encoded pairing. For
+        instance, the molecule `AAACCUUU` with secondary structure
+        `(((...)))` will be represented as:
 
             [0 0 0 0 0 0 0 0 y]
             [0 0 0 0 0 0 0 y 0]
@@ -245,7 +254,22 @@ class Structure:
 
         Returns (str): RNA structure.
         """
-        pass
+        # Obtain the list of combinations (e.g.: AU, AU, ...)
+        encoding = []
+        empty = Structure.IUPAC_ONEHOT_PAIRINGS['-']
+        for i, p in enumerate(pairings):
+            if p < 0:
+                encoding.append(empty)
+            else:
+                combination = bases[i] + bases[p]
+                encoding.append(Structure.IUPAC_ONEHOT_PAIRINGS[combination])
+        if len(pairings) < size:
+            encoding += empty * (size - len(pairings))
+        # Convert the list of combinations into a 2D anti-diagonal matrix.
+        matrix = [[empty for _ in range(size)] for _ in range(size)]
+        for i in range(size):
+            matrix[size - i - 1][i] = encoding[i]
+        return matrix
 
 class Family:
     # One-hot encoding for RNA families.
