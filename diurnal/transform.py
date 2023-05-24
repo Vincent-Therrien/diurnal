@@ -8,8 +8,13 @@
 """
 
 class PrimaryStructure:
-    # One-hot encoding dictionary for IUPAC symbols
-    # Reference: https://www.bioinformatics.org/sms/iupac.html
+    """A utility class designed to transform RNA primary structures into
+    useful formats.
+
+    Attributes:
+        IUPAC_ONEHOT (dict): One-hot encoding dictionary for IUPAC
+            symbols. Reference: https://www.bioinformatics.org/sms/iupac.html
+    """
     IUPAC_ONEHOT = {
         #     A  C  G  U
         "A": [1, 0, 0, 0],
@@ -32,16 +37,19 @@ class PrimaryStructure:
         "-": [0, 0, 0, 0],
     }
 
-    def iupac_to_onehot(bases: list, size: int = 0):
-        """
-        Convert pairings returned by `diurnal.utils.read_ct_file` into
-        a primary structure, e.g. `[[1,0,0,0], [0,1,0,0]]`.
-        
+    def iupac_to_onehot(bases, size: int = 0) -> list:
+        """Convert a list of IUPAC symbols into a one-hot encoded list
+        to represent the primary structure of an RNA molecule.
+
         Args:
-            bases (list(str)): A list of nucleotides.
+            bases: A sequence of nucleotides, e.g. `['A', 'U']` or
+                `'AU'`.
             size (int): Output size. `0` for no padding.
-        
-        Returns (list(list(int))): One-hot encoded primary structure.
+
+        Returns (list(list(int))): One-hot encoded primary structure,
+            e.g. `[[1,0,0,0], [0,1,0,0]]`. Null elements are appended at
+            the right end if the size is greater than the length of the
+            `bases` argument.
         """
         encoding = [PrimaryStructure.IUPAC_ONEHOT[base] for base in bases]
         if len(bases) < size:
@@ -49,14 +57,15 @@ class PrimaryStructure:
                 encoding.append(PrimaryStructure.IUPAC_ONEHOT['.'])
         return encoding
 
-    def onehot_to_iupac(onehot: list):
-        """
-        Convert one-hot encoding into a sequence of nucleotides.
-        
+    def onehot_to_iupac(onehot: list) -> list:
+        """Convert one-hot primary structure encoding into a sequence of
+        nucleotides.
+
         Args:
-            (list(list(int))): One-hot encoded primary structure.
-        
-        Returns (list(str)): A list of nucleotide.
+            onehot (list(list(int))): One-hot encoded primary structure.
+
+        Returns (list(str)): A list of nucleotides encoded with IUPAC
+            symbols.
         """
         nt = []
         for base in onehot:
@@ -73,7 +82,16 @@ class PrimaryStructure:
         return nt[:i]
 
 class SecondaryStructure:
-    # One-hot encoding dictionary for secondary structure bracket notation.
+    """A utility class designed to transform RNA secondary structures
+    into useful formats.
+
+    Attributes:
+        BRACKET_ONEHOT (dict): One-hot encoding dictionary for a
+            secondary structure that relies on the bracket notation.
+        SHADOW_ENCODING (dict): One-hot encoding dictionary to encode
+            the shadow of the secondary structure (i.e. the symbols `(`
+            and `)` of the bracket notation are considered identical).
+    """
     BRACKET_ONEHOT = {
         "(": [1, 0, 0],
         ".": [0, 1, 0],
@@ -88,16 +106,19 @@ class SecondaryStructure:
         " " : 0
     }
 
-    def pairings_to_bracket(pairings: list, size: int):
-        """
-        Convert pairings returned by `diurnal.utils.read_ct_file` into
-        a bracket notation, e.g. `(((...)))`.
+    def pairings_to_bracket(pairings: list, size: int) -> str:
+        """Convert a list of nucleotide pairings into a secondary
+        structure bracket notation, e.g. `'(((...)))`.'
         
         Args:
-            pairings (list(int)): A list of nucleotide pairings.
+            pairings (list(int)): A list of nucleotide pairings, e.g.
+                the pairing `(((...)))` is represented as
+                `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
             size (int): Output size. `0` for no padding.
         
-        Returns (str): Secondary structure bracket notation.
+        Returns (str): Secondary structure bracket notation. Null
+            elements are appended at the right end of the vector if the
+            provided size is greater than the length of the pairings.
         """
         encoding = ""
         for i, p in enumerate(pairings):
@@ -111,16 +132,19 @@ class SecondaryStructure:
             encoding += ' ' * (size - len(pairings))
         return encoding
     
-    def pairings_to_shadow(pairings: list, size: int):
-        """
-        Convert pairings returned by `diurnal.utils.read_ct_file` into
-        a secondary structure, e.g. `111000111`.
-        
+    def pairings_to_shadow(pairings: list, size: int) -> list:
+        """Convert a list of nucleotide pairings into a secondary
+        structure shadow, e.g. `'111000111'`.
+
         Args:
-            pairings (list(int)): A list of nucleotide pairings.
+            pairings (list(int)): A list of nucleotide pairings, e.g.
+                the pairing `(((...)))` is represented as
+                `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
             size (int): Output size. `0` for no padding.
         
-        Returns (str): Secondary structure shadow.
+        Returns (list(int)): Secondary structure shadow. `0` elements
+            are appended at the right end of the vector if the provided
+            size is greater than the length of the pairings.
         """
         encoding = []
         for p in pairings:
@@ -133,34 +157,28 @@ class SecondaryStructure:
                 encoding.append(SecondaryStructure.SHADOW_ENCODING[' '])
         return encoding
     
-    def pairings_to_onehot(pairings: list, size: int = 0):
-        """
-        Convert pairings returned by `diurnal.utils.read_ct_file` into
-        a secondary structure, e.g. `[[1,0,0], [0,1,0], [0,0,1]]`.
-        
+    def pairings_to_onehot(pairings: list, size: int) -> list:
+        """Convert a list of nucleotide pairings into a one-hot encoded
+        secondary structure, e.g. `[[1,0,0], [0,1,0], [0,0,1]]`.
+
         Args:
-            pairings (list(int)): A list of nucleotide pairings.
+            pairings (list(int)): A list of nucleotide pairings, e.g.
+                the pairing `(((...)))` is represented as
+                `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
             size (int): Output size. `0` for no padding.
-        
-        Returns (list(list(int))): One-hot encoded secondary structure.
+
+        Returns (list): One-hot encoded secondary structure. Null
+            elements are appended at the right end of the vector if the
+            provided size is greater than the length of the pairings.
         """
+        bracket = SecondaryStructure.pairings_to_bracket(pairings, size)
         encoding = []
-        for i, p in enumerate(pairings):
-            if p < 0:
-                encoding.append(SecondaryStructure.BRACKET_ONEHOT['.'])
-            elif i < p:
-                encoding.append(SecondaryStructure.BRACKET_ONEHOT['('])
-            else:
-                encoding.append(SecondaryStructure.BRACKET_ONEHOT[')'])
-        # Add padding
-        if len(pairings) < size:
-            for _ in range(size - len(pairings)):
-                encoding.append(SecondaryStructure.BRACKET_ONEHOT[' '])
+        for b in bracket:
+            encoding.append(SecondaryStructure.BRACKET_ONEHOT[b])
         return encoding
-    
-    def onehot_to_bracket(onehot):
-        """
-        Convert a one-hot-encoded pairing sequence into bracket
+
+    def onehot_to_bracket(onehot: list) -> str:
+        """Convert a one-hot-encoded pairing sequence into bracket
         notation, e.g. `(((...)))`.
 
         Args:
@@ -177,9 +195,8 @@ class SecondaryStructure:
             encoding += characters[value]
         return encoding
     
-    def remove_onehot_padding(sequence):
-        """
-        Remove zero-valued elements at the end of a one-hot encoded
+    def remove_onehot_padding(sequence: list) -> list:
+        """Remove zero-valued elements at the end of a one-hot encoded
         secondary structure.
 
         Args:
@@ -196,9 +213,8 @@ class SecondaryStructure:
             i -= 1
         return None
     
-    def remove_bracket_padding(sequence):
-        """
-        Remove zero-valued elements at the end of a bracket-notation
+    def remove_bracket_padding(sequence: str) -> str:
+        """Remove zero-valued elements at the end of a bracket-notation
         encoded secondary structure.
 
         Args:
@@ -212,9 +228,13 @@ class SecondaryStructure:
         return None
 
 class Structure:
-    """
-    Representations that combine the primary and secondary structures
+    """Representations that combine the primary and secondary structures
     into a single data structure.
+
+    Attributes:
+        IUPAC_ONEHOT_PAIRINGS (dict): One-hot encoded nucleotide
+            pairings, including normal ones (AU, UA, CG, and GC) and
+            wobble pairs (GU and UG).
     """
     IUPAC_ONEHOT_PAIRINGS = {
         "AU": [1, 0, 0, 0, 0, 0],
@@ -227,11 +247,10 @@ class Structure:
     }
 
     def structure_to_2D_matrix(bases: list, pairings: list, size: int) -> list:
-        """
-        Convert pairings returned by `diurnal.utils.read_ct_file` into
-        a 2D anti-diagonal matrix of one-hot-encoded pairing. For
-        instance, the molecule `AAACCUUU` with secondary structure
-        `(((...)))` will be represented as:
+        """Convert a list of nucleotide pairings into a 2D anti-diagonal
+        matrix of one-hot-encoded pairing. For instance, the molecule
+        `AAACCUUU` with secondary structure `(((...)))` will be
+        represented as:
 
             [0 0 0 0 0 0 0 0 y]
             [0 0 0 0 0 0 0 y 0]
@@ -254,18 +273,18 @@ class Structure:
 
         Returns (str): RNA structure.
         """
-        # Obtain the list of combinations (e.g.: AU, AU, ...)
+        # Obtain the list of bonds (e.g.: AU, AU, ...)
         encoding = []
         empty = Structure.IUPAC_ONEHOT_PAIRINGS['-']
         for i, p in enumerate(pairings):
             if p < 0:
                 encoding.append(empty)
             else:
-                combination = bases[i] + bases[p]
-                encoding.append(Structure.IUPAC_ONEHOT_PAIRINGS[combination])
+                bonds = bases[i] + bases[p]
+                encoding.append(Structure.IUPAC_ONEHOT_PAIRINGS[bonds])
         if len(pairings) < size:
             encoding += empty * (size - len(pairings))
-        # Convert the list of combinations into a 2D anti-diagonal matrix.
+        # Convert the list of bonds into a 2D anti-diagonal matrix.
         matrix = [[empty for _ in range(size)] for _ in range(size)]
         for i in range(size):
             matrix[size - i - 1][i] = encoding[i]
@@ -273,6 +292,11 @@ class Structure:
 
 class Family:
     # One-hot encoding for RNA families.
+    """RNA family encoding utility class.
+
+    Attributes:
+        ONEHOT (dict): Map an RNA family to a one-hot vector.
+    """
     ONEHOT = {
         "5s"         : [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         "16s"        : [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -287,19 +311,17 @@ class Family:
     }
 
     def onehot(family: str) -> list:
-        """
-        Encode a family into a vector.
-        
+        """Encode a family into a vector.
+
         Args:
             family (str): RNA family.
-        
+
             Returns (list(int)): One-hot encoded family.
         """
         return Family.ONEHOT[family]
 
     def onehot_to_family(vector: list) -> str:
-        """
-        Convert a one-hot-encoded family back into its name.
+        """Convert a one-hot-encoded family back into its name.
 
         Args:
             vector (list): A one-hot encoded family.

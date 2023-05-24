@@ -41,7 +41,7 @@ def test_encode_secondary_structure():
         [0, 0, 1],
         [0, 0, 1],
     ]
-    encoding = SecondaryStructure.pairings_to_onehot(structure)
+    encoding = SecondaryStructure.pairings_to_onehot(structure, 0)
     assert expected_encoding == encoding
 
 def test_encode_structure():
