@@ -60,6 +60,12 @@ FAMILIES = [
 ]
 
 # Installation functions.
+def available_datasets() -> None:
+    """
+    Print available RNA datasets.
+    """
+    file_io.log(f"Available datasets: {ALLOWED_DATASETS}")
+
 def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
              ) -> None:
     """
@@ -378,8 +384,3 @@ def summarize(path: str,
         content += str(F[0])
         content += "\n"
     return content
-
-def visualize(path: str):
-    """
-    """
-    pass

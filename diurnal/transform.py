@@ -131,7 +131,7 @@ class SecondaryStructure:
         if len(pairings) < size:
             encoding += ' ' * (size - len(pairings))
         return encoding
-    
+
     def pairings_to_shadow(pairings: list, size: int) -> list:
         """Convert a list of nucleotide pairings into a secondary
         structure shadow, e.g. `'111000111'`.
