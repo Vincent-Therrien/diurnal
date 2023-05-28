@@ -170,3 +170,27 @@ Le dépôt contient un cadre de tests automatisés développé avec la biblioth�
 
    cd test
    pytest
+
+Objectifs de développement
+--------------------------
+
+La liste suivante énumère des objectifs de développement du projet :
+
+- [ ] Élaborer un carnet interactif (en : *notebook*) pour illustrer le
+  fonctionnement de l'outil.
+- [ ] Conteneuriser l'environnement de développement et des scripts de
+  validation avec Docker pour reproduire les résultats automatiquement.
+- [ ] Améliorer l'empaquetage des résultats (ex. : inclure les noms des
+   molécules utilisées pour l'entraînement)
+- [ ] Développer davantage les fonctionnalités de prédiction
+  - [ ] Mieux décrire le fonctionnement des CNN
+  - [ ] Réaliser des modèles basés sur les RNN
+  - [ ] Réaliser des modèles basés sur les transformateurs
+  - [ ] Réaliser des modèles basés sur les encodeurs / décodeurs
+  - [ ] Utiliser des mécanismes récursifs pour appliquer des contraintes rigides
+    sur les résultats.
+  - [ ] Introduire des informations liées à la thermodynamique des molécules
+    pour améliorer les prédictions.
+- [ ] Investiguer l'utilisation de l'apprentissage par renforcement
+- [ ] Déployer un service Web pour permettre à des utilisateurs de tester les
+  modèle à partir d'un navigateur.
