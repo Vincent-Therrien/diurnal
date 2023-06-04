@@ -191,6 +191,7 @@ La liste suivante énumère des objectifs de développement du projet :
     sur les résultats.
   - [ ] Introduire des informations liées à la thermodynamique des molécules
     pour améliorer les prédictions.
+  - [ ] Ajouter des couches multi-branches
 - [ ] Investiguer l'utilisation de l'apprentissage par renforcement
 - [ ] Déployer un service Web pour permettre à des utilisateurs de tester les
   modèle à partir d'un navigateur.
