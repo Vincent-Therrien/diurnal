@@ -13,7 +13,7 @@ import inspect
 from .utils import file_io
 
 
-class Codes:
+class Transform:
     """RNA structural codes to transform data into other representations.
 
     Attributes:
@@ -87,7 +87,7 @@ class Codes:
 class Primary:
     """Transform RNA primary structures into useful formats."""
     @classmethod
-    def vectorize(bases, map=Codes.IUPAC_TO_ONEHOT) -> list:
+    def vectorize(bases, map=Transform.IUPAC_TO_ONEHOT) -> list:
         """Transform a sequence of bases into a vector.
 
         Args:
@@ -95,8 +95,7 @@ class Primary:
                 or ``'AU'``.
             map: A dictionary or function that maps bases to vectors.
 
-        Returns (list):
-            One-hot encoded primary structure.
+        Returns (list): One-hot encoded primary structure.
         """
         if inspect.isfunction(map):
             return map(bases)
@@ -107,15 +106,14 @@ class Primary:
         file_io.log(message, -1)
 
     @classmethod
-    def devectorize(vector, map=Codes.ONEHOT_TO_IUPAC) -> list:
+    def devectorize(vector, map=Transform.ONEHOT_TO_IUPAC) -> list:
         """Transform a vector into a sequence of bases.
         
         Args:
             vector (list-like): One-hot encoded primary structure.
             map: A dictionary or function that maps bases to vectors.
 
-        Returns (list):
-            A sequence of bases. E.g.: ``['A', 'U']``.
+        Returns (list): A sequence of bases. E.g.: ``['A', 'U']``.
         """
         if inspect.isfunction(map):
             return map(vector)
@@ -128,7 +126,7 @@ class Primary:
 
     @classmethod
     def pad(vector: list, size: int,
-            element: list = Codes.IUPAC_TO_ONEHOT['.']) -> list:
+            element: list = Transform.IUPAC_TO_ONEHOT['.']) -> list:
         """Append elements at the right extremity of a vector.
         
         Args:
@@ -136,8 +134,7 @@ class Primary:
             size (int): The final size of the vector.
             element (list): The element to add to the vector.
 
-        Returns (list):
-            The padded list of size "size:.
+        Returns (list): The padded list of size "size:.
         """
         difference = size - len(vector)
         if difference > 0:
@@ -157,8 +154,7 @@ class Secondary:
                 the pairing `(((...)))` is represented as
                 `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
 
-        Returns (list):
-            Secondary structure bracket notation.
+        Returns (list): Secondary structure bracket notation.
         """
         encoding = []
         for i, p in enumerate(pairings):
@@ -171,7 +167,7 @@ class Secondary:
         return encoding
 
     @classmethod
-    def vectorize(pairings: list, map=Codes.BRACKET_TO_ONEHOT) -> list:
+    def vectorize(pairings: list, map=Transform.BRACKET_TO_ONEHOT) -> list:
         """Encode pairings in a one-hot bracket-based secondary structure.
 
         Args:
@@ -179,8 +175,7 @@ class Secondary:
                 the pairing `(((...)))` is represented as
                 `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
 
-        Returns (list):
-            One-hot encoded secondary structure.
+        Returns (list): One-hot encoded secondary structure.
         """
         bracket = Secondary.pairings_to_bracket(pairings)
         if inspect.isfunction(map):
@@ -204,7 +199,7 @@ class Secondary:
         """
         values = [n.index(max(n)) for n in vector]
         encoding = ""
-        characters = list(Codes.BRACKET_TO_ONEHOT.keys())
+        characters = list(Transform.BRACKET_TO_ONEHOT.keys())
         for value in values:
             encoding += characters[value]
         return encoding
@@ -218,8 +213,7 @@ class Secondary:
             size (int): The final size of the vector.
             element (list): The element to add to the vector.
 
-        Returns (list):
-            The padded list of size "size:.
+        Returns (list): The padded list of size "size:.
         """
         difference = size - len(vector)
         if difference > 0:
@@ -230,7 +224,8 @@ class Secondary:
         return vector
 
 
-def to_matrix(bases: list, pairings: list, size: int) -> list:
+def to_matrix(bases: list, pairings: list,
+        map: dict = Transform.IUPAC_ONEHOT_PAIRINGS) -> list:
     """Convert a list of nucleotide pairings into a 2D anti-diagonal
     matrix of one-hot-encoded pairing.
 
@@ -252,25 +247,50 @@ def to_matrix(bases: list, pairings: list, size: int) -> list:
     `[0 1 0 0 0 0]`, a one-hot encoded representation of `UA`.
 
     Args:
-        bases (list(str)): A list of nucleotides.
-        pairings (list(int)): A list of nucleotide pairings.
-        size (int): Output size. `0` for no padding.
+        bases (list(str)): A list of nucleotides, i.e. primary structure
+        pairings (list(int)): A list of nucleotide pairings, i.e. the
+            secondary structure.
+        map (dict): Assign pairs of symbols to vectors.
 
     Returns (str): RNA structure.
     """
     # Obtain the list of bonds (e.g.: AU, AU, ...)
     encoding = []
-    empty = Codes.IUPAC_ONEHOT_PAIRINGS['-']
+    empty = map['-']
     for i, p in enumerate(pairings):
         if p < 0:
             encoding.append(empty)
         else:
             bonds = bases[i] + bases[p]
-            encoding.append(Codes.IUPAC_ONEHOT_PAIRINGS[bonds])
-    if len(pairings) < size:
-        encoding += empty * (size - len(pairings))
+            encoding.append(map[bonds])
     # Convert the list of bonds into a 2D anti-diagonal matrix.
     matrix = [[empty for _ in range(size)] for _ in range(size)]
+    size = len(matrix)
     for i in range(size):
         matrix[size - i - 1][i] = encoding[i]
     return matrix
+
+
+def pad_matrix(matrix: list, size: int,
+        map: dict = Transform.IUPAC_ONEHOT_PAIRINGS) -> list:
+    """Add neutral elements to structure matrix to fit ``size``.
+
+    Args:
+        matrix (list): Matrix obtained from ``to_matrix()``.
+        size (int): Dimension of the matrix to obtain.
+        map (dict): Assign pairs of symbols to vectors.
+
+    Returns (list): Padded matrix.
+    """
+    original_size = len(matrix)
+    if original_size >= size:
+        file_io.log(f"Matrix of size {original_size} cannot be padded "
+            + f"to size {size}")
+        return matrix
+    # Append elements on the right side.
+    append_size = size - original_size
+    for i in range(original_size):
+        matrix[i] = matrix[i] + append_size * map['-']
+    # Append elements at the bottom of the matrix.
+    for i in range(append_size):
+        matrix.append(size * map['-'])
