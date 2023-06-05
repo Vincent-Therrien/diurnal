@@ -19,7 +19,6 @@ class Transform:
     Attributes:
         IUPAC_TO_ONEHOT (dict): One-hot encoding dictionary for IUPAC
             symbols. Reference: https://www.bioinformatics.org/sms/iupac.html
-        ONEHOT_TO_IUPAC (dict): Reciprocal of IUPAC_TO_ONEHOT.
         IUPAC_ONEHOT_PAIRINGS (dict): One-hot encoded nucleotide
             pairings, including normal ones (AU, UA, CG, and GC) and
             wobble pairs (GU and UG).
@@ -28,7 +27,6 @@ class Transform:
             is an unpaired base. `(` is a base paired to a downstream
             base. `)` is a base paired to an upstream base. ` ` is a
             padding (i.e. empty) base.
-        ONEHOT_TO_BRACKET (dict): Reciprocal of BRACKET_TO_ONEHOT.
         SHADOW_ENCODING (dict): One-hot encoding dictionary to encode
             the shadow of the secondary structure (i.e. the symbols `(`
             and `)` of the bracket notation are considered identical).
@@ -55,8 +53,6 @@ class Transform:
         "-": [0, 0, 0, 0],
     }
 
-    ONEHOT_TO_IUPAC = {v: k for k, v in IUPAC_TO_ONEHOT.items()}
-
     IUPAC_ONEHOT_PAIRINGS = {
         "AU": [1, 0, 0, 0, 0, 0],
         "UA": [0, 1, 0, 0, 0, 0],
@@ -74,8 +70,6 @@ class Transform:
         " ": [0, 0, 0],
     }
 
-    ONEHOT_TO_BRACKET = {v: k for k, v in BRACKET_TO_ONEHOT.items()}
-
     SHADOW_ENCODING = {
         "(" : 1,
         "." : 0,
@@ -86,27 +80,25 @@ class Transform:
 
 class Primary:
     """Transform RNA primary structures into useful formats."""
-    @classmethod
+
     def vectorize(bases, map=Transform.IUPAC_TO_ONEHOT) -> list:
         """Transform a sequence of bases into a vector.
 
         Args:
-            bases (list-like): A sequence of bases. E.g.: ``['A', 'U']``
-                or ``'AU'``.
+            bases (list): A sequence of bases. E.g.: ``['A', 'U']``.
             map: A dictionary or function that maps bases to vectors.
 
         Returns (list): One-hot encoded primary structure.
         """
         if inspect.isfunction(map):
             return map(bases)
-        elif type(map) == dict:
+        if type(map) == dict:
             return [map[base] for base in bases]
         message = (f"Type `{type(map)}` is not allowed for primary structure "
             + "encoding. Use a mapping function or dictionary.")
         file_io.log(message, -1)
 
-    @classmethod
-    def devectorize(vector, map=Transform.ONEHOT_TO_IUPAC) -> list:
+    def devectorize(vector, map=Transform.IUPAC_TO_ONEHOT) -> list:
         """Transform a vector into a sequence of bases.
         
         Args:
@@ -117,14 +109,15 @@ class Primary:
         """
         if inspect.isfunction(map):
             return map(vector)
-        elif type(map) == dict:
-            values = [n.index(max(n)) for n in vector]
-            return [map[v] for v in values]
-        message = (f"Type `{type(map)}` is not allowed for primary structure "
-            + "encoding. Use a mapping function or dictionary.")
-        file_io.log(message, -1)
+        bases = []
+        for base in vector:
+            base = list(base)
+            for key, code in map:
+                if code == base:
+                    bases.append(key)
+                    break
+        return bases
 
-    @classmethod
     def pad(vector: list, size: int,
             element: list = Transform.IUPAC_TO_ONEHOT['.']) -> list:
         """Append elements at the right extremity of a vector.
@@ -144,7 +137,7 @@ class Primary:
 
 class Secondary:
     """Transform RNA secondary structures into useful formats."""
-    @classmethod
+
     def to_bracket(pairings: list) -> list:
         """Convert a list of nucleotide pairings into a secondary
         structure bracket notation, e.g. `'(((...)))`.'
@@ -166,7 +159,6 @@ class Secondary:
                 encoding.append(')')
         return encoding
 
-    @classmethod
     def vectorize(pairings: list, map=Transform.BRACKET_TO_ONEHOT) -> list:
         """Encode pairings in a one-hot bracket-based secondary structure.
 
@@ -177,7 +169,7 @@ class Secondary:
 
         Returns (list): One-hot encoded secondary structure.
         """
-        bracket = Secondary.pairings_to_bracket(pairings)
+        bracket = Secondary.to_bracket(pairings)
         if inspect.isfunction(map):
             return map(bracket)
         elif type(map) == dict:
@@ -194,17 +186,17 @@ class Secondary:
             onehot (list-like): A one-hot encoded secondary structure,
                 e.g. `[[1,0,0], [0,1,0], [0,0,1]]`
 
-        Returns (str): A bracket notation secondary structure,
-            e.g. `(((...)))`
+        Returns (list): A bracket notation secondary structure,
+            e.g. `['(', '(', '(', '.', '.', '.', ')', ')', ')']`
         """
+        # TODO: Generalize to other mappings
         values = [n.index(max(n)) for n in vector]
-        encoding = ""
+        encoding = []
         characters = list(Transform.BRACKET_TO_ONEHOT.keys())
         for value in values:
-            encoding += characters[value]
+            encoding.append(characters[value])
         return encoding
 
-    @classmethod
     def pad(vector: list, size: int, element: str = ' ') -> list:
         """Append elements at the right extremity of a vector.
         
@@ -264,8 +256,8 @@ def to_matrix(bases: list, pairings: list,
             bonds = bases[i] + bases[p]
             encoding.append(map[bonds])
     # Convert the list of bonds into a 2D anti-diagonal matrix.
+    size = len(encoding)
     matrix = [[empty for _ in range(size)] for _ in range(size)]
-    size = len(matrix)
     for i in range(size):
         matrix[size - i - 1][i] = encoding[i]
     return matrix
@@ -294,3 +286,16 @@ def pad_matrix(matrix: list, size: int,
     # Append elements at the bottom of the matrix.
     for i in range(append_size):
         matrix.append(size * map['-'])
+
+def from_matrix(matrix: list, map: dict = Transform.IUPAC_ONEHOT_PAIRINGS
+        ) -> tuple:
+    """Convert a structural matrix to primary and secondary structures.
+
+    Args:
+        matrix (list): RNA structure represented as a matrix.
+        map (dict): Assign a vector to a type of bond.
+
+    Returns (tuple): Result arranged as
+        (primary structure (list), secondary structure (list))
+    """
+    pass
