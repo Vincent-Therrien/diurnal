@@ -10,18 +10,19 @@
     Example:
         blocks:: python
 
-            import diurnal.database
-            from diurnal.encoding import PrimaryStructure as s1
-            from diurnal.encoding import SecondaryStructure as s2
+            import diurnal.database as db
+            import diurnal.structure as structure
+            import diurnal.family as family
 
-            diurnal.database.download_all("./data/")
-            diurnal.database.format(
-                "./data/", # Raw data input directory.
+            # Download the dataset.
+            db.download("./data/", "archiveII")
+
+            # Format the dataset into numpy `.npy` files.
+            db.format(
+                "./data/archiveII", # Directory of the raw data to format.
                 "./data/formatted", # Formatted data output directory.
-                s1.iupac_onehot, # RNA encoding scheme.
-                s2.bracket_onehot, # RNA encoding scheme.
+                512 # Normalized size.
             )
-            diurnal.database.visualize("./data/formatted")
 
     Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
     Affiliation: Département d'informatique, UQÀM
@@ -32,7 +33,6 @@
 import os
 import pathlib
 import numpy as np
-import inspect
 from datetime import datetime
 
 import diurnal.utils.file_io as file_io
@@ -52,16 +52,13 @@ ALLOWED_DATASETS = [
 
 # Installation functions.
 def available_datasets() -> None:
-    """
-    Print available RNA datasets.
-    """
+    """Print available RNA datasets."""
     file_io.log(f"Available datasets: {ALLOWED_DATASETS}")
 
 
 def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
              ) -> None:
-    """
-    Download and unpack RNA secondary structure databases.
+    """Download and unpack RNA secondary structure databases.
 
     This function downloads the datasets listed in the `datasets`
     argument, places them in the `dst` directory, and unpacks
@@ -108,9 +105,8 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
 
 
 def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
-    """
-    Download all available RNA secondary structure datasets (archiveII
-    and RNASTRalign).
+    """Download all available RNA secondary structure datasets
+    (archiveII and RNASTRalign).
 
     Args:
         dst (str): Directory path in which the files are
@@ -123,23 +119,6 @@ def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     download(dst, ALLOWED_DATASETS, cleanup, verbosity)
 
 
-def _encode_family(family: str, map) -> tuple:
-    """
-    Encode an RNA family into a matrix.
-
-    Args:
-        family (str): Family name.
-        map: A function that maps a family to a value.
-    """
-    if inspect.isfunction(map):
-        return map(family)
-    else:
-        message = (f"Type `{type(map)}` is not allowed for family encoding. "
-            + "Use a mapping function instead, "
-            + "e.g. `diurnal.encoding.Family.onehot(bases)`.")
-        file_io.log(message, -1)
-        raise RuntimeError
-
 def format(src: str,
           dst: str,
           max_size: int,
@@ -147,9 +126,8 @@ def format(src: str,
           secondary_structure_map,
           family_map=None,
           verbosity: int=1) -> None:
-    """
-    Transform the original datasets into the representation provided by
-    the arguments.
+    """ Transform the original datasets into the representation provided
+    by the arguments.
 
     This function reads the RNA dataset files comprised in the directory
     `dataset_path`, applies the encoding schemes defined by the
@@ -252,8 +230,7 @@ def summarize(path: str,
               primary_structure_map,
               secondary_structure_map,
               family_map) -> str:
-    """
-    Summarize the content of the formatted file directory.
+    """Summarize the content of the formatted file directory.
 
     Args:
         path (str): File path of the formatted data.

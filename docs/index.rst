@@ -35,7 +35,7 @@ The example below illustrates the use of the library:
 
    import torch
    from torch.utils.data import DataLoader
-   
+
    import diurnal.database as db
    from diurnal.transform import PrimaryStructure as s1
    from diurnal.transform import SecondaryStructure as s2
@@ -43,10 +43,10 @@ The example below illustrates the use of the library:
    from diurnal import train, evaluate
    from diurnal.models import DiurnalBasicModel
    from diurnal.networks import cnn as diurnalCNN
-   
+
    # Download the dataset.
    db.download("./data/", "archiveII")
-   
+
    # Format the dataset into numpy `.npy` files.
    db.format(
        "./data/archiveII", # Directory of the raw data to format.
@@ -59,20 +59,20 @@ The example below illustrates the use of the library:
 
    # Load data from `.npy` files.
    data, names = train.load_data("./data/formatted/")
-   
+
    # Split the data in training and test sets.
    train_set, test_set = train.split_data(data, [0.8, 0.2])
-   
+
    # Create the RNA secondary structure prediction model.
    model = DiurnalBasicModel(
            diurnalCNN.RNA_CNN_classes, [512],
            torch.optim.Adam, [1e-04],
            torch.nn.MSELoss()
        )
-   
+
    model.train(DataLoader(train_set, batch_size=32), 5)
    f1 = model.test(DataLoader(test_set, batch_size=32), evaluate.three_class_f1)
-   
+
    # Display performances.
    evaluate.summarize_results(f1, "CNN, Three-class evaluation")
 
@@ -85,7 +85,7 @@ References
 **Models**:
 
 - CNNFold: https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-021-04540-7
-- ATTFold: https://www.frontiersin.org/articles/10.3389/fgene.2020.612086/full#B17
+- ATTFold: https://www.frontiersin.org/articles/10.3389/fgene.2020.612086
 - UFold: https://academic.oup.com/nar/article/50/3/e14/6430845
 - MXFolx2: https://www.nature.com/articles/s41467-021-21194-4
 - CDPFold: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6540740/

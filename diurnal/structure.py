@@ -313,6 +313,7 @@ def pad_matrix(matrix: list, size: int,
     for i in range(append_size):
         matrix.append(size * map['-'])
 
+
 def from_matrix(matrix: list, map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS
         ) -> tuple:
     """Convert a structural matrix to primary and secondary structures.

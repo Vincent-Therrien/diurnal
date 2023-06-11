@@ -12,162 +12,172 @@
 
 import statistics
 import numpy as np
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, confusion_matrix
 
 from diurnal.utils import file_io
+from diurnal.structure import Schemes
 
-# Evaluation based on paired / unpaired sensitivity.
-def get_true_positive(prediction, reference, unpaired_symbol="."):
-    """
-    Compute the true positive value obtained by comparing two secondary
-    structures.
-    
-    The true positive (TP) value is defined as the number of bases that
-    are correctly predicted to be paired with another base. For example,
-    in the following *demonstrative* secondary structures:
-    - predicton: (..(((....
-    - reference: (.....))))
-    one paired base is correctly predicted, so the function returns 1.
-    """
-    tp = 0
-    for i in range(min(len(prediction), len(reference))):
-        if prediction[i] != unpaired_symbol and reference[i] != unpaired_symbol:
-            tp += 1
-    return tp
 
-def get_true_negative(prediction, reference, unpaired_symbol="."):
-    """
-    Compute the true negative value obtained by comparing two secondary
-    structures.
-    
-    The true negative (TN) value is defined as the number of bases that
-    are correclty predicted to be unpaired.For example, in the following
-    *demonstrative* secondary structures:
-    - predicton: (..(((....
-    - reference: (.....))))
-    Two unpaired base are correctly predicted, so the function returns
-    2.
-    """
-    tn = 0
-    for i in range(min(len(prediction), len(reference))):
-        if prediction[i] == unpaired_symbol and reference[i] == unpaired_symbol:
-            tn += 1
-    return tn
+class Vector:
+    """Evaluate secondary structure predictions for vectors."""
+    def _convert_to_scalars(true, pred) -> tuple:
+        """Convert a vector of vectors into a vector of scalars.
 
-def get_false_positive(prediction, reference, unpaired_symbol="."):
-    """
-    Compute the false positive value obtained by comparing two secondary
-    structures.
-    
-    The false positive (FP) value is defined as the number of bases that
-    are predicted to be paired but that are actually unpaired. For
-    example, in the following *demonstrative* secondary structures:
-    - predicton: (..(((....
-    - reference: (.....))))
-    three bases are incorrectly predicted as paired, so the function
-    returns 3.
-    """
-    fp = 0
-    for i in range(min(len(prediction), len(reference))):
-        if prediction[i] != unpaired_symbol and reference[i] == unpaired_symbol:
-            fp += 1
-    return fp
+        For instance, `[[0, 1], [0, 1], [1, 0]]` is converted to
+        `[0, 0, 1]`.
 
-def get_false_negative(prediction, reference, unpaired_symbol="."):
-    """
-    Compute the false negative value obtained by comparing two secondary
-    structures.
-    
-    The false negative (FN) value is defined as the number of bases that
-    are predicted to be unpaired but that are actually paired. For
-    example, in the following *demonstrative* secondary structures:
-    - predicton: (..(((....
-    - reference: (.....))))
-    four bases are incorrectly predicted as unpaired, so the function
-    returns 4.
-    """
-    fn = 0
-    for i in range(min(len(prediction), len(reference))):
-        if prediction[i] == unpaired_symbol and prediction[i] != reference[i]:
-            fn += 1
-    return fn
+        Args:
+            true (list-like): Vector of the true structure.
+            pred (list-like): Vector of the predicted structure.
 
-def get_sensitivity(prediction, reference, unpaired_symbol="."):
-    """
-    Compute the sensitivity value (SEN) obtained by comparing two
-    secondary structures. The sensitivity is defined as: TP / (TP + FN).
-    """
-    tp = get_true_positive(prediction, reference, unpaired_symbol)
-    fn = get_false_negative(prediction, reference, unpaired_symbol)
-    if tp + fn:
-        return tp / (tp + fn)
-    else:
-        return 0.0
+        Returns (list): Tuple containing the scalar vectors.
+        """
+        symbols = set(pred + true)
+        digits = {}
+        for i, s in enumerate(symbols):
+            digits[s] = i
+        pred = [digits[e] for e in pred]
+        true = [digits[e] for e in true]
+        return true, pred, symbols
 
-def get_PPV(prediction, reference, unpaired_symbol="."):
-    """
-    Compute the positive predictive value (PPV) obtained by comparing
-    two secondary structures. The PPV is defined as: TP / (TP + FP).
-    """
-    tp = get_true_positive(prediction, reference, unpaired_symbol)
-    fp = get_false_positive(prediction, reference, unpaired_symbol)
-    if tp + fp:
-        return tp / (tp + fp)
-    else:
-        return 0.0
+    def get_f1(true, pred) -> float:
+        """ Compute the F1-score by considering the secondary structure
+        symbols '(', '.', and ')' as three different classes.
 
-def get_sen_PPV_f1(prediction, reference, unpaired_symbol="."):
-    """
-    Compute the F1-score obtained by comparing two secondary structures.
-    The f1-score is defined as: 2 * ((SEN*PPV) / (SEN+PPV)). Also return
-    the sensitivity and precision.
-    """
-    sen = get_sensitivity(prediction, reference, unpaired_symbol)
-    ppv = get_PPV(prediction, reference, unpaired_symbol)
-    if sen + ppv:
-        f1 = 2 * ((sen*ppv) / (sen+ppv))
-        return sen, ppv, f1
-    else:
-        return sen, ppv, 0.0
+        Args:
+            true (list-like): Vector of the true structure.
+            pred (list-like): Vector of the predicted structure.
 
-def _convert_to_scalars(pred, true) -> tuple:
-    symbols = set(pred + true)
-    digits = {}
-    for i, s in enumerate(symbols):
-        digits[s] = i
-    pred = [digits[e] for e in pred]
-    true = [digits[e] for e in true]
-    return pred, true
+        Returns (float): F1-score of the prediction, i.e. a value
+            between 0 and 1.
+        """
+        scalar_true, scalar_pred, _ = Vector._convert_to_scalars(true, pred)
+        return f1_score(scalar_pred, scalar_true, average='micro')
 
-def two_class_f1(prediction, reference, unpaired_symbol="."):
-    """
-    Compute the F1-score obtained by comparing two secondary structures.
-    The f1-score is defined as: 2 * ((SEN*PPV) / (SEN+PPV)).
-    """
-    if type(prediction[0]) != str:
-        prediction, reference = _convert_to_scalars(prediction, reference)
-        unpaired_symbol = 1
-    sen = get_sensitivity(prediction, reference, unpaired_symbol)
-    ppv = get_PPV(prediction, reference, unpaired_symbol)
-    if sen + ppv:
-        return 2 * ((sen*ppv) / (sen+ppv))
-    else:
-        return 0.0
+    def get_confusion_matrix(true, pred) -> tuple:
+        """Get the confusion matrix of the prediction.
 
-# Evaluation based on 3-class f1-score.
-def three_class_f1(prediction, reference):
+        Args:
+            true (list-like): Vector of the true structure.
+            pred (list-like): Vector of the predicted structure.
+
+        Returns (tuple): A tuple containing the confusion matrix and a
+            list of symbols that correspond to each row of the matrix.
+        """
+        scalar_true, scalar_pred, symbols=Vector._convert_to_scalars(true, pred)
+        return confusion_matrix(scalar_true, scalar_pred), symbols
+
+
+class Matrix:
+    """Evaluate predictions made with matrices."""
+    pass
+
+
+class TwoClassVector:
+    """Evaluate predictions by considering the paired and unpaired bases
+    of an RNA secondary structures.
+
+    The methods in this class take as an input secondary structures
+    formatted in bracket notation and evaluate the predictions by making
+    no difference between thw `(` and `)` symbols.
+
+    These metrics are derived from the work of Wang et al., ATTFold.
     """
-    Compute the F1-score by considering the secondary structure symbols
-    '(', '.', and ')' as three different classes.
-    """
-    pred, true = _convert_to_scalars(prediction, reference)
-    return f1_score(pred, true, average='micro')
+    def get_TP(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+        """ Compute the true positive value (predicted paired bases that
+        are actually paired).
+        """
+        tp = 0
+        for i in range(len(true)):
+            if pred[i] != unpaired_symbol and true[i] != unpaired_symbol:
+                tp += 1
+        return tp
+
+    def get_TN(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+        """Compute the true negative value (predicted unpaired bases
+        that are actually unpaired).
+        """
+        tn = 0
+        for i in range(len(true)):
+            if pred[i] == unpaired_symbol and true[i] == unpaired_symbol:
+                tn += 1
+        return tn
+
+    def get_FP(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+        """Compute the false positive value (predicted paired bases that
+        are actually unpaired).
+        """
+        fp = 0
+        for i in range(len(true)):
+            if pred[i] != unpaired_symbol and true[i] == unpaired_symbol:
+                fp += 1
+        return fp
+
+    def get_FN(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+        """Compute the false negative value (predicted unpaired bases
+        that are actually unpaired).
+        """
+        fn = 0
+        for i in range(len(true)):
+            if pred[i] == unpaired_symbol and pred[i] != true[i]:
+                fn += 1
+        return fn
+
+    def get_sensitivity(true, pred,
+            unpaired_symbol=Schemes.BRACKET_TO_ONEHOT['.']):
+        """Compute the sensitivity value (SEN) obtained by comparing two
+        secondary structures. The sensitivity is defined as:
+
+        .. :math:
+
+            TP / (TP + FN).
+        """
+        tp = TwoClassVector.get_TP(true, pred, unpaired_symbol)
+        fn = TwoClassVector.get_FN(true, pred, unpaired_symbol)
+        if tp + fn:
+            return tp / (tp + fn)
+        else:
+            return 0.0
+
+    def get_PPV(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+        """Compute the positive predictive value (PPV) obtained by
+        comparing two secondary structures. The PPV is defined as:
+
+        .. :math:
+
+            TP / (TP + FP).
+        """
+        tp = TwoClassVector.get_TP(true, pred, unpaired_symbol)
+        fp = TwoClassVector.get_FP(true, pred, unpaired_symbol)
+        if tp + fp:
+            return tp / (tp + fp)
+        else:
+            return 0.0
+
+    def get_sen_PPV_f1(true, pred, unpaired_symbol="."):
+        """Compute the F1-score obtained by comparing two secondary
+        structures. The f1-score is defined as:
+
+        .. :math:
+
+            2 * ((SEN*PPV) / (SEN+PPV)).
+
+        Also return the sensitivity and precision.
+        """
+        sen = TwoClassVector.get_sensitivity(true, pred, unpaired_symbol)
+        ppv = TwoClassVector.get_PPV(true, pred, unpaired_symbol)
+        if sen + ppv:
+            f1 = 2 * ((sen*ppv) / (sen+ppv))
+            return sen, ppv, f1
+        else:
+            return sen, ppv, 0.0
+
 
 # Result presentation
 def summarize_results(f1_scores: list, name: str) -> None:
     """
     Summarize the f1-scores.
-    
+
     Args:
         f1_scores (list(float)): List of f1-scores.
         name (str): Name of the results printed along with the summary.
@@ -177,5 +187,5 @@ def summarize_results(f1_scores: list, name: str) -> None:
     file_io.log(f"Mean: {np.mean(f1_scores)}", 1)
     file_io.log(f"Harmonic mean: {statistics.harmonic_mean(f1_scores)}", 1)
     file_io.log(f"Maximum: {max(f1_scores)}", 1)
-    file_io.log(f"Median:  {np.median(f1_scores)}", 1) 
+    file_io.log(f"Median:  {np.median(f1_scores)}", 1)
     file_io.log(f"Minimum: {min(f1_scores)}", 1)

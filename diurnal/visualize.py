@@ -13,8 +13,7 @@ import matplotlib.pyplot as plt
 from diurnal import transform
 
 def count_structures_per_family(path: str) -> None:
-    """
-    Display a histogram of RNA lengths.
+    """Display a histogram of RNA lengths.
 
     Args:
         path (str): Directory name of the folder that contains the data
