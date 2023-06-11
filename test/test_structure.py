@@ -21,7 +21,26 @@ def test_encode_primary_structure():
         [0, 0, 0, 1],
         [0, 0, 0, 1]
     ]
-    encoding = Structure.Primary.vectorize(structure)
+    encoding = Structure.Primary.to_vector(structure)
+    assert expected_encoding == encoding
+
+def test_primary_structure_padding():
+    """Ensure that primary structures are well padded."""
+    structure = list("AAACCC")
+    total_size = 9
+    expected_encoding = [
+        [1, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+    ]
+    encoding = Structure.Primary.pad(Structure.Primary.to_vector(structure),
+        total_size)
     assert expected_encoding == encoding
 
 def test_encode_secondary_structure():
@@ -41,7 +60,28 @@ def test_encode_secondary_structure():
         [0, 0, 1],
         [0, 0, 1],
     ]
-    encoding = Structure.Secondary.vectorize(structure)
+    encoding = Structure.Secondary.to_vector(structure)
+    assert expected_encoding == encoding
+
+def test_secondary_structure_padding():
+    """Ensure that primary structures are well padded."""
+    structure = [8, 7, 6, -1, -1, -1, 2, 1, 0]
+    total_size = 11
+    expected_encoding = [
+        [1, 0, 0],
+        [1, 0, 0],
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 1, 0],
+        [0, 1, 0],
+        [0, 0, 1],
+        [0, 0, 1],
+        [0, 0, 1],
+        [0, 0, 0],
+        [0, 0, 0]
+    ]
+    encoding = Structure.Secondary.pad(Structure.Secondary.to_vector(structure),
+        total_size)
     assert expected_encoding == encoding
 
 def test_encode_structure():
@@ -55,9 +95,9 @@ def test_encode_structure():
     # Encode the structure.
     encoding = Structure.to_matrix(primary, secondary)
     # COmpare against the expected format.
-    AU = Structure.Transform.IUPAC_ONEHOT_PAIRINGS["AU"]
-    UA = Structure.Transform.IUPAC_ONEHOT_PAIRINGS["UA"]
-    empty = Structure.Transform.IUPAC_ONEHOT_PAIRINGS["-"]
+    AU = Structure.Schemes.IUPAC_ONEHOT_PAIRINGS["AU"]
+    UA = Structure.Schemes.IUPAC_ONEHOT_PAIRINGS["UA"]
+    empty = Structure.Schemes.IUPAC_ONEHOT_PAIRINGS["-"]
     pattern = [[empty for _ in range(size)] for _ in range(size)]
     pattern[8][0] = AU
     pattern[7][1] = AU

@@ -13,7 +13,7 @@ import inspect
 from .utils import file_io
 
 
-class Transform:
+class Schemes:
     """RNA structural codes to transform data into other representations.
 
     Attributes:
@@ -81,7 +81,7 @@ class Transform:
 class Primary:
     """Transform RNA primary structures into useful formats."""
 
-    def vectorize(bases, map=Transform.IUPAC_TO_ONEHOT) -> list:
+    def to_vector(bases, map=Schemes.IUPAC_TO_ONEHOT) -> list:
         """Transform a sequence of bases into a vector.
 
         Args:
@@ -98,9 +98,9 @@ class Primary:
             + "encoding. Use a mapping function or dictionary.")
         file_io.log(message, -1)
 
-    def devectorize(vector, map=Transform.IUPAC_TO_ONEHOT) -> list:
+    def from_vector(vector, map=Schemes.IUPAC_TO_ONEHOT) -> list:
         """Transform a vector into a sequence of bases.
-        
+
         Args:
             vector (list-like): One-hot encoded primary structure.
             map: A dictionary or function that maps bases to vectors.
@@ -119,20 +119,32 @@ class Primary:
         return bases
 
     def pad(vector: list, size: int,
-            element: list = Transform.IUPAC_TO_ONEHOT['.']) -> list:
+            element: list = Schemes.IUPAC_TO_ONEHOT['.']) -> list:
         """Append elements at the right extremity of a vector.
-        
+
         Args:
             vector (list): A vector of elements.
             size (int): The final size of the vector.
             element (list): The element to add to the vector.
 
-        Returns (list): The padded list of size "size:.
+        Returns (list): The padded list of size "size".
         """
         difference = size - len(vector)
         if difference > 0:
-            return vector + size * [element]
+            return vector + difference * [element]
         return vector
+
+    def to_padded_vector(bases, size: int, map=Schemes.IUPAC_TO_ONEHOT) -> list:
+        """Transform a sequence of bases into a vector of a specific size.
+
+        Args:
+            vector (list): A vector of elements.
+            size (int): The final size of the vector.
+            map: A dictionary or function that maps bases to vectors.
+
+        Returns (list): The padded list of size "size".
+        """
+        return Primary.pad(Primary.to_vector(bases, map), size)
 
 
 class Secondary:
@@ -159,7 +171,7 @@ class Secondary:
                 encoding.append(')')
         return encoding
 
-    def vectorize(pairings: list, map=Transform.BRACKET_TO_ONEHOT) -> list:
+    def to_vector(pairings: list, map=Schemes.BRACKET_TO_ONEHOT) -> list:
         """Encode pairings in a one-hot bracket-based secondary structure.
 
         Args:
@@ -178,7 +190,7 @@ class Secondary:
             + "encoding. Use a mapping function or dictionary.")
         file_io.log(message, -1)
 
-    def devectorize_bracket(vector: list) -> list:
+    def from_vector_bracket(vector: list) -> list:
         """Convert a one-hot-encoded pairing sequence into bracket
         notation, e.g. `(((...)))`.
 
@@ -192,14 +204,15 @@ class Secondary:
         # TODO: Generalize to other mappings
         values = [n.index(max(n)) for n in vector]
         encoding = []
-        characters = list(Transform.BRACKET_TO_ONEHOT.keys())
+        characters = list(Schemes.BRACKET_TO_ONEHOT.keys())
         for value in values:
             encoding.append(characters[value])
         return encoding
 
-    def pad(vector: list, size: int, element: str = ' ') -> list:
+    def pad(vector: list, size: int,
+            element: str = Schemes.BRACKET_TO_ONEHOT[' ']) -> list:
         """Append elements at the right extremity of a vector.
-        
+
         Args:
             vector (list): A vector of elements.
             size (int): The final size of the vector.
@@ -210,14 +223,27 @@ class Secondary:
         difference = size - len(vector)
         if difference > 0:
             if type(vector) == str:
-                return vector + size * element
+                return vector + difference * element
             else:
-                return vector + size * [element]
+                return vector + difference * [element]
         return vector
+
+    def to_padded_vector(pairings, size: int,
+            map = Schemes.BRACKET_TO_ONEHOT) -> list:
+        """Encode pairings in a one-hot bracket-based secondary structure.
+
+        Args:
+            pairings (list(int)): A list of nucleotide pairings
+            size (int): The final size of the vector.
+            map: A dictionary or function that maps bases to vectors.
+
+        Returns (list): The padded list of size "size".
+        """
+        return Secondary.pad(Secondary.to_vector(pairings, map), size)
 
 
 def to_matrix(bases: list, pairings: list,
-        map: dict = Transform.IUPAC_ONEHOT_PAIRINGS) -> list:
+        map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS) -> list:
     """Convert a list of nucleotide pairings into a 2D anti-diagonal
     matrix of one-hot-encoded pairing.
 
@@ -264,7 +290,7 @@ def to_matrix(bases: list, pairings: list,
 
 
 def pad_matrix(matrix: list, size: int,
-        map: dict = Transform.IUPAC_ONEHOT_PAIRINGS) -> list:
+        map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS) -> list:
     """Add neutral elements to structure matrix to fit ``size``.
 
     Args:
@@ -287,7 +313,7 @@ def pad_matrix(matrix: list, size: int,
     for i in range(append_size):
         matrix.append(size * map['-'])
 
-def from_matrix(matrix: list, map: dict = Transform.IUPAC_ONEHOT_PAIRINGS
+def from_matrix(matrix: list, map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS
         ) -> tuple:
     """Convert a structural matrix to primary and secondary structures.
 

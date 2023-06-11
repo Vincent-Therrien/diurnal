@@ -13,7 +13,7 @@
             import diurnal.database
             from diurnal.encoding import PrimaryStructure as s1
             from diurnal.encoding import SecondaryStructure as s2
-            
+
             diurnal.database.download_all("./data/")
             diurnal.database.format(
                 "./data/", # Raw data input directory.
@@ -35,7 +35,9 @@ import numpy as np
 import inspect
 from datetime import datetime
 
-from .utils import file_io
+import diurnal.utils.file_io as file_io
+import diurnal.structure
+import diurnal.family
 
 # Constant values.
 URL_PREFIX ="https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/"
@@ -46,18 +48,7 @@ ALLOWED_DATASETS = [
     "RNASTRalign",
     "RNA_STRAND"
 ]
-FAMILIES = [
-    ["5s"],  # 5s ribosomal RNA (rRNA)
-    ["16s"], # 16s ribosomal RNA (rRNA)
-    ["23s"], # 23s ribosomal RNA (rRNA)
-    ["grp1", "group_I_introns"],
-    ["grp2", "group_II_introns"],
-    ["RNaseP"],
-    ["SRP"],
-    ["telomerase"],
-    ["tmRNA"],
-    ["tRNA"]
-]
+
 
 # Installation functions.
 def available_datasets() -> None:
@@ -65,6 +56,7 @@ def available_datasets() -> None:
     Print available RNA datasets.
     """
     file_io.log(f"Available datasets: {ALLOWED_DATASETS}")
+
 
 def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
              ) -> None:
@@ -114,6 +106,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         if verbosity:
             file_io.log(f"Files installed in `{dst + dataset}`.", 1)
 
+
 def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     """
     Download all available RNA secondary structure datasets (archiveII
@@ -129,70 +122,6 @@ def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     """
     download(dst, ALLOWED_DATASETS, cleanup, verbosity)
 
-def get_rna_family(path: str) -> str:
-    """
-    Determine the RNA family from the file path. For archiveII, the
-    family is indicated in the file name. For RNASTRalign, it is
-    indicated is the directory name.
-    
-    Args:
-        path (str): Complete name of the file.
-    """
-    candidates = []
-    for family in FAMILIES:
-        for alias in family:
-            if alias.upper() in path.upper():
-                candidates.append(family[0])
-                break
-    if not candidates:
-        file_io.log(f"Unknown family for `{path}`.", -1)
-        raise RuntimeError
-    if len(candidates) == 1:
-        return candidates[0]
-    # If several families are comprised in the file name, return the last one.
-    else:
-        c = {}
-        for candidate in candidates:
-            c[path.upper().find(candidate.upper())] = candidate
-        return c[max(c.keys())]
-
-def _encode_primary_structure(bases: list, target_size: int, map) -> tuple:
-    """
-    Encode a primary structure into a matrix.
-
-    Args:
-        bases list(str): List of nucleotides (i.e. 'A', 'C', 'G', 'U').
-        target_size (int): Size of the encoded structure. Padding is
-            determined by the `map` argument.
-        map: A function that maps a base pair to a value.
-    """
-    if inspect.isfunction(map):
-        return map(bases, target_size)
-    else:
-        message = (f"Type `{type(map)}` is not allowed for primary "
-            + " structure encoding. Use a mapping function instead, "
-            + "e.g. `diurnal.encoding.PrimaryStructure.iupac_onehot(bases)`.")
-        file_io.log(message, -1)
-        raise RuntimeError
-
-def _encode_secondary_structure(pairings: list, target_size: int, map) -> tuple:
-    """
-    Encode a secondary structure into a matrix.
-
-    Args:
-        pairings list(int): Paired nucleotide index, -1 is unpaired.
-        target_size (int): Size of the encoded structure. Padding is
-            determined by the `map` argument.
-        map: A function that maps a base pair to a value.
-    """
-    if inspect.isfunction(map):
-        return map(pairings, target_size)
-    else:
-        message = (f"Type `{type(map)}` is not allowed for secondary "
-            + " structure encoding. Use a mapping function instead, "
-            + "e.g. `diurnal.encoding.PrimaryStructure.iupac_onehot(bases)`.")
-        file_io.log(message, -1)
-        raise RuntimeError
 
 def _encode_family(family: str, map) -> tuple:
     """
@@ -275,7 +204,7 @@ def format(src: str,
     for i, path in enumerate(paths):
         # Read the file.
         _, bases, pairings = file_io.read_ct_file(str(path))
-        family = get_rna_family(str(path))
+        family = diurnal.family.get_name(str(path))
         # Add the file to the dataset or not depending on its size.
         if len(bases) > max_size:
             rejected_names.append(str(path))
@@ -284,13 +213,13 @@ def format(src: str,
             names.append(str(path))
         # Encode the data.
         if primary_structure_map:
-            X.append(_encode_primary_structure(bases, max_size,
-                                               primary_structure_map))
+            X.append(diurnal.structure.Primary.to_padded_vector(
+                    bases, max_size, primary_structure_map))
         if secondary_structure_map:
-            Y.append(_encode_secondary_structure(pairings, max_size,
-                                                 secondary_structure_map))
+            Y.append(diurnal.structure.Secondary.to_padded_vector(
+                    pairings, max_size, secondary_structure_map))
         if family_map:
-            F.append(_encode_family(family, family_map))
+            F.append(diurnal.family.to_vector(family, family_map))
         if verbosity:
             prefix = f"    Encoding {len(paths)} files "
             suffix = f" {path.name}"
@@ -317,7 +246,7 @@ def format(src: str,
     # Write an informative file to sum up the content of the formatted folder.
     with open(dst + "info.rst", "w") as outfile:
         outfile.write(summarize(dst, primary_structure_map,
-                                secondary_structure_map, family_map))
+            secondary_structure_map, family_map))
 
 def summarize(path: str,
               primary_structure_map,
@@ -328,7 +257,7 @@ def summarize(path: str,
 
     Args:
         path (str): File path of the formatted data.
-    
+
     Returns (str): Informative file containing:
         - Title
         - Generation date and time
@@ -350,7 +279,8 @@ def summarize(path: str,
         content += f"Shape: {X.shape}\n\n"
         content += "Encoding:\n"
         example = "ACGU-"
-        code = _encode_primary_structure(example, 0, primary_structure_map)
+        code = diurnal.structure.Primary.to_vector(example,
+            primary_structure_map)
         for i in range(len(example)):
             content += f"    {example[i]} -> {code[i]}\n"
         content += "\nExample:\n"
@@ -364,7 +294,8 @@ def summarize(path: str,
         content += f"Shape: {Y.shape}\n\n"
         content += "Encoding:\n"
         example = [2, -1, 0] # Corresponds to `(.)` in bracket notation.
-        code =_encode_secondary_structure(example,4,secondary_structure_map)
+        code = diurnal.structure.Secondary.to_vector(example,
+            secondary_structure_map)
         for i in range(len(example)):
             content += f"    {example[i]} -> {code[i]}\n"
         content += "\nExample:\n"
@@ -377,8 +308,9 @@ def summarize(path: str,
         content += f"File: `{path + 'families.npy'}`\n\n"
         content += f"Shape: {F.shape}\n\n"
         content += "Encoding:\n"
-        for f in FAMILIES:
-            content+=f"    {f[0]} -> {_encode_family(f[0], family_map)}"
+        for f in diurnal.family.NAMES:
+            name = diurnal.family.to_vector(f[0],family_map)
+            content += f"    {f[0]} -> {name}"
             content += "\n"
         content += "\nExample: \n"
         content += str(F[0])
