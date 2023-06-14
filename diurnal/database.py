@@ -227,9 +227,9 @@ def format(src: str,
             secondary_structure_map, family_map))
 
 def summarize(path: str,
-              primary_structure_map,
-              secondary_structure_map,
-              family_map) -> str:
+        primary_structure_map,
+        secondary_structure_map,
+        family_map) -> str:
     """Summarize the content of the formatted file directory.
 
     Args:

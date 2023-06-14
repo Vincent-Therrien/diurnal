@@ -38,6 +38,8 @@ class Schemes:
         "G": [0, 0, 1, 0],
         "U": [0, 0, 0, 1],
         "T": [0, 0, 0, 1],
+        ".": [0, 0, 0, 0],
+        "-": [0, 0, 0, 0],
         "R": [1, 0, 1, 0],
         "Y": [0, 1, 0, 1],
         "S": [0, 1, 1, 0],
@@ -49,8 +51,6 @@ class Schemes:
         "H": [1, 1, 0, 1],
         "V": [1, 1, 1, 0],
         "N": [1, 1, 1, 1],
-        ".": [0, 0, 0, 0],
-        "-": [0, 0, 0, 0],
     }
 
     IUPAC_ONEHOT_PAIRINGS = {
@@ -81,45 +81,55 @@ class Schemes:
 class Primary:
     """Transform RNA primary structures into useful formats."""
 
-    def to_vector(bases, map=Schemes.IUPAC_TO_ONEHOT) -> list:
+    def to_vector(bases, size: int = 0, map=Schemes.IUPAC_TO_ONEHOT) -> list:
         """Transform a sequence of bases into a vector.
 
         Args:
             bases (list): A sequence of bases. E.g.: ``['A', 'U']``.
+            size (int): Size of a normalized vector. `0` for no padding.
             map: A dictionary or function that maps bases to vectors.
 
         Returns (list): One-hot encoded primary structure.
         """
+        vector = []
         if inspect.isfunction(map):
-            return map(bases)
-        if type(map) == dict:
-            return [map[base] for base in bases]
-        message = (f"Type `{type(map)}` is not allowed for primary structure "
-            + "encoding. Use a mapping function or dictionary.")
-        file_io.log(message, -1)
+            vector = map(bases)
+        elif type(map) == dict:
+            vector = [map[base] for base in bases]
+        else:
+            message = (f"Type `{type(map)}` is not allowed for primary "
+                + "structure encoding. Use a mapping function or dictionary.")
+            file_io.log(message, -1)
+        if size:
+            element = map['.'] if type(map) == dict else map('.')
+            return Primary._pad(vector, size, element)
+        return vector
 
-    def from_vector(vector, map=Schemes.IUPAC_TO_ONEHOT) -> list:
+    def to_bases(vector, strip: bool = True, map=Schemes.IUPAC_TO_ONEHOT)->list:
         """Transform a vector into a sequence of bases.
 
         Args:
             vector (list-like): One-hot encoded primary structure.
+            strip (bool): Remove empty elements at the vector's right end.
             map: A dictionary or function that maps bases to vectors.
 
         Returns (list): A sequence of bases. E.g.: ``['A', 'U']``.
         """
+        if strip:
+            element = map['.'] if type(map) == dict else map('.')
+            vector = Primary._unpad(vector, element)
         if inspect.isfunction(map):
             return map(vector)
         bases = []
         for base in vector:
             base = list(base)
-            for key, code in map:
+            for key, code in map.items():
                 if code == base:
                     bases.append(key)
                     break
         return bases
 
-    def pad(vector: list, size: int,
-            element: list = Schemes.IUPAC_TO_ONEHOT['.']) -> list:
+    def _pad(vector: list, size: int, element: list) -> list:
         """Append elements at the right extremity of a vector.
 
         Args:
@@ -134,23 +144,32 @@ class Primary:
             return vector + difference * [element]
         return vector
 
-    def to_padded_vector(bases, size: int, map=Schemes.IUPAC_TO_ONEHOT) -> list:
-        """Transform a sequence of bases into a vector of a specific size.
+    def _unpad(vector: list, element: list) -> list:
+        """Remove the empty elements appended to the right side of a
+        vector.
 
         Args:
-            vector (list): A vector of elements.
-            size (int): The final size of the vector.
-            map: A dictionary or function that maps bases to vectors.
+            vector (list): Vector-encoded primary structure.
+            element (list): Empty element of the set (e.g. `[0, 0, 0, 0]`).
 
-        Returns (list): The padded list of size "size".
+        Returns (list): Unpadded vector.
         """
-        return Primary.pad(Primary.to_vector(bases, map), size)
+        i = len(vector) - 1
+        while i > 0:
+            nonzero = False
+            for j, e in enumerate(vector[i]):
+                if e != element[j]:
+                    nonzero = True
+            if nonzero:
+                return vector[0:i+1]
+            i -= 1
+        return vector
 
 
 class Secondary:
     """Transform RNA secondary structures into useful formats."""
 
-    def to_bracket(pairings: list) -> list:
+    def to_bracket(pairings: list, strip: bool = True) -> list:
         """Convert a list of nucleotide pairings into a secondary
         structure bracket notation, e.g. `'(((...)))`.'
 
@@ -158,20 +177,36 @@ class Secondary:
             pairings (list(int)): A list of nucleotide pairings, e.g.
                 the pairing `(((...)))` is represented as
                 `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
+            strip (bool): Remove empty elements.
 
         Returns (list): Secondary structure bracket notation.
         """
-        encoding = []
-        for i, p in enumerate(pairings):
-            if p < 0:
-                encoding.append('.')
-            elif i < p:
-                encoding.append('(')
-            else:
-                encoding.append(')')
-        return encoding
+        if type(pairings[0]) == int:
+            encoding = []
+            for i, p in enumerate(pairings):
+                if p < 0:
+                    encoding.append('.')
+                elif i < p:
+                    encoding.append('(')
+                else:
+                    encoding.append(')')
+            return encoding
+        else:
+            encoding = []
+            characters = list(Schemes.BRACKET_TO_ONEHOT.keys())
+            for p in pairings:
+                if sum(p) == 0:
+                    if strip:
+                        return encoding
+                    else:
+                        encoding.append(" ")
+                else:
+                    encoding.append(characters[p.index(max(p))])
+                print(encoding)
+            return encoding
 
-    def to_vector(pairings: list, map=Schemes.BRACKET_TO_ONEHOT) -> list:
+    def to_vector(pairings: list, size: int = 0,
+            map = Schemes.BRACKET_TO_ONEHOT) -> list:
         """Encode pairings in a one-hot bracket-based secondary structure.
 
         Args:
@@ -182,35 +217,21 @@ class Secondary:
         Returns (list): One-hot encoded secondary structure.
         """
         bracket = Secondary.to_bracket(pairings)
+        vector = []
         if inspect.isfunction(map):
-            return map(bracket)
+            vector = map(bracket)
         elif type(map) == dict:
-            return [map[symbol] for symbol in bracket]
-        message = (f"Type `{type(map)}` is not allowed for secondary structure "
-            + "encoding. Use a mapping function or dictionary.")
-        file_io.log(message, -1)
+            vector = [map[symbol] for symbol in bracket]
+        else:
+            message = (f"Type `{type(map)}` is not allowed for secondary "
+                + "structure encoding. Use a mapping function or dictionary.")
+            file_io.log(message, -1)
+        if size:
+            element = map[' '] if type(map) == dict else map(' ')
+            vector = Secondary._pad(vector, size, element)
+        return vector
 
-    def from_vector_bracket(vector: list) -> list:
-        """Convert a one-hot-encoded pairing sequence into bracket
-        notation, e.g. `(((...)))`.
-
-        Args:
-            onehot (list-like): A one-hot encoded secondary structure,
-                e.g. `[[1,0,0], [0,1,0], [0,0,1]]`
-
-        Returns (list): A bracket notation secondary structure,
-            e.g. `['(', '(', '(', '.', '.', '.', ')', ')', ')']`
-        """
-        # TODO: Generalize to other mappings
-        values = [n.index(max(n)) for n in vector]
-        encoding = []
-        characters = list(Schemes.BRACKET_TO_ONEHOT.keys())
-        for value in values:
-            encoding.append(characters[value])
-        return encoding
-
-    def pad(vector: list, size: int,
-            element: str = Schemes.BRACKET_TO_ONEHOT[' ']) -> list:
+    def _pad(vector: list, size: int, element: list) -> list:
         """Append elements at the right extremity of a vector.
 
         Args:
@@ -222,24 +243,8 @@ class Secondary:
         """
         difference = size - len(vector)
         if difference > 0:
-            if type(vector) == str:
-                return vector + difference * element
-            else:
-                return vector + difference * [element]
+            return vector + difference * [element]
         return vector
-
-    def to_padded_vector(pairings, size: int,
-            map = Schemes.BRACKET_TO_ONEHOT) -> list:
-        """Encode pairings in a one-hot bracket-based secondary structure.
-
-        Args:
-            pairings (list(int)): A list of nucleotide pairings
-            size (int): The final size of the vector.
-            map: A dictionary or function that maps bases to vectors.
-
-        Returns (list): The padded list of size "size".
-        """
-        return Secondary.pad(Secondary.to_vector(pairings, map), size)
 
 
 def to_matrix(bases: list, pairings: list,

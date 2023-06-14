@@ -29,9 +29,9 @@ def test_two_class_metrics(true, pred, S, P, F):
         F: Expected F-score.
     """
     s, p, f = evaluate.TwoClassVector.get_sen_PPV_f1(true, pred)
-    assert s == S
-    assert p == P
-    assert f == F
+    assert s == S, "Incorrect sensitivity."
+    assert p == P, "Incorrect positive predictive value."
+    assert f == F, "Incorrect F1-score."
 
 
 @pytest.mark.parametrize(
@@ -53,7 +53,7 @@ def test_vector_f1(pred, true, F):
         F: Expected F-score.
     """
     f = evaluate.Vector.get_f1(true, pred)
-    assert f == F
+    assert f == F, "Incorrect F1-score."
 
 
 @pytest.mark.parametrize(
@@ -76,4 +76,5 @@ def test_vector_confusion_matrix(pred, true, is_diagonal):
     """
     cm, _ = evaluate.Vector.get_confusion_matrix(true, pred)
     cm_is_diagonal = np.count_nonzero(cm - np.diag(np.diagonal(cm))) == 0
-    assert cm_is_diagonal == is_diagonal
+    assert cm_is_diagonal == is_diagonal, \
+        "Confusion matrix does not match the expected result."

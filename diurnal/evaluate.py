@@ -175,8 +175,7 @@ class TwoClassVector:
 
 # Result presentation
 def summarize_results(f1_scores: list, name: str) -> None:
-    """
-    Summarize the f1-scores.
+    """Summarize the f1-scores.
 
     Args:
         f1_scores (list(float)): List of f1-scores.
