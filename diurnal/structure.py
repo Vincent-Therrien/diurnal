@@ -9,6 +9,7 @@
 
 
 import inspect
+import numpy as np
 
 from .utils import file_io
 
@@ -54,13 +55,15 @@ class Schemes:
     }
 
     IUPAC_ONEHOT_PAIRINGS = {
-        "AU": [1, 0, 0, 0, 0, 0],
-        "UA": [0, 1, 0, 0, 0, 0],
-        "CG": [0, 0, 1, 0, 0, 0],
-        "GC": [0, 0, 0, 1, 0, 0],
-        "GU": [0, 0, 0, 0, 1, 0],
-        "UG": [0, 0, 0, 0, 0, 1],
-        "-":  [0, 0, 0, 0, 0, 0]
+        "AU":       [1, 0, 0, 0, 0, 0, 0, 0],
+        "UA":       [0, 1, 0, 0, 0, 0, 0, 0],
+        "CG":       [0, 0, 1, 0, 0, 0, 0, 0],
+        "GC":       [0, 0, 0, 1, 0, 0, 0, 0],
+        "GU":       [0, 0, 0, 0, 1, 0, 0, 0],
+        "UG":       [0, 0, 0, 0, 0, 1, 0, 0],
+        "unpaired": [0, 0, 0, 0, 0, 0, 1, 0],
+        "invalid":  [0, 0, 0, 0, 0, 0, 0, 1],
+        "-":        [0, 0, 0, 0, 0, 0, 0, 0]
     }
 
     BRACKET_TO_ONEHOT = {
@@ -102,8 +105,40 @@ class Primary:
             file_io.log(message, -1)
         if size:
             element = map['.'] if type(map) == dict else map('.')
-            return Primary._pad(vector, size, element)
+            return Primary._pad_vector(vector, size, element)
         return vector
+
+    def to_matrix(bases: list, size: int = 0,
+            map=Schemes.IUPAC_ONEHOT_PAIRINGS) -> list:
+        """Encode a primary structure in a matrix of potential pairings.
+
+        Create an `n` by `n` matrix, where `n` is the number of bases,
+        whose element each represent a potential RNA base pairing. For
+        instance, the pairing `AA` is not possible and will be assigned
+        the `invalid` value of the map. `AU` is a valid pairing and the
+        corresponding element will be assigned to its value in the map.
+
+        Args:
+            bases (list): Sequence of bases.
+            size (int): Matrix dimension. `0` for no padding.
+            map (dict): A dictionary that maps a base pairing to a vector.
+
+        Returns (list): Encoded matrix.
+        """
+        if size == 0:
+            size = len(bases)
+        empty = map['-']
+        matrix = [[empty for _ in range(size)] for _ in range(size)]
+        for row in range(len(bases)):
+            for col in range(len(bases)):
+                if row == col:
+                    matrix[row][col] = map["unpaired"]
+                elif abs(row - col) < 4 or len(set(pairing)) == 1:
+                    matrix[row][col] = map["invalid"]
+                elif pairing in map:
+                    pairing = bases[row] + bases[col]
+                    matrix[row][col] = map[pairing]
+        return matrix
 
     def to_bases(vector, strip: bool = True, map=Schemes.IUPAC_TO_ONEHOT)->list:
         """Transform a vector into a sequence of bases.
@@ -117,7 +152,7 @@ class Primary:
         """
         if strip:
             element = map['.'] if type(map) == dict else map('.')
-            vector = Primary._unpad(vector, element)
+            vector = Primary._unpad_vector(vector, element)
         if inspect.isfunction(map):
             return map(vector)
         bases = []
@@ -129,7 +164,7 @@ class Primary:
                     break
         return bases
 
-    def _pad(vector: list, size: int, element: list) -> list:
+    def _pad_vector(vector: list, size: int, element: list) -> list:
         """Append elements at the right extremity of a vector.
 
         Args:
@@ -144,7 +179,7 @@ class Primary:
             return vector + difference * [element]
         return vector
 
-    def _unpad(vector: list, element: list) -> list:
+    def _unpad_vector(vector: list, element: list) -> list:
         """Remove the empty elements appended to the right side of a
         vector.
 
@@ -168,6 +203,52 @@ class Primary:
 
 class Secondary:
     """Transform RNA secondary structures into useful formats."""
+
+    def to_vector(pairings: list, size: int = 0,
+            map = Schemes.BRACKET_TO_ONEHOT) -> list:
+        """Encode pairings in a one-hot bracket-based secondary structure.
+
+        Args:
+            pairings (list(int)): A list of nucleotide pairings, e.g.
+                the pairing `(((...)))` can be represented as
+                `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
+
+        Returns (list): One-hot encoded secondary structure.
+        """
+        bracket = Secondary.to_bracket(pairings)
+        vector = []
+        if inspect.isfunction(map):
+            vector = map(bracket)
+        elif type(map) == dict:
+            vector = [map[symbol] for symbol in bracket]
+        else:
+            message = (f"Type `{type(map)}` is not allowed for secondary "
+                + "structure encoding. Use a mapping function or dictionary.")
+            file_io.log(message, -1)
+        if size:
+            element = map[' '] if type(map) == dict else map(' ')
+            vector = Secondary._pad(vector, size, element)
+        return vector
+
+    def to_matrix(pairings: list, size: int = 0) -> list:
+        """Encode a secondary structure in a matrix.
+
+        Transform the sequence of pairings into an `n` by `n` matrix,
+        where `n` is the number of pairings, whose elements can be `0`
+        for an unpaired base and `1` for a paired base.
+
+        Args:
+            pairings (list(int): List of base pairings.
+            size (int): Dimension of the matrix. `0` for default.
+
+        Returns (list): Matrix encoding of the secondary structure."""
+        if size == 0:
+            size = len(pairings)
+        matrix = [[0 for _ in range(size)] for _ in range(size)]
+        for i in range(len(pairings)):
+            if pairings[i] >= 0:
+                matrix[i][pairings[i]] = 1
+        return matrix
 
     def to_bracket(pairings: list, strip: bool = True) -> list:
         """Convert a list of nucleotide pairings into a secondary
@@ -202,34 +283,7 @@ class Secondary:
                         encoding.append(" ")
                 else:
                     encoding.append(characters[p.index(max(p))])
-                print(encoding)
             return encoding
-
-    def to_vector(pairings: list, size: int = 0,
-            map = Schemes.BRACKET_TO_ONEHOT) -> list:
-        """Encode pairings in a one-hot bracket-based secondary structure.
-
-        Args:
-            pairings (list(int)): A list of nucleotide pairings, e.g.
-                the pairing `(((...)))` is represented as
-                `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
-
-        Returns (list): One-hot encoded secondary structure.
-        """
-        bracket = Secondary.to_bracket(pairings)
-        vector = []
-        if inspect.isfunction(map):
-            vector = map(bracket)
-        elif type(map) == dict:
-            vector = [map[symbol] for symbol in bracket]
-        else:
-            message = (f"Type `{type(map)}` is not allowed for secondary "
-                + "structure encoding. Use a mapping function or dictionary.")
-            file_io.log(message, -1)
-        if size:
-            element = map[' '] if type(map) == dict else map(' ')
-            vector = Secondary._pad(vector, size, element)
-        return vector
 
     def _pad(vector: list, size: int, element: list) -> list:
         """Append elements at the right extremity of a vector.
@@ -245,89 +299,3 @@ class Secondary:
         if difference > 0:
             return vector + difference * [element]
         return vector
-
-
-def to_matrix(bases: list, pairings: list,
-        map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS) -> list:
-    """Convert a list of nucleotide pairings into a 2D anti-diagonal
-    matrix of one-hot-encoded pairing.
-
-    For instance, the molecule `AAACCUUU` with secondary structure
-    `(((...)))` will be represented as:
-
-        [0 0 0 0 0 0 0 0 y]
-        [0 0 0 0 0 0 0 y 0]
-        [0 0 0 0 0 0 y 0 0]
-        [0 0 0 0 0 0 0 0 0]
-        [0 0 0 0 0 0 0 0 0]
-        [0 0 0 0 0 0 0 0 0]
-        [0 0 x 0 0 0 0 0 0]
-        [0 x 0 0 0 0 0 0 0]
-        [x 0 0 0 0 0 0 0 0]
-
-    where `x` is the vector `[1 0 0 0 0 0]`, a one-hot encoded
-    representation of the `AU`, and `y` is the vector
-    `[0 1 0 0 0 0]`, a one-hot encoded representation of `UA`.
-
-    Args:
-        bases (list(str)): A list of nucleotides, i.e. primary structure
-        pairings (list(int)): A list of nucleotide pairings, i.e. the
-            secondary structure.
-        map (dict): Assign pairs of symbols to vectors.
-
-    Returns (str): RNA structure.
-    """
-    # Obtain the list of bonds (e.g.: AU, AU, ...)
-    encoding = []
-    empty = map['-']
-    for i, p in enumerate(pairings):
-        if p < 0:
-            encoding.append(empty)
-        else:
-            bonds = bases[i] + bases[p]
-            encoding.append(map[bonds])
-    # Convert the list of bonds into a 2D anti-diagonal matrix.
-    size = len(encoding)
-    matrix = [[empty for _ in range(size)] for _ in range(size)]
-    for i in range(size):
-        matrix[size - i - 1][i] = encoding[i]
-    return matrix
-
-
-def pad_matrix(matrix: list, size: int,
-        map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS) -> list:
-    """Add neutral elements to structure matrix to fit ``size``.
-
-    Args:
-        matrix (list): Matrix obtained from ``to_matrix()``.
-        size (int): Dimension of the matrix to obtain.
-        map (dict): Assign pairs of symbols to vectors.
-
-    Returns (list): Padded matrix.
-    """
-    original_size = len(matrix)
-    if original_size >= size:
-        file_io.log(f"Matrix of size {original_size} cannot be padded "
-            + f"to size {size}")
-        return matrix
-    # Append elements on the right side.
-    append_size = size - original_size
-    for i in range(original_size):
-        matrix[i] = matrix[i] + append_size * map['-']
-    # Append elements at the bottom of the matrix.
-    for i in range(append_size):
-        matrix.append(size * map['-'])
-
-
-def from_matrix(matrix: list, map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS
-        ) -> tuple:
-    """Convert a structural matrix to primary and secondary structures.
-
-    Args:
-        matrix (list): RNA structure represented as a matrix.
-        map (dict): Assign a vector to a type of bond.
-
-    Returns (tuple): Result arranged as
-        (primary structure (list), secondary structure (list))
-    """
-    pass
