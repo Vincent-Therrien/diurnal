@@ -61,9 +61,9 @@ class Schemes:
         "GC":       [0, 0, 0, 1, 0, 0, 0, 0],
         "GU":       [0, 0, 0, 0, 1, 0, 0, 0],
         "UG":       [0, 0, 0, 0, 0, 1, 0, 0],
-        "unpaired": [0, 0, 0, 0, 0, 0, 1, 0],
-        "invalid":  [0, 0, 0, 0, 0, 0, 0, 1],
-        "-":        [0, 0, 0, 0, 0, 0, 0, 0]
+        "unpaired": [0, 0, 0, 0, 0, 0, 1, 0], # Unpaired base.
+        "invalid":  [0, 0, 0, 0, 0, 0, 0, 1], # Impossible pairing (e.g. AA).
+        "-":        [0, 0, 0, 0, 0, 0, 0, 0]  # Padding element.
     }
 
     BRACKET_TO_ONEHOT = {
@@ -131,13 +131,15 @@ class Primary:
         matrix = [[empty for _ in range(size)] for _ in range(size)]
         for row in range(len(bases)):
             for col in range(len(bases)):
+                pairing = bases[row] + bases[col]
                 if row == col:
                     matrix[row][col] = map["unpaired"]
                 elif abs(row - col) < 4 or len(set(pairing)) == 1:
                     matrix[row][col] = map["invalid"]
                 elif pairing in map:
-                    pairing = bases[row] + bases[col]
                     matrix[row][col] = map[pairing]
+                else:
+                    matrix[row][col] = map["invalid"]
         return matrix
 
     def to_bases(vector, strip: bool = True, map=Schemes.IUPAC_TO_ONEHOT)->list:
