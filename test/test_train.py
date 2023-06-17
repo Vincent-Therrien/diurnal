@@ -7,13 +7,14 @@
     License: MIT
 """
 
-from diurnal.structure import Secondary
+import pytest
+
+from diurnal.structure import Primary, Secondary
 import diurnal.train as train
 
+
 def test_split_data():
-    """
-    Validate that data can be split in subarrays.
-    """
+    """Validate that data can be split in subarrays."""
     N = 100
     data = list(range(N))
     fractions = [0.8, 0.1, 0.1]
@@ -30,30 +31,43 @@ def test_split_data():
         beginning += int(f*N)
         assert s == expected_array
 
-def test_prediction_post_processing_str():
-    """
-    Ensure that the ending of predictions can be removed.
-    """
-    true_pairings = [8, 7, 6, -1, -1, -1, 2, 1, 0, -1, -1] # (((...)))..
-    size_A = len(true_pairings)
-    true = Secondary.to_vector(true_pairings, size_A + 1)
-    size_B = len(true)
-    pred_pairings = [8, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1] # (((........
-    pred = Secondary.to_vector(pred_pairings, size_B)
-    assert len(true) == len(pred)
-    true, pred = train.clean_true_pred(true, pred)
-    assert len(true) == size_A and len(pred) == size_A
 
-def test_prediction_post_processing_vector():
-    """
-    Ensure that the ending of predictions can be removed.
-    """
-    true_pairings = [8, 7, 6, -1, -1, -1, 2, 1, 0, -1, -1] # (((...)))..
-    size_A = len(true_pairings)
-    true = Secondary.to_vector(true_pairings, size_A + 1)
-    size_B = len(true)
-    pred_pairings = [8, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1] # (((........
-    pred = Secondary.to_vector(pred_pairings, size_B)
-    assert len(true) == len(pred)
-    true, pred = train.clean_true_pred(true, pred)
-    assert len(true) == size_A and len(pred) == size_A
+def test_categorize_vectors():
+    """Ensure that predictions are correctly converted into one-hot
+    vectors."""
+    expected = [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+    ]
+    test_vector = [
+        [0.9, 0.5, 0.1],
+        [0.0, 0.1, 0.05],
+        [0.0, 0.0, 0.8]
+    ]
+    assert train.categorize_vector(test_vector) == expected, \
+        "Prediction vector is incorrectly categorized."
+
+@pytest.mark.parametrize(
+    "bases, true, pred",
+    [
+        (
+            list("AAACCCUUUCC"),
+            [8, 7, 6, -1, -1, -1, 2, 1, 0, -1, -1], # (((...)))..
+            [8, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1] # (((........
+        ),
+        (
+            list("AAACCCUUUCC-----"),
+            [8, 7, 6, -1, -1, -1, 2, 1, 0, -1, -1], # (((...)))..
+            [8, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1] # (((........
+        )
+    ]
+)
+def test_prediction_post_processing(bases, true, pred):
+    """Ensure that the ending of predictions can be removed."""
+    bases_v = Primary.to_vector(bases)
+    true_v  = Secondary.to_vector(true, len(bases))
+    pred_v  = Secondary.to_vector(pred, len(bases))
+    b, t, p = train.clean_vectors(bases_v, true_v, pred_v)
+    assert len(b) == len(t) == len(p), "Non-homogeneous vector dimensions."
+

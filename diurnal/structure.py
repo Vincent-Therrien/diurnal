@@ -114,6 +114,7 @@ class Primary:
 
         Returns (list): Encoded matrix.
         """
+        N_MINIMUM_DISTANCE = 4
         if size == 0:
             size = len(bases)
         map = Schemes.IUPAC_ONEHOT_PAIRINGS
@@ -124,7 +125,7 @@ class Primary:
                 pairing = bases[row] + bases[col]
                 if row == col:
                     matrix[row][col] = map["unpaired"]
-                elif abs(row - col) < 4 or len(set(pairing)) == 1:
+                elif abs(row - col)<N_MINIMUM_DISTANCE or len(set(pairing))==1:
                     matrix[row][col] = map["invalid"]
                 elif pairing in map:
                     matrix[row][col] = map[pairing]

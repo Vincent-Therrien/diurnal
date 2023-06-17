@@ -27,12 +27,17 @@ NAMES = [
     ["tRNA"]
 ]
 
+NAME_SET = []
+for name in NAMES:
+    for alias in name:
+        NAME_SET.append(alias)
+
 ONEHOT = dict()
 for i, name in enumerate(NAMES):
     ONEHOT[name[0]] = [1 if x == i else 0 for x in range(len(NAMES))]
 
 
-def to_vector(family: str, map: dict = ONEHOT) -> list:
+def to_vector(family: str) -> list:
     """Encode a family into a vector.
 
     Args:
@@ -40,13 +45,7 @@ def to_vector(family: str, map: dict = ONEHOT) -> list:
 
     Returns (list(int)): One-hot encoded family.
     """
-    if inspect.isfunction(map):
-        return map(family)
-    if type(map) == dict:
-        return map[family]
-    message = (f"Type `{type(map)}` is not allowed for family "
-        + "encoding. Use a mapping function or dictionary.")
-    file_io.log(message, -1)
+    return NAMES[family]
 
 
 def from_vector(vector: list) -> str:
@@ -91,3 +90,14 @@ def get_name(filename: str) -> str:
         for candidate in candidates:
             c[filename.upper().find(candidate.upper())] = candidate
         return c[max(c.keys())]
+
+
+def is_known(family: str) -> bool:
+    """Check if a family is recognized.
+
+    Args:
+        family (str): Family test name.
+
+    Returns (bool): True if the family is recognized, False otherwise.
+    """
+    return family in NAME_SET
