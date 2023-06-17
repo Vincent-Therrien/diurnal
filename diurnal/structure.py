@@ -63,7 +63,7 @@ class Schemes:
         "UG":       [0, 0, 0, 0, 0, 1, 0, 0],
         "unpaired": [0, 0, 0, 0, 0, 0, 1, 0], # Unpaired base.
         "invalid":  [0, 0, 0, 0, 0, 0, 0, 1], # Impossible pairing (e.g. AA).
-        "-":        [0, 0, 0, 0, 0, 0, 0, 0]  # Padding element.
+        "-":        [0, 0, 0, 0, 0, 0, 0, 0]  # Padding element (i.e. empty).
     }
 
     BRACKET_TO_ONEHOT = {
@@ -84,32 +84,22 @@ class Schemes:
 class Primary:
     """Transform RNA primary structures into useful formats."""
 
-    def to_vector(bases, size: int = 0, map=Schemes.IUPAC_TO_ONEHOT) -> list:
+    def to_vector(bases, size: int = 0) -> list:
         """Transform a sequence of bases into a vector.
 
         Args:
             bases (list): A sequence of bases. E.g.: ``['A', 'U']``.
             size (int): Size of a normalized vector. `0` for no padding.
-            map: A dictionary or function that maps bases to vectors.
 
         Returns (list): One-hot encoded primary structure.
         """
-        vector = []
-        if inspect.isfunction(map):
-            vector = map(bases)
-        elif type(map) == dict:
-            vector = [map[base] for base in bases]
-        else:
-            message = (f"Type `{type(map)}` is not allowed for primary "
-                + "structure encoding. Use a mapping function or dictionary.")
-            file_io.log(message, -1)
+        vector = [Schemes.IUPAC_TO_ONEHOT[base] for base in bases]
         if size:
-            element = map['.'] if type(map) == dict else map('.')
+            element = Schemes.IUPAC_TO_ONEHOT['.']
             return Primary._pad_vector(vector, size, element)
         return vector
 
-    def to_matrix(bases: list, size: int = 0,
-            map=Schemes.IUPAC_ONEHOT_PAIRINGS) -> list:
+    def to_matrix(bases: list, size: int = 0) -> list:
         """Encode a primary structure in a matrix of potential pairings.
 
         Create an `n` by `n` matrix, where `n` is the number of bases,
@@ -121,12 +111,12 @@ class Primary:
         Args:
             bases (list): Sequence of bases.
             size (int): Matrix dimension. `0` for no padding.
-            map (dict): A dictionary that maps a base pairing to a vector.
 
         Returns (list): Encoded matrix.
         """
         if size == 0:
             size = len(bases)
+        map = Schemes.IUPAC_ONEHOT_PAIRINGS
         empty = map['-']
         matrix = [[empty for _ in range(size)] for _ in range(size)]
         for row in range(len(bases)):
@@ -206,8 +196,7 @@ class Primary:
 class Secondary:
     """Transform RNA secondary structures into useful formats."""
 
-    def to_vector(pairings: list, size: int = 0,
-            map = Schemes.BRACKET_TO_ONEHOT) -> list:
+    def to_vector(pairings: list, size: int = 0) -> list:
         """Encode pairings in a one-hot bracket-based secondary structure.
 
         Args:
@@ -218,17 +207,9 @@ class Secondary:
         Returns (list): One-hot encoded secondary structure.
         """
         bracket = Secondary.to_bracket(pairings)
-        vector = []
-        if inspect.isfunction(map):
-            vector = map(bracket)
-        elif type(map) == dict:
-            vector = [map[symbol] for symbol in bracket]
-        else:
-            message = (f"Type `{type(map)}` is not allowed for secondary "
-                + "structure encoding. Use a mapping function or dictionary.")
-            file_io.log(message, -1)
+        vector = [Schemes.BRACKET_TO_ONEHOT[symbol] for symbol in bracket]
         if size:
-            element = map[' '] if type(map) == dict else map(' ')
+            element = Schemes.BRACKET_TO_ONEHOT[' ']
             vector = Secondary._pad(vector, size, element)
         return vector
 

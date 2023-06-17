@@ -60,9 +60,8 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
              ) -> None:
     """Download and unpack RNA secondary structure databases.
 
-    This function downloads the datasets listed in the `datasets`
-    argument, places them in the `dst` directory, and unpacks
-    the downloaded files.
+    Download the datasets listed in the `datasets` argument, places them
+    in the `dst` directory, and unpacks the downloaded files.
 
     Args:
         dst (str): Directory path in which the files are downloaded and
@@ -122,9 +121,9 @@ def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
 def format(src: str,
           dst: str,
           max_size: int,
-          primary_structure_map,
-          secondary_structure_map,
-          family_map=None,
+          primary_structure_map = diurnal.structure.Primary.to_vector,
+          secondary_structure_map = diurnal.structure.Secondary.to_vector,
+          family_map = diurnal.family.to_vector,
           verbosity: int=1) -> None:
     """ Transform the original datasets into the representation provided
     by the arguments.
@@ -180,24 +179,15 @@ def format(src: str,
     Y = [] # Secondary structure
     F = [] # Family
     for i, path in enumerate(paths):
-        # Read the file.
         _, bases, pairings = file_io.read_ct_file(str(path))
         family = diurnal.family.get_name(str(path))
-        # Add the file to the dataset or not depending on its size.
         if len(bases) > max_size:
             rejected_names.append(str(path))
             continue
-        else:
-            names.append(str(path))
-        # Encode the data.
-        if primary_structure_map:
-            X.append(diurnal.structure.Primary.to_padded_vector(
-                    bases, max_size, primary_structure_map))
-        if secondary_structure_map:
-            Y.append(diurnal.structure.Secondary.to_padded_vector(
-                    pairings, max_size, secondary_structure_map))
-        if family_map:
-            F.append(diurnal.family.to_vector(family, family_map))
+        names.append(str(path))
+        X.append(primary_structure_map(bases, max_size))
+        Y.append(secondary_structure_map(pairings, max_size))
+        F.append(family_map(family))
         if verbosity:
             prefix = f"    Encoding {len(paths)} files "
             suffix = f" {path.name}"
@@ -208,21 +198,26 @@ def format(src: str,
         r = len(rejected_names)
         file_io.log(f"Encoded {i} files. Rejected {r} files.", 1)
     # Write the encoded file content into Numpy files.
-    if X:
-        if verbosity: file_io.log(f"Writing primary structures.", 1)
-        np.save(dst + "primary_structures", np.asarray(X, dtype=np.float32))
-    if Y:
-        if verbosity: file_io.log("Writing secondary structures.", 1)
-        np.save(dst + "secondary_structures", np.asarray(Y, dtype=np.float32))
-    if F:
-        if verbosity: file_io.log("Writing families.", 1)
-        np.save(dst + "families", np.asarray(F, dtype=np.float32))
-    if names:
-        if verbosity: file_io.log("Writing names.", 1)
-        with open(dst + "names.txt", "w") as outfile:
-            outfile.write("\n".join(names))
+    if not X:
+        if verbosity: file_io.log(f"No structure to write.", 1)
+        return
+    s1 = dst + "primary_structures"
+    if verbosity: file_io.log(f"Writing primary structures at `{s1}.npy`.", 1)
+    np.save(s1, np.asarray(X, dtype=np.float32))
+    s2 = dst + "secondary_structures"
+    if verbosity: file_io.log(f"Writing secondary structures at `{s2}.npy`.", 1)
+    np.save(s2, np.asarray(Y, dtype=np.float32))
+    f = dst + "families"
+    if verbosity: file_io.log(f"Writing families at `{f}.npy`.", 1)
+    np.save(f, np.asarray(F, dtype=np.float32))
+    n = dst + "names.txt"
+    if verbosity: file_io.log(f"Writing names at `{n}`.", 1)
+    with open(n, "w") as outfile:
+        outfile.write("\n".join(names))
     # Write an informative file to sum up the content of the formatted folder.
-    with open(dst + "info.rst", "w") as outfile:
+    info = dst + "info.rst"
+    if verbosity: file_io.log(f"Writing an informative file at `{info}`.", 1)
+    with open(info, "w") as outfile:
         outfile.write(summarize(dst, primary_structure_map,
             secondary_structure_map, family_map))
 
@@ -254,10 +249,9 @@ def summarize(path: str,
         content += "--------------------------\n\n"
         content += f"File: `{path + 'primary_structures.npy'}`\n\n"
         content += f"Shape: {X.shape}\n\n"
-        content += "Encoding:\n"
         example = "ACGU-"
-        code = diurnal.structure.Primary.to_vector(example,
-            primary_structure_map)
+        content += f"Encoding of the structure `{example}`:\n"
+        code = primary_structure_map(example)
         for i in range(len(example)):
             content += f"    {example[i]} -> {code[i]}\n"
         content += "\nExample:\n"
@@ -269,10 +263,9 @@ def summarize(path: str,
         content += "----------------------------\n\n"
         content += f"File: `{path + 'secondary_structures.npy'}`\n\n"
         content += f"Shape: {Y.shape}\n\n"
-        content += "Encoding:\n"
         example = [2, -1, 0] # Corresponds to `(.)` in bracket notation.
-        code = diurnal.structure.Secondary.to_vector(example,
-            secondary_structure_map)
+        content += f"Encoding of the structure `{example}`:\n"
+        code = secondary_structure_map(example)
         for i in range(len(example)):
             content += f"    {example[i]} -> {code[i]}\n"
         content += "\nExample:\n"
@@ -286,7 +279,7 @@ def summarize(path: str,
         content += f"Shape: {F.shape}\n\n"
         content += "Encoding:\n"
         for f in diurnal.family.NAMES:
-            name = diurnal.family.to_vector(f[0],family_map)
+            name = family_map(f[0])
             content += f"    {f[0]} -> {name}"
             content += "\n"
         content += "\nExample: \n"
