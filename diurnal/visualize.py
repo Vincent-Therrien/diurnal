@@ -10,7 +10,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from diurnal import transform
+import diurnal.family
+import diurnal.structure
+
 
 def count_structures_per_family(path: str) -> None:
     """Display a histogram of RNA lengths.
@@ -21,16 +23,16 @@ def count_structures_per_family(path: str) -> None:
     """
     # Read data.
     if path[-1] != '/': path += '/'
-    S = np.load(path + "secondary_structures.npy")
+    P = np.load(path + "primary_structures.npy")
     F = np.load(path + "families.npy")
     # Obtain lengths.
     families = {}
-    for s, f in zip(S, F):
-        family = transform.Family.onehot_to_family(f)
+    for p, f in zip(P, F):
+        family = diurnal.family.from_vector(f)
         if family not in families:
             families[family] = []
-        L = len(transform.SecondaryStructure.remove_onehot_padding(s))
-        families[family].append(L)
+        bases = diurnal.structure.Primary.to_bases(p)
+        families[family].append(len(bases))
     # Plot data
     n_bins = 50
     for family, lengths in families.items():
@@ -40,4 +42,23 @@ def count_structures_per_family(path: str) -> None:
     plt.title("Number of Bases in RNA Molecules")
     plt.xlabel('Number of bases')
     plt.ylabel('Count')
+    plt.show()
+
+
+def visualize_potential_pairings(matrix: list,
+        map: dict=diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS) -> None:
+    """Display a heatmap of potential pairings."""
+    x = list(range(len(matrix[0])))
+    y = list(range(len(matrix)))
+    C = []
+    for row in y[::-1]:
+        line = []
+        for col in x:
+            element = matrix[row][col]
+            if sum(element) == 0:
+                line.append(0)
+            else:
+                line.append(element.index(max(element)) + 1)
+        C.append(line)
+    plt.pcolormesh(x, y, C)
     plt.show()

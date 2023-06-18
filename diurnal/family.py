@@ -45,7 +45,10 @@ def to_vector(family: str) -> list:
 
     Returns (list(int)): One-hot encoded family.
     """
-    return NAMES[family]
+    for name in NAMES:
+        if family in name:
+            return ONEHOT[name[0]]
+    return None
 
 
 def from_vector(vector: list) -> str:
