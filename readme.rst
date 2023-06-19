@@ -4,6 +4,7 @@ diurnal
 - `English (en) <#Predict-RNA-Secondary-Structures>`_
 - `Français (fr) <#Prédire-les-structures-secondaires-de-lARN>`_
 
+
 Predict RNA Secondary Structures
 --------------------------------
 
@@ -14,6 +15,7 @@ It comprises the following subdirectories.
 - ``docs`` : Documentation file written with ``Sphinx``.
 - ``diurnal`` : Library source code.
 - ``test`` : Automated test framework written with ``pytest``.
+
 
 Installation
 ````````````
@@ -41,6 +43,7 @@ Windows :
    pip install -r requirements.txt
    py setup.py install
 
+
 Documentation
 ``````````````
 
@@ -52,10 +55,12 @@ installed.
    cd docs
    make html
 
+
 Demonstration Scripts
 `````````````````````
 
 The directory  ``./demo`` comprises commented usages of the library.
+
 
 Dataset Obtention
 `````````````````
@@ -72,6 +77,7 @@ Execute the following Python script to download the data:
 
    import diurnal.database as db
    db.download_all("./data/")
+
 
 Test Framwork
 `````````````
@@ -100,6 +106,7 @@ réseaux neuronaux. Il comprend les répertoires suivants :
 - ``test`` : Scripts utilisés pour valider le format des données et les
   modèles. Ils utilisent ``Python`` et la bibliothèque ``pytest``.
 
+
 Installation
 ````````````
 
@@ -126,6 +133,7 @@ Windows :
    pip install -r requirements.txt # Installer les outils requis.
    py setup.py install # Installer la bibliothèque diurnal.
 
+
 Documentation
 ``````````````
 
@@ -136,6 +144,7 @@ installée.
 
    cd docs
    make html
+
 
 Scripts de démonstration
 ````````````````````````
@@ -160,6 +169,7 @@ Exécutez le script suivant pour obtenir les données :
    import diurnal.database as db
    db.download_all("./data/")
 
+
 Cadre de tests
 ``````````````
 
@@ -170,6 +180,7 @@ Le dépôt contient un cadre de tests automatisés développé avec la biblioth�
 
    cd test
    pytest
+
 
 Objectifs de développement
 --------------------------

@@ -8,13 +8,28 @@
 """
 
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import diurnal.family
 import diurnal.structure
 
 
-def count_structures_per_family(path: str) -> None:
+PAIRING_COLORS = {
+    "AU":       (0.4, 0.0, 0.0),
+    "UA":       (0.7, 0.0, 0.0),
+    "CG":       (0.0, 0.4, 0.0),
+    "GC":       (0.0, 0.7, 0.0),
+    "GU":       (0.0, 0.0, 0.4),
+    "UG":       (0.0, 0.0, 0.7),
+    "unpaired": (0.5, 0.5, 0.5), # Unpaired base.
+    "invalid":  (0.85, 0.85, 0.85), # Impossible pairing (e.g. AA).
+    "padding":  (0.95, 0.95, 0.95)  # Padding element (i.e. empty).
+}
+PAIRING_CMAP = [(i, v) for i, v in enumerate(PAIRING_COLORS.values())]
+
+
+def structure_length_per_family(path: str) -> None:
     """Display a histogram of RNA lengths.
 
     Args:
@@ -45,20 +60,26 @@ def count_structures_per_family(path: str) -> None:
     plt.show()
 
 
-def visualize_potential_pairings(matrix: list,
+def potential_pairings(matrix: list,
+        title: str="RNA Molecule Potential Pairings",
         map: dict=diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS) -> None:
     """Display a heatmap of potential pairings."""
-    x = list(range(len(matrix[0])))
-    y = list(range(len(matrix)))
+    # Obtain data.
     C = []
-    for row in y[::-1]:
+    for row in list(range(len(matrix))):
         line = []
-        for col in x:
-            element = matrix[row][col]
-            if sum(element) == 0:
-                line.append(0)
-            else:
-                line.append(element.index(max(element)) + 1)
+        for col in list(range(len(matrix[0]))):
+            element = list(matrix[row][col])
+            color = PAIRING_CMAP[list(map.values()).index(element)][1]
+            line.append(color)
         C.append(line)
-    plt.pcolormesh(x, y, C)
+    # Plot the structure.
+    plt.imshow(C, interpolation='none')
+    patches = [
+        mpl.patches.Patch(color=v, label=k) for k, v in PAIRING_COLORS.items()]
+    plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2)
+    plt.xticks(np.arange(-.5, len(C), 1), np.arange(1, len(C) + 2, 1))
+    plt.yticks(np.arange(-.5, len(C), 1), np.arange(1, len(C) + 2, 1))
+    plt.grid()
+    plt.title(title)
     plt.show()
