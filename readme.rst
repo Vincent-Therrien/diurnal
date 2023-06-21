@@ -16,10 +16,6 @@ It comprises the following subdirectories.
 - ``diurnal`` : Library source code.
 - ``test`` : Automated test framework written with ``pytest``.
 
-
-Installation
-````````````
-
 Execute the following commands to install the library with pip.
 
 .. code-block:: bash
@@ -44,6 +40,12 @@ Windows :
    py setup.py install
 
 
+Demonstration Scripts
+`````````````````````
+
+The directory  ``./demo`` comprises commented usages of the library.
+
+
 Documentation
 ``````````````
 
@@ -54,12 +56,6 @@ installed.
 
    cd docs
    make html
-
-
-Demonstration Scripts
-`````````````````````
-
-The directory  ``./demo`` comprises commented usages of the library.
 
 
 Dataset Obtention
@@ -106,10 +102,6 @@ réseaux neuronaux. Il comprend les répertoires suivants :
 - ``test`` : Scripts utilisés pour valider le format des données et les
   modèles. Ils utilisent ``Python`` et la bibliothèque ``pytest``.
 
-
-Installation
-````````````
-
 Exécutez les commandes suivantes pour installer la bibliothèque:
 
 .. code-block:: bash
@@ -134,6 +126,13 @@ Windows :
    py setup.py install # Installer la bibliothèque diurnal.
 
 
+Scripts de démonstration
+````````````````````````
+
+Consultez le répertoire ``./demo`` pour voir des exemples commentés
+d'utilisation de la bibliothèque.
+
+
 Documentation
 ``````````````
 
@@ -145,12 +144,6 @@ installée.
    cd docs
    make html
 
-
-Scripts de démonstration
-````````````````````````
-
-Consultez le répertoire ``./demo`` pour voir des exemples commentés
-d'utilisation de la bibliothèque.
 
 Obtenir l'ensemble de données
 `````````````````````````````

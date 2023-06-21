@@ -235,8 +235,12 @@ def categorize_vector(prediction: list) -> list:
 
     Returns: Reformatted secondary structure.
     """
-    indices = [n.index(max(n)) for n in prediction]
-    element_size = len(prediction[0])
+    if type(prediction) == np.ndarray:
+        pred_vector = prediction.tolist()
+    else:
+        pred_vector = list(prediction)
+    indices = [n.index(max(n)) for n in pred_vector]
+    element_size = len(pred_vector[0])
     return [[1 if j == i else 0 for j in range(element_size)] for i in indices]
 
 

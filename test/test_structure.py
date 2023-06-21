@@ -28,7 +28,7 @@ def test_primary_structure_to_vector():
         [0, 0, 0, 1]
     ]
     encoding = structure.Primary.to_vector(sequence)
-    assert expected_encoding == encoding, \
+    assert (expected_encoding == encoding).all(), \
         "Primary structure is incorrectly encoded."
 
 
@@ -48,7 +48,7 @@ def test_primary_structure_to_vector_padding():
         [0, 0, 0, 0]
     ]
     encoding = structure.Primary.to_vector(sequence, total_size)
-    assert expected_encoding == encoding, \
+    assert (expected_encoding == encoding).all(), \
         "Primary structure is incorrectly padded."
 
 
@@ -99,9 +99,9 @@ def test_primary_structure_bases_to_matrix():
     n_errors = 0
     for row in range(10):
         for col in range(10):
-            if expected_matrix[row][col] != encoding[row][col]:
+            if list(expected_matrix[row][col]) != list(encoding[row][col]):
                 n_errors += 1
-    assert expected_matrix == encoding, \
+    assert (expected_matrix == encoding).all(), \
         f"Incorrectly encoded primary structure matrix. N errors: {n_errors}"
 
 
@@ -123,7 +123,7 @@ def test_secondary_structure_to_vector():
         [0, 0, 1],
     ]
     encoding = structure.Secondary.to_vector(pairings)
-    assert expected_encoding == encoding, \
+    assert (expected_encoding == encoding).all(), \
         "Secondary structure is incorrectly encoded."
 
 
@@ -145,7 +145,7 @@ def test_secondary_structure_to_vector_padding():
         [0, 0, 0]
     ]
     encoding = structure.Secondary.to_vector(pairings, total_size)
-    assert expected_encoding == encoding, \
+    assert (expected_encoding == encoding).all(), \
         "Secondary structure is incorrectly padded."
 
 
@@ -187,7 +187,7 @@ def test_secondary_structure_to_matrix():
         [1, 0, 0, 0, 0, 0, 0, 0, 0]
     ]
     encoding = structure.Secondary.to_matrix(pairings)
-    assert expected_matrix == encoding, \
+    assert (expected_matrix == encoding).all(), \
         "Secondary structure is incorrectly formatted into a matrix."
     expected_matrix = [
         [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
@@ -202,5 +202,5 @@ def test_secondary_structure_to_matrix():
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     ]
     encoding = structure.Secondary.to_matrix(pairings, len(pairings) + 1)
-    assert expected_matrix == encoding, \
+    assert (expected_matrix == encoding).all(), \
         "Secondary structure is incorrectly padded in a matrix."

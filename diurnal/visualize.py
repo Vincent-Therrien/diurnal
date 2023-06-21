@@ -24,7 +24,6 @@ PAIRING_COLORS = {
     "UG":       (0.0, 0.0, 0.7),
     "unpaired": (0.5, 0.5, 0.5), # Unpaired base.
     "invalid":  (0.85, 0.85, 0.85), # Impossible pairing (e.g. AA).
-    "padding":  (0.95, 0.95, 0.95)  # Padding element (i.e. empty).
 }
 PAIRING_CMAP = [(i, v) for i, v in enumerate(PAIRING_COLORS.values())]
 
@@ -65,6 +64,7 @@ def potential_pairings(matrix: list,
         map: dict=diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS) -> None:
     """Display a heatmap of potential pairings."""
     # Obtain data.
+    matrix = diurnal.structure.Primary.unpad_matrix(matrix)
     C = []
     for row in list(range(len(matrix))):
         line = []
