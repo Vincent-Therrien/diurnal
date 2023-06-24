@@ -43,7 +43,7 @@ def structure_length_per_family(path: str) -> None:
     # Obtain lengths.
     families = {}
     for p, f in zip(P, F):
-        family = diurnal.family.from_vector(f)
+        family = diurnal.family.to_name(f)
         if family not in families:
             families[family] = []
         bases = diurnal.structure.Primary.to_bases(p)

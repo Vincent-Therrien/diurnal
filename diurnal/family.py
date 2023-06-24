@@ -38,7 +38,7 @@ for i, name in enumerate(NAMES):
 
 
 def to_vector(family: str) -> list:
-    """Encode a family into a vector.
+    """Encode a family into a one-hot vector.
 
     Args:
         family (str): RNA family.
@@ -51,7 +51,7 @@ def to_vector(family: str) -> list:
     return None
 
 
-def from_vector(vector: list) -> str:
+def to_name(vector: list) -> str:
     """Convert a one-hot-encoded family back into its name.
 
     Args:
