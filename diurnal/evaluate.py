@@ -23,8 +23,8 @@ class Vector:
     def _convert_to_scalars(true, pred) -> tuple:
         """Convert a vector of vectors into a vector of scalars.
 
-        For instance, `[[0, 1], [0, 1], [1, 0]]` is converted to
-        `[0, 0, 1]`.
+        For instance, `[[0, 1], [0, 1], [1, 0]]` and `['.', '.', '(']`
+        are converted to `[0, 0, 1]`.
 
         Args:
             true (list-like): Vector of the true structure.
@@ -41,8 +41,8 @@ class Vector:
         return true, pred, symbols
 
     def get_f1(true, pred) -> float:
-        """ Compute the F1-score by considering the secondary structure
-        symbols '(', '.', and ')' as three different classes.
+        """ Compute the micro F1-score by considering the secondary
+        structure symbols '(', '.', and ')' as three different classes.
 
         Args:
             true (list-like): Vector of the true structure.

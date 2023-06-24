@@ -22,8 +22,9 @@ PAIRING_COLORS = {
     "GC":       (0.0, 0.7, 0.0),
     "GU":       (0.0, 0.0, 0.4),
     "UG":       (0.0, 0.0, 0.7),
-    "unpaired": (0.5, 0.5, 0.5), # Unpaired base.
+    "unpaired": (0.5, 0.5, 0.5),    # Unpaired base.
     "invalid":  (0.85, 0.85, 0.85), # Impossible pairing (e.g. AA).
+    "padding":  (0.95, 0.95, 0.95)  # Padding elements.
 }
 PAIRING_CMAP = [(i, v) for i, v in enumerate(PAIRING_COLORS.values())]
 

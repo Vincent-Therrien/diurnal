@@ -16,7 +16,7 @@ setup(name='diurnal',
     author='Vincent Therrien',
     author_email='therrien.vincent.2@courrier.uqam.ca',
     url='https://github.com/Vincent-Therrien/diurnal',
-    packages=['diurnal', 'diurnal/utils', 'diurnal/networks'],
+    packages=['diurnal', 'diurnal/utils', 'diurnal/models'],
     python_requires='>=3.7',
     install_requires=dependencies
 )

@@ -16,9 +16,9 @@ import diurnal.evaluate as evaluate
 @pytest.mark.parametrize(
     "true, pred, S, P, F",
     [
-        ("(((...)))", "(((...)))", 1.0, 1.0, 1.0),
-        ("(((...)))", "(((...(((", 1.0, 1.0, 1.0),
-        ("(((...)))", "(((......", 0.5, 1.0, 2/3),
+        (list("(((...)))"), list("(((...)))"), 1.0, 1.0, 1.0),
+        (list("(((...)))"), list("(((...((("), 1.0, 1.0, 1.0),
+        (list("(((...)))"), list("(((......"), 0.5, 1.0, 2/3),
     ]
 )
 def test_two_class_metrics(true, pred, S, P, F):
@@ -42,9 +42,9 @@ def test_two_class_metrics(true, pred, S, P, F):
 @pytest.mark.parametrize(
     "true, pred, F",
     [
-        ("(((...)))", "(((...)))", 1.0),
-        ("(((...)))", "(((...(((", 2/3),
-        ("(((...)))", "(((......", 2/3),
+        (list("(((...)))"), list("(((...)))"), 1.0),
+        (list("(((...)))"), list("(((...((("), 2/3),
+        (list("(((...)))"), list("(((......"), 2/3),
     ]
 )
 def test_vector_f1(pred, true, F):

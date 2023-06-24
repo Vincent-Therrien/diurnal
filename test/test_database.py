@@ -7,29 +7,12 @@
     License: MIT
 """
 
-import pytest
 import requests
 import os
 import numpy as np
-import shutil
 
 import diurnal.database as database
-
-
-STRUCTURE_PATH = os.path.dirname(os.path.realpath(__file__)) + "/data/ct"
-TMP_PATH = os.path.dirname(os.path.realpath(__file__)) + "/tmp"
-FILENAMES = ["families.npy", "info.rst", "names.txt",
-    "primary_structures.npy", "secondary_structures.npy"]
-
-
-@pytest.fixture()
-def tmp_rna_structure_files(request):
-    if os.path.isdir(TMP_PATH):
-        shutil.rmtree(TMP_PATH)
-    os.makedirs(TMP_PATH)
-    def teardown():
-        shutil.rmtree(TMP_PATH)
-    request.addfinalizer(teardown)
+import utils.fileio as fileio
 
 
 def test_repository_availability():
@@ -42,9 +25,16 @@ def test_repository_availability():
 def test_ct_file_format(tmp_rna_structure_files):
     """Ensure that CT files are correctly converted into a vector
     representation."""
-    database.format(STRUCTURE_PATH, TMP_PATH, 512)
-    for filename in FILENAMES:
-        path = f"{TMP_PATH}/{filename}"
+    DIM = 512
+    database.format(fileio.STRUCTURE_PATH, fileio.TMP_PATH, DIM)
+    for filename in fileio.FILENAMES:
+        path = f"{fileio.TMP_PATH}/{filename}"
         assert os.path.isfile(path), f"The file `{filename}` cannot be found."
-        if path.endswith(".npy"):
-            np.load(path, allow_pickle=True)
+        if (path.endswith("primary_structures.npy")
+                or path.endswith("secondary_structures.npy")):
+            values = np.load(path, allow_pickle=True)
+            length = len(values[0])
+            assert length == DIM, \
+                f"Incorrect dimension for {path}; expected {DIM}, got {length}."
+        if path.endswith("families.npy"):
+            values = np.load(path, allow_pickle=True)

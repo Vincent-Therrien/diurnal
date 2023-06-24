@@ -15,15 +15,35 @@
 """
 
 from random import choice
+import numpy as np
 
-def random_prediction(size: int, symbols: list):
-    """Predict a random symbol for each base.
 
-    Args:
-        size (int): Number of bases.
-        symbols (list): Set of symbols of the prediction.
+class Random():
+    """Baseline model that makes random predictions."""
+    def __init__(self) -> None:
+        self.symbols = []
 
-    Returns (list):
-        Random prediction.
-    """
-    return [choice(symbols) for _ in range(size)]
+    def train(self, primary, secondary) -> None:
+        """Simulate a training of the model."""
+        for symbol in secondary[0]:
+            symbol = symbol.tolist()
+            if symbol not in self.symbols:
+                self.symbols.append(symbol)
+
+    def predict(self, primary) -> np.array:
+        """Predict a random secondary structure. Argument is ignored."""
+        return [choice(self.symbols) for _ in range(len(primary))]
+
+
+class Uniform():
+    """Baseline model that predicts a uniform vector."""
+    def __init__(self, symbol) -> None:
+        self.symbol = symbol
+
+    def train(self, primary, secondary) -> None:
+        """Simulate a training of the model."""
+        pass
+
+    def predict(self, primary) -> np.array:
+        """Predict a random secondary structure. Argument is ignored."""
+        return [self.symbol for _ in range(len(primary))]

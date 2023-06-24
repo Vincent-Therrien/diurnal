@@ -11,8 +11,6 @@
 import inspect
 import numpy as np
 
-from .utils import file_io
-
 
 class Schemes:
     """RNA structural codes to transform data into other representations.
@@ -212,16 +210,23 @@ class Secondary:
     """Transform RNA secondary structures into useful formats."""
 
     def to_vector(pairings: list, size: int = 0) -> np.array:
-        """Encode pairings in a one-hot bracket-based secondary structure.
+        """Encode pairings in a one-hot bracket-based secondary
+        structure.
 
         Args:
-            pairings (list(int)): A list of nucleotide pairings, e.g.
-                the pairing `(((...)))` can be represented as
-                `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
+            pairings (List[int|str]): A list of nucleotide pairings.
+                The pairing `(((...)))` can be represented as
+                `[8, 7, 6, -1, -1, -1, 2, 1, 0]` or
+                `['(', '(', '(', '.', '.', '.', ')', ')', ')']`.
 
         Returns (np.array): One-hot encoded secondary structure.
         """
-        bracket = Secondary.to_bracket(pairings)
+        if type(pairings[0]) is int:
+            bracket = Secondary.to_bracket(pairings)
+        elif type(pairings[0]) is str:
+            bracket = pairings
+        else:
+            raise RuntimeError(f"Unrecognized type: {type(pairings[0])}")
         vector = [Schemes.BRACKET_TO_ONEHOT[symbol] for symbol in bracket]
         vector = np.array(vector)
         if size:
@@ -250,15 +255,14 @@ class Secondary:
                 matrix[i][pairings[i]] = 1
         return matrix
 
-    def to_bracket(pairings: list, strip: bool = True) -> list:
+    def to_bracket(pairings: list) -> list:
         """Convert a list of nucleotide pairings into a secondary
-        structure bracket notation, e.g. `'(((...)))`.'
+        structure bracket notation, e.g. `'(((...)))`'.
 
         Args:
             pairings (list(int)): A list of nucleotide pairings, e.g.
                 the pairing `(((...)))` is represented as
                 `[8, 7, 6, -1, -1, -1, 2, 1, 0]`.
-            strip (bool): Remove empty elements.
 
         Returns (list): Secondary structure bracket notation.
         """
@@ -276,11 +280,9 @@ class Secondary:
             encoding = []
             characters = list(Schemes.BRACKET_TO_ONEHOT.keys())
             for p in pairings:
+                p = p.tolist() if type(p) == np.ndarray else p
                 if sum(p) == 0:
-                    if strip:
-                        return encoding
-                    else:
-                        encoding.append(" ")
+                    encoding.append(" ")
                 else:
                     encoding.append(characters[p.index(max(p))])
             return encoding

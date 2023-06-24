@@ -8,11 +8,11 @@
 
 import numpy as np
 
-from diurnal import visualize
+from diurnal import visualize, structure
 
 
 visualize.structure_length_per_family("data/formatted")
 
-P = np.load("data/formatted_matrix/primary_structures.npy", mmap_mode='r')
-example = P[0]
+matrices = np.load("data/formatted_matrix/primary_structures.npy",mmap_mode='r')
+example = structure.Primary.unpad_matrix(matrices[0])
 visualize.potential_pairings(example)

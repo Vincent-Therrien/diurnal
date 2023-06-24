@@ -137,11 +137,25 @@ def _read_npy_files(path: str) -> tuple:
         if lengths.count(lengths[0]) != len(lengths):
             file_io.log(f"load_data: Inhomogeneous sequences: {lengths}", -1)
             raise RuntimeError
-    else:
-        file_io.log(f"load_data: path `{path}` is empty.", -1)
-        raise RuntimeError
     return data
 
+
+def _convert_data_to_dict(data: list) -> dict:
+    """Format loaded data into a dictionary.
+
+    Args:
+        data (list): Input data.
+
+    Return (dict): Input data represented in a labelled dictionary.
+    """
+    return {
+        "structures": {
+            "primary": data[0],
+            "secondary": data[1]
+        },
+        "names": data[2],
+        "families": data[3] if len(data) > 3 else None
+    }
 
 def _convert_to_tensor(data: list) -> torch.Tensor:
     """Convert matrix-like objects into pyTorch tensors.
@@ -180,7 +194,7 @@ def load_data(path: str, randomize: bool = True) -> tuple:
     # Shuffle data.
     if randomize:
         data = list(shuffle_data(*data))
-    return _convert_to_tensor(data[:3]), data[-1]
+    return _convert_data_to_dict(data)
 
 
 def load_inter_family(path: str, family: str, randomize: bool = True) -> list:
@@ -239,7 +253,7 @@ def categorize_vector(prediction: list) -> list:
         pred_vector = prediction.tolist()
     else:
         pred_vector = list(prediction)
-    indices = [n.index(max(n)) for n in pred_vector]
+    indices = [n.index(max(n)) if sum(n) else -1 for n in pred_vector]
     element_size = len(pred_vector[0])
     return [[1 if j == i else 0 for j in range(element_size)] for i in indices]
 

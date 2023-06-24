@@ -164,11 +164,8 @@ def test_secondary_structure_vector_to_brackets():
         [0, 0, 0]
     ]
     decoding = structure.Secondary.to_bracket(encoding)
-    assert decoding == list("(((..."), \
-        "Primary structure unpadded decoding produced an unexpected result."
-    decoding = structure.Secondary.to_bracket(encoding, False)
     assert decoding == list("(((...   "), \
-        "Primary structure padded decoding produced an unexpected result."
+        "Primary structure decoding produced an unexpected result."
 
 
 def test_secondary_structure_to_matrix():
