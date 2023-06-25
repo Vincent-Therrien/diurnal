@@ -7,9 +7,11 @@
     License: MIT
 """
 
+import os
 import sys
 import tarfile
 import requests
+
 
 def log(message: str, level: int = 0) -> None:
     """
@@ -26,6 +28,7 @@ def log(message: str, level: int = 0) -> None:
         print(f"[> DIURNAL] Error: {message}")
     else:
         print(f"    {message}")
+
 
 def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
     """
@@ -44,6 +47,7 @@ def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
     bar = f"[{'=' * done}{' ' * (50-done)}]"
     sys.stdout.write('\033[K\r' + prefix + bar + suffix)
     sys.stdout.flush()
+
 
 def download(url: str, dst: str, verbosity: int, name: str="") -> None:
     """
@@ -74,11 +78,12 @@ def download(url: str, dst: str, verbosity: int, name: str="") -> None:
     if verbosity:
         print()
 
+
 def decompress(filename: str, mode: str, dst: str,
                verbosity: int, name: str="") -> None:
     """
     Decompress a TAR file.
-    
+
     Args:
         filename (str): Name of the file to decompress.
         mode (str): Decompression mode (e.g. `r:gz`).
@@ -98,6 +103,25 @@ def decompress(filename: str, mode: str, dst: str,
     tar.close()
     if verbosity:
         print()
+
+
+def clean_dir_path(directory: str) -> str:
+    """Validate a directory.
+
+    Args:
+        directory (str): Directory name to validate.
+
+    Raises:
+        RuntimeError: If the directory does not exist.
+
+    Returns (str): Cleaned directory path.
+    """
+    if not directory.endswith("/"):
+        directory += "/"
+    if not os.path.isdir(directory):
+        log(f"Invalid directory: {directory}", -1)
+        raise RuntimeError
+    return directory
 
 def read_ct_file(path: str) -> tuple:
     """

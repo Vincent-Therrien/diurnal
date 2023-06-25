@@ -18,22 +18,7 @@ import diurnal.structure
 
 
 # Input data transformation
-def split_data(data, fractions: list, offset: int = 0) -> list:
-    """Split data in subsets according to the specified fractions.
-
-    Args:
-        data: Array-like object containing the data to split.
-        fractions: Proportion of each subset. For instance, to use 80% of the
-            data for training and 20% for testing, use [0.8, 0.2].
-        offset: Number of indices to offset to assemble the subsets. Used for
-            K-fold data splits.
-
-    Returns:
-        A list containing the split data object.
-    """
-    if sum(fractions) != 1.0:
-        file_io.log("Invalid data split proportions.", -1)
-        raise RuntimeError
+def _split_arrays(data, fractions: list, offset: int = 0) -> list:
     subarrays = []
     index = int(offset)
     n = len(data)
@@ -51,6 +36,41 @@ def split_data(data, fractions: list, offset: int = 0) -> list:
             subarrays.append(tmp)
         index = index2
     return subarrays
+
+def split_data(data, fractions: list, offset: int = 0) -> list:
+    """Split data in subsets according to the specified fractions.
+
+    Args:
+        data: Array-like object containing the data to split.
+        fractions: Proportion of each subset. For instance, to use 80% of the
+            data for training and 20% for testing, use [0.8, 0.2].
+        offset: Number of indices to offset to assemble the subsets. Used for
+            K-fold data splits.
+
+    Returns:
+        A list containing the split data object.
+    """
+    if sum(fractions) != 1.0:
+        file_io.log("Invalid data split proportions.", -1)
+        raise RuntimeError
+    if type(data) == dict:
+        keys = list(data.keys())
+        values = []
+        for i in range(len(data[keys[0]])):
+            element = []
+            for k in keys:
+                element.append(data[k][i])
+            values.append(element)
+        split_values = _split_arrays(values, fractions, offset)
+        new_data = []
+        for split in split_values:
+            d = {}
+            for i, k in enumerate(keys):
+                d[k] = [element[i] for element in split]
+            new_data.append(d)
+        return new_data
+    else:
+        return _split_arrays(data, fractions, offset)
 
 
 def k_fold_split(data, fractions: list, k: int, i: int) -> list:
@@ -119,8 +139,9 @@ def _read_npy_files(path: str) -> tuple:
     relative_paths = [
         "primary_structures.npy",
         "secondary_structures.npy",
-        "families.npy",
-        "names.txt"]
+        "names.txt",
+        "families.npy"
+    ]
     data = []
     for p in relative_paths:
         if p.endswith(".npy"):
@@ -149,13 +170,12 @@ def _convert_data_to_dict(data: list) -> dict:
     Return (dict): Input data represented in a labelled dictionary.
     """
     return {
-        "structures": {
-            "primary": data[0],
-            "secondary": data[1]
-        },
+        "primary_structures": data[0],
+        "secondary_structures": data[1],
         "names": data[2],
         "families": data[3] if len(data) > 3 else None
     }
+
 
 def _convert_to_tensor(data: list) -> torch.Tensor:
     """Convert matrix-like objects into pyTorch tensors.

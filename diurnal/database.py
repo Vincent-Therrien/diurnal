@@ -221,6 +221,7 @@ def format(src: str,
         outfile.write(summarize(dst, primary_structure_map,
             secondary_structure_map, family_map))
 
+
 def summarize(path: str,
         primary_structure_map,
         secondary_structure_map,

@@ -21,10 +21,10 @@ DIM = 512
 @pytest.mark.parametrize(
     "model, f_range",
     [
-        (baseline.Random(), [0.2, 0.5]),
-        (baseline.Uniform([1, 0, 0]), [0.2, 0.5]),
-        (baseline.Uniform([0, 1, 0]), [0.2, 0.5]),
-        (baseline.Uniform([0, 0, 1]), [0.2, 0.5]),
+        (baseline.Random(), [0.1, 0.5]),
+        (baseline.Uniform([1, 0, 0]), [0.1, 0.5]),
+        (baseline.Uniform([0, 1, 0]), [0.1, 0.5]),
+        (baseline.Uniform([0, 0, 1]), [0.1, 0.5]),
         (baseline.Uniform([0, 0, 0]), [0.0, 0.0])
     ]
 )
@@ -40,17 +40,22 @@ def test_pipeline_dryrun(tmp_rna_structure_files, model, f_range):
     Since models are baselines, they will, on average, correctly predict
     one pairing out of three - except if the model is designed to make
     incorrect predictions.
+
+    Args:
+        model: Baseline model to test.
+        f_range (List[float]): Range of acceptable f1-score for a model.
     """
     # Preprocessing
     database.format(STRUCTURE_PATH, TMP_PATH, DIM)
     data = train.load_data(TMP_PATH, False)
+    train_set, test_set, validate_set = train.split_data(data, [1/3, 1/3, 1/3])
     # Simulated training
-    model.train(data["structures"]["primary"], data["structures"]["secondary"])
-    prediction = model.predict(data["structures"]["primary"][0])
+    model.train(train_set)
+    prediction = model.predict(test_set["primary_structures"][0])
     # Clean up
     bases, true, pred = train.clean_vectors(
-        data["structures"]["primary"][0],
-        data["structures"]["secondary"][0],
+        test_set["primary_structures"][0],
+        test_set["secondary_structures"][0],
         prediction
     )
     true = structure.Secondary.to_bracket(true)

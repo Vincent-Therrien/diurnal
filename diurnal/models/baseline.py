@@ -17,33 +17,51 @@
 from random import choice
 import numpy as np
 
+from diurnal.models import Basic
 
-class Random():
+
+class Random(Basic):
     """Baseline model that makes random predictions."""
     def __init__(self) -> None:
         self.symbols = []
 
-    def train(self, primary, secondary) -> None:
+    def _train(self, primary, secondary, family) -> None:
         """Simulate a training of the model."""
         for symbol in secondary[0]:
             symbol = symbol.tolist()
             if symbol not in self.symbols:
                 self.symbols.append(symbol)
 
-    def predict(self, primary) -> np.array:
-        """Predict a random secondary structure. Argument is ignored."""
+    def _predict(self, primary) -> np.array:
+        """Predict a random secondary structure."""
         return [choice(self.symbols) for _ in range(len(primary))]
 
+    def _save(self, directory) -> None:
+        """Since the model is entirely random, no data is saved."""
+        pass
 
-class Uniform():
+    def _load(self, directory) -> None:
+        """Since the model is entirely random, no data is loaded."""
+        pass
+
+
+class Uniform(Basic):
     """Baseline model that predicts a uniform vector."""
     def __init__(self, symbol) -> None:
         self.symbol = symbol
 
-    def train(self, primary, secondary) -> None:
+    def _train(self, primary, secondary, family) -> None:
         """Simulate a training of the model."""
         pass
 
-    def predict(self, primary) -> np.array:
-        """Predict a random secondary structure. Argument is ignored."""
+    def _predict(self, primary) -> np.array:
+        """Predict a random secondary structure."""
         return [self.symbol for _ in range(len(primary))]
+
+    def _save(self, directory) -> None:
+        """Save the model."""
+        np.save(directory + "model.npy", np.array(self.symbol))
+
+    def _load(self, directory) -> None:
+        """Write the model."""
+        self.symbol = np.load(directory + "model.npy")

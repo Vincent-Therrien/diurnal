@@ -13,15 +13,14 @@ import sys
 import os
 import shutil
 
-
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
-
 
 import utils
 
 
 @pytest.fixture()
 def tmp_rna_structure_files(request):
+    """Create a temporary directory to write RNA structure files."""
     if os.path.isdir(utils.fileio.TMP_PATH):
         shutil.rmtree(utils.fileio.TMP_PATH)
     os.makedirs(utils.fileio.TMP_PATH)
