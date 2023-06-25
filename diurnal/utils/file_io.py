@@ -11,6 +11,7 @@ import os
 import sys
 import tarfile
 import requests
+import pathlib
 
 
 def log(message: str, level: int = 0) -> None:
@@ -47,6 +48,25 @@ def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
     bar = f"[{'=' * done}{' ' * (50-done)}]"
     sys.stdout.write('\033[K\r' + prefix + bar + suffix)
     sys.stdout.flush()
+
+
+def clean_dir_path(directory: str) -> str:
+    """Validate a directory.
+
+    Args:
+        directory (str): Directory name to validate.
+
+    Raises:
+        RuntimeError: If the directory does not exist.
+
+    Returns (str): Cleaned directory path.
+    """
+    if not directory.endswith("/"):
+        directory += "/"
+    if not os.path.isdir(directory):
+        log(f"Invalid directory: {directory}", -1)
+        raise RuntimeError
+    return directory
 
 
 def download(url: str, dst: str, verbosity: int, name: str="") -> None:
@@ -105,72 +125,17 @@ def decompress(filename: str, mode: str, dst: str,
         print()
 
 
-def clean_dir_path(directory: str) -> str:
-    """Validate a directory.
+def is_downloaded(dst: str, n: int) -> bool:
+    """Check if a dataset has been downloaded and is available on the
+    filesystem.
 
     Args:
-        directory (str): Directory name to validate.
+        dst (str): Expected directory in which the dataset should be.
+        n (int): Expected number of RNA structure files.
 
-    Raises:
-        RuntimeError: If the directory does not exist.
-
-    Returns (str): Cleaned directory path.
+    Returns (bool): True if the dataset is downloaded, False otherwise.
     """
-    if not directory.endswith("/"):
-        directory += "/"
-    if not os.path.isdir(directory):
-        log(f"Invalid directory: {directory}", -1)
-        raise RuntimeError
-    return directory
-
-def read_ct_file(path: str) -> tuple:
-    """
-    Read a CT (Connect table) file and return its information.
-
-    Args:
-        path (str): File path of the CT file.
-
-    Returns (tuple):
-        The returned tuple contains the following data:
-        - RNA molecule title.
-        - Primary structure (i.e. a list of 'A', 'C', 'G', and 'U').
-        - Pairings (i.e. a list of integers indicating the index of the
-            paired based, with `-1` indicating unpaired bases).
-    """
-    bases = []
-    pairings = []
-    with open(path) as f:
-        header = f.readline()
-        if header[0] == ">":
-            length = int(header.split()[2])
-        else:
-            length = int(header.split()[0])
-
-        title = " ".join(header.split()[1:])
-        f.seek(0)
-
-        for i, line in enumerate(f):
-            # deal w/ header for nth structure
-            if i == 0:
-                if header[0] == ">":
-                    length = int(line.split()[2])
-                else:
-                    length = int(header.split()[0])
-
-                title = " ".join(line.split()[1:])
-                continue
-
-            bn, b, _, _, p, _ = line.split()
-
-            if int(bn) != i:
-                raise NotImplementedError(
-                    "Skipping indices in CT files is not supported."
-                )
-
-            bases.append(b)
-            pairings.append(int(p) - 1)
-
-            if i == length:
-                break
-
-    return title, bases, pairings
+    paths = []
+    for path in pathlib.Path(dst).rglob('*.ct'):
+        paths.append(path)
+    return len(paths) == n

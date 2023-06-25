@@ -1,1 +1,1 @@
-__all__ = ["file_io"]
+__all__ = ["file_io", "rna_data"]

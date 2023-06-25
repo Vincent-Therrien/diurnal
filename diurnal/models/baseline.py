@@ -65,3 +65,9 @@ class Uniform(Basic):
     def _load(self, directory) -> None:
         """Write the model."""
         self.symbol = np.load(directory + "model.npy")
+
+class Majority(Basic):
+    """Baseline model that predicts a uniform vector whose elements are
+    the most common element in the training data.
+    """
+    pass

@@ -15,7 +15,7 @@ import numpy as np
 from sklearn.metrics import f1_score, confusion_matrix
 
 from diurnal.utils import file_io
-from diurnal.structure import Schemes
+from diurnal.structure import Schemes, Secondary
 
 
 class Vector:
@@ -51,6 +51,8 @@ class Vector:
         Returns (float): F1-score of the prediction, i.e. a value
             between 0 and 1.
         """
+        true = Secondary.to_bracket(true)
+        pred = Secondary.to_bracket(pred)
         scalar_true, scalar_pred, _ = Vector._convert_to_scalars(true, pred)
         return f1_score(scalar_pred, scalar_true, average='micro')
 
@@ -64,6 +66,8 @@ class Vector:
         Returns (tuple): A tuple containing the confusion matrix and a
             list of symbols that correspond to each row of the matrix.
         """
+        true = Secondary.to_bracket(true)
+        pred = Secondary.to_bracket(pred)
         scalar_true, scalar_pred, symbols=Vector._convert_to_scalars(true, pred)
         return confusion_matrix(scalar_true, scalar_pred), symbols
 

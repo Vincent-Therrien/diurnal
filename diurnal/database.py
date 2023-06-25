@@ -36,6 +36,7 @@ import numpy as np
 from datetime import datetime
 
 import diurnal.utils.file_io as file_io
+import diurnal.utils.rna_data as rna_data
 import diurnal.structure
 import diurnal.family
 
@@ -43,11 +44,11 @@ import diurnal.family
 URL_PREFIX ="https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/"
 DATA_FILE_ENDING = ".tar.gz"
 INFO_FILE_ENDING = ".rst"
-ALLOWED_DATASETS = [
-    "archiveII",
-    "RNASTRalign",
-    "RNA_STRAND"
-]
+ALLOWED_DATASETS = {
+    "archiveII": 3975,
+    "RNASTRalign": 37149,
+    "RNA_STRAND": 4666
+}
 
 
 # Installation functions.
@@ -88,6 +89,12 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
             raise FileNotFoundError
     # Data obtention.
     for dataset in datasets:
+        # Check if the data have already been downloaded.
+        if file_io.is_downloaded(dst + dataset, ALLOWED_DATASETS[dataset]):
+            if verbosity:
+                file_io.log((f"The dataset `{dataset}` "
+                    + f"is already downloaded at {dst + dataset}."), 1)
+            continue
         # Information file.
         url = URL_PREFIX + "/" + dataset + INFO_FILE_ENDING
         file_name = dst + dataset + INFO_FILE_ENDING
@@ -179,7 +186,7 @@ def format(src: str,
     Y = [] # Secondary structure
     F = [] # Family
     for i, path in enumerate(paths):
-        _, bases, pairings = file_io.read_ct_file(str(path))
+        _, bases, pairings = rna_data.read_ct_file(str(path))
         family = diurnal.family.get_name(str(path))
         if len(bases) > max_size:
             rejected_names.append(str(path))

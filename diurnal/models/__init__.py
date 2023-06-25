@@ -23,12 +23,18 @@
     - `_predict(primary) -> np.array` (make a prediction)
     - `_save(directory) -> None` (save the model)
     - `_load(directory) -> None` (load a model from files)
+
+    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    Affiliation: Département d'informatique, UQÀM
+    File creation date: June 2023
+    License: MIT
 """
 
 from typing import Callable
 import numpy as np
+from datetime import datetime
 
-from diurnal import evaluate
+from diurnal import evaluate, train
 import diurnal.utils.file_io as file_io
 
 __all__ = ["baseline"]
@@ -80,6 +86,17 @@ class Basic():
         directory = file_io.clean_dir_path(directory)
         with open(directory + "training_molecule_list.txt", "w") as f:
             f.writelines(self.names)
+        with open(directory + "ìnfo.rst", "w") as f:
+            f.writelines(
+                [
+                    f"RNA Secondary Structure Prediction Model",
+                    f"========================================",
+                    f"",
+                    f"Generation timestamp: {datetime.utcnow()} UTC",
+                    f"",
+                    f"Training data listed in ``training_molecule_list.txt``."
+                ]
+            )
         self._save(directory)
 
     def load(self, directory: str) -> None:
@@ -104,6 +121,11 @@ class Basic():
         Returns (list): The evaluation obtained for each structure.
         """
         results = []
-        for datum in data:
-            results.append(evaluation(self.predict(datum)))
+        n = len(data["primary_structures"])
+        for i in range(n):
+            primary = data["primary_structures"][i]
+            true = data["secondary_structures"][i]
+            pred = self.predict(primary)
+            _, true, pred = train.clean_vectors(primary, true, pred)
+            results.append(evaluation(true, pred))
         return results

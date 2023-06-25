@@ -57,7 +57,7 @@ def test_split_dict():
             'names': ['J']
         }
     ]
-    subdicts = train.split_data(data, [0.8, 0.1, 0.1], 0)
+    subdicts = train.split_data(data, [0.8, 0.1, 0.1])
     assert subdicts == expected
 
 
