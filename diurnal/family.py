@@ -10,9 +10,8 @@
     License: MIT
 """
 
-import inspect
+from diurnal.utils import log
 
-from diurnal.utils import file_io
 
 NAMES = [
     ["5s"],  # 5s ribosomal RNA (rRNA)
@@ -84,7 +83,7 @@ def get_name(filename: str) -> str:
                 candidates.append(family[0])
                 break
     if not candidates:
-        file_io.log(f"Unknown family for `{filename}`.", -1)
+        log.error(f"Unknown family for `{filename}`.")
         return ""
     if len(candidates) == 1:
         return candidates[0]

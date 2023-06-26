@@ -34,7 +34,7 @@ from typing import Callable
 import numpy as np
 from datetime import datetime
 
-from diurnal import evaluate, train
+from diurnal import evaluate, train, structure
 import diurnal.utils.file_io as file_io
 
 __all__ = ["baseline"]
@@ -127,5 +127,7 @@ class Basic():
             true = data["secondary_structures"][i]
             pred = self.predict(primary)
             _, true, pred = train.clean_vectors(primary, true, pred)
+            true = structure.Secondary.to_bracket(true)
+            pred = structure.Secondary.to_bracket(pred)
             results.append(evaluation(true, pred))
         return results

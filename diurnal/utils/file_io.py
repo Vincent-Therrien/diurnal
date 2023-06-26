@@ -8,46 +8,11 @@
 """
 
 import os
-import sys
 import tarfile
 import requests
 import pathlib
 
-
-def log(message: str, level: int = 0) -> None:
-    """
-    Print information about the execution of the program.
-
-    Args:
-        message (str): Message to display.
-        level (int): Logging level. `0` is a general message. `1` is a
-            nested message. `-1` is an error message.
-    """
-    if level == 0:
-        print(f"[> DIURNAL] Info: {message}")
-    elif level == -1:
-        print(f"[> DIURNAL] Error: {message}")
-    else:
-        print(f"    {message}")
-
-
-def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
-    """
-    Print a progress bar in the standard output.
-
-    Args:
-        N (int): Total number of elements to process.
-        n (int): Number of elements that have been processed.
-        prefix (str): A text to display before the progress bar.
-        suffix (str): A text to display after the progress bar.
-    """
-    if n == N - 1:
-        done = 50
-    else:
-        done = int(50 * n / N)
-    bar = f"[{'=' * done}{' ' * (50-done)}]"
-    sys.stdout.write('\033[K\r' + prefix + bar + suffix)
-    sys.stdout.flush()
+from diurnal.utils import log
 
 
 def clean_dir_path(directory: str) -> str:
@@ -94,7 +59,8 @@ def download(url: str, dst: str, verbosity: int, name: str="") -> None:
                 dl += len(data)
                 f.write(data)
                 if verbosity:
-                    progress_bar(total_length, dl, f"    Downloading   {name} ")
+                    prefix = f"Downloading   {name} "
+                    log.progress_bar(total_length, dl, prefix)
     if verbosity:
         print()
 
@@ -117,7 +83,7 @@ def decompress(filename: str, mode: str, dst: str,
         for i, member in enumerate(members):
             tar.extract(member, path=dst)
             if verbosity:
-                progress_bar(len(members), i, f"    Decompressing {name} ")
+                log.progress_bar(len(members), i, f"Decompressing {name} ")
     else:
         tar.extractall(dst)
     tar.close()

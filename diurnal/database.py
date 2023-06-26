@@ -35,7 +35,7 @@ import pathlib
 import numpy as np
 from datetime import datetime
 
-import diurnal.utils.file_io as file_io
+from diurnal.utils import file_io, log
 import diurnal.utils.rna_data as rna_data
 import diurnal.structure
 import diurnal.family
@@ -54,7 +54,7 @@ ALLOWED_DATASETS = {
 # Installation functions.
 def available_datasets() -> None:
     """Print available RNA datasets."""
-    file_io.log(f"Available datasets: {ALLOWED_DATASETS}")
+    log.info(f"Available datasets: {ALLOWED_DATASETS}")
 
 
 def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
@@ -74,7 +74,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         verbosity (int): Verbosity of the function. 1 (default) prints
             informative messages. 0 silences the function.
     """
-    if verbosity: file_io.log("Download and install an RNA database.")
+    if verbosity: log.info("Download and install an RNA database.")
     if dst[-1] != '/':
         dst += '/'
     if not os.path.exists(dst):
@@ -84,7 +84,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         datasets = [datasets]
     for dataset in datasets:
         if dataset not in ALLOWED_DATASETS:
-            file_io.log(f"The dataset `{dataset}` is not allowed. "
+            log.info(f"The dataset `{dataset}` is not allowed. "
                 + f"Allowed databases are {ALLOWED_DATASETS}.")
             raise FileNotFoundError
     # Data obtention.
@@ -92,8 +92,8 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         # Check if the data have already been downloaded.
         if file_io.is_downloaded(dst + dataset, ALLOWED_DATASETS[dataset]):
             if verbosity:
-                file_io.log((f"The dataset `{dataset}` "
-                    + f"is already downloaded at {dst + dataset}."), 1)
+                log.trace((f"The dataset `{dataset}` "
+                    + f"is already downloaded at {dst + dataset}."))
             continue
         # Information file.
         url = URL_PREFIX + "/" + dataset + INFO_FILE_ENDING
@@ -107,7 +107,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         if cleanup:
             os.remove(file_name)
         if verbosity:
-            file_io.log(f"Files installed in `{dst + dataset}`.", 1)
+            log.info(f"Files installed in `{dst + dataset}`.", 1)
 
 
 def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
@@ -170,7 +170,7 @@ def format(src: str,
         verbosity (int): Verbosity level of the function. 1 (default)
             prints informative messages. 0 silences the function.
     """
-    if verbosity: file_io.log("Encode RNA data into Numpy files.")
+    if verbosity: log.info("Encode RNA data into Numpy files.")
     # Create the directory if it des not exist.
     if dst[-1] != '/': dst += '/'
     if not os.path.exists(dst):
@@ -196,34 +196,34 @@ def format(src: str,
         Y.append(secondary_structure_map(pairings, max_size))
         F.append(family_map(family))
         if verbosity:
-            prefix = f"    Encoding {len(paths)} files "
+            prefix = f"Encoding {len(paths)} files "
             suffix = f" {path.name}"
-            file_io.progress_bar(len(paths), i, prefix, suffix)
+            log.progress_bar(len(paths), i, prefix, suffix)
     if verbosity:
         print() # Change the line after the progress bar.
         i = len(names)
         r = len(rejected_names)
-        file_io.log(f"Encoded {i} files. Rejected {r} files.", 1)
+        log.trace(f"Encoded {i} files. Rejected {r} files.")
     # Write the encoded file content into Numpy files.
     if not X:
-        if verbosity: file_io.log(f"No structure to write.", 1)
+        if verbosity: log.trace(f"No structure to write.")
         return
     s1 = dst + "primary_structures"
-    if verbosity: file_io.log(f"Writing primary structures at `{s1}.npy`.", 1)
+    if verbosity: log.trace(f"Writing primary structures at `{s1}.npy`.")
     np.save(s1, np.asarray(X, dtype=np.float32))
     s2 = dst + "secondary_structures"
-    if verbosity: file_io.log(f"Writing secondary structures at `{s2}.npy`.", 1)
+    if verbosity: log.trace(f"Writing secondary structures at `{s2}.npy`.")
     np.save(s2, np.asarray(Y, dtype=np.float32))
     f = dst + "families"
-    if verbosity: file_io.log(f"Writing families at `{f}.npy`.", 1)
+    if verbosity: log.trace(f"Writing families at `{f}.npy`.")
     np.save(f, np.asarray(F, dtype=np.float32))
     n = dst + "names.txt"
-    if verbosity: file_io.log(f"Writing names at `{n}`.", 1)
+    if verbosity: log.trace(f"Writing names at `{n}`.")
     with open(n, "w") as outfile:
         outfile.write("\n".join(names))
     # Write an informative file to sum up the content of the formatted folder.
     info = dst + "info.rst"
-    if verbosity: file_io.log(f"Writing an informative file at `{info}`.", 1)
+    if verbosity: log.trace(f"Writing an informative file at `{info}`.")
     with open(info, "w") as outfile:
         outfile.write(summarize(dst, primary_structure_map,
             secondary_structure_map, family_map))

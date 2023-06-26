@@ -24,7 +24,6 @@ from diurnal.models import baseline
 
 # Step 1: Obtain and format data
 database.download("./data/", "archiveII")
-
 database.format(
     "./data/archiveII", # Directory of the raw data to format.
     "./data/formatted", # Formatted data output directory.
@@ -32,8 +31,8 @@ database.format(
 )
 
 # Step 2: Prediction model creation
-data = train.load_data("./data/formatted/")
-train_set, test_set, validate_set = train.split_data(data, [0.8, 0.02, 0.18])
+test_set, other_data = train.load_inter_family("./data/formatted", "5s")
+train_set, validate_set = train.split_data(other_data, [0.8, 0.2])
 
 # Step 3: Model training
 model = baseline.Random()

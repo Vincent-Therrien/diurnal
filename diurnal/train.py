@@ -12,7 +12,7 @@ import numpy as np
 import torch
 import os.path
 
-from .utils import file_io
+from diurnal.utils import log
 import diurnal.family
 import diurnal.structure
 
@@ -37,6 +37,7 @@ def _split_arrays(data, fractions: list, offset: int = 0) -> list:
         index = index2
     return subarrays
 
+
 def split_data(data, fractions: list, offset: int = 0) -> list:
     """Split data in subsets according to the specified fractions.
 
@@ -51,7 +52,7 @@ def split_data(data, fractions: list, offset: int = 0) -> list:
         A list containing the split data object.
     """
     if sum(fractions) != 1.0:
-        file_io.log("Invalid data split proportions.", -1)
+        log.error("Invalid data split proportions.")
         raise RuntimeError
     if type(data) == dict:
         keys = list(data.keys())
@@ -114,7 +115,7 @@ def shuffle_data(*args) -> tuple:
     for a in args:
         lengths.append(len(a))
     if lengths.count(lengths[0]) != len(lengths):
-        file_io.log("Shuffled data are not homogeneous.", -1)
+        log.error("Shuffled data are not homogeneous.")
         raise RuntimeError
     # Shuffling
     tmp = list(zip(*args))
@@ -156,7 +157,7 @@ def _read_npy_files(path: str) -> tuple:
     if data:
         lengths = [len(d) for d in data]
         if lengths.count(lengths[0]) != len(lengths):
-            file_io.log(f"load_data: Inhomogeneous sequences: {lengths}", -1)
+            log.error(f"load_data: Inhomogeneous sequences: {lengths}")
             raise RuntimeError
     return data
 
@@ -233,15 +234,15 @@ def load_inter_family(path: str, family: str, randomize: bool = True) -> list:
             The first element is the test family. The second element
             comprises all other families.
     """
-    data = _read_npy_files(path)
     if not diurnal.family.is_known(family):
-        file_io.log(f"Family `{family}` not recognized.", -1)
+        log.error(f"Family `{family}` not recognized.")
         raise ValueError
+    data = _read_npy_files(path)
     family_vector = diurnal.family.to_vector(family)
     k = [[], [], [], []] # Test family
     n = [[], [], [], []] # Other families
     for i in range(len(data[0])):
-        if np.array_equal(data[2][i], family_vector):
+        if np.array_equal(data[3][i], family_vector):
             for j in range(4):
                 k[j].append(data[j][i])
         else:
@@ -251,11 +252,7 @@ def load_inter_family(path: str, family: str, randomize: bool = True) -> list:
     if randomize:
         k = list(shuffle_data(*k))
         n = list(shuffle_data(*n))
-    K = _convert_to_tensor(k[:3]) if k else None
-    N = _convert_to_tensor(n[:3]) if n else None
-    k_names = k[-1] if k else None
-    n_names = n[-1] if n else None
-    return K, N, k_names, n_names
+    return _convert_data_to_dict(k), _convert_data_to_dict(n)
 
 
 # Output data manipulation
