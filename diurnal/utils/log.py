@@ -8,6 +8,7 @@
 """
 
 import sys
+from datetime import datetime
 from colorama import init as colorama_init
 from colorama import Fore
 from colorama import Style
@@ -16,13 +17,22 @@ from colorama import Style
 colorama_init()
 
 
+def _print_with_datetime(message: str) -> None:
+    """Prefix the argument with a timestamp and print it.
+
+    Args:
+        message (str): Message to print.
+    """
+    print(f"{datetime.now().isoformat()} {message}")
+
+
 def info(message: str) -> None:
     """Print information about the execution of the program.
 
     Args:
         message (str): Message to display.
     """
-    print(f"[{Fore.GREEN}> DIURNAL{Style.RESET_ALL}] Info: {message}")
+    _print_with_datetime(f"{Fore.GREEN}> INFO{Style.RESET_ALL} {message}")
 
 
 def trace(message: str) -> None:
@@ -31,7 +41,7 @@ def trace(message: str) -> None:
     Args:
         message (str): Message to display.
     """
-    print(f" {Fore.GREEN}>{Style.RESET_ALL} {message}")
+    _print_with_datetime(f"{Fore.GREEN}>    {Style.RESET_ALL} {message}")
 
 
 def error(message: str) -> None:
@@ -40,7 +50,7 @@ def error(message: str) -> None:
     Args:
         message (str): Message to display.
     """
-    print(f"[{Fore.RED}> DIURNAL{Style.RESET_ALL}] Error: {message}")
+    _print_with_datetime(f"{Fore.RED}> ERROR{Style.RESET_ALL} {message}")
 
 
 def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
@@ -59,6 +69,7 @@ def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
         done = int(50 * n / N)
     bar = f"[{'=' * done}{' ' * (50-done)}]"
     back = '\033[K\r'
-    dash = f' {Fore.GREEN}>{Style.RESET_ALL} '
-    sys.stdout.write(back + dash + prefix + bar + suffix)
+    timestamp = f"{datetime.now().isoformat()} "
+    dash = f'{Fore.GREEN}>{Style.RESET_ALL} '
+    sys.stdout.write(back + timestamp + dash + prefix + bar + suffix)
     sys.stdout.flush()

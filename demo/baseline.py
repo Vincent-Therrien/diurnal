@@ -18,7 +18,7 @@
     License: MIT
 """
 
-from diurnal import database, train
+from diurnal import database, train, utils
 from diurnal.models import baseline
 
 
@@ -31,6 +31,7 @@ database.format(
 )
 
 # Step 2: Prediction model creation
+utils.log.info("Training the model.")
 test_set, other_data = train.load_inter_family("./data/formatted", "5s")
 train_set, validate_set = train.split_data(other_data, [0.8, 0.2])
 
@@ -39,5 +40,6 @@ model = baseline.Random()
 model.train(train_set)
 
 # Step 4: Model evaluation
+utils.log.info("Testing the model.")
 f = model.test(test_set)
 print(f"Average F1-score: {sum(f)/len(f):.4}")

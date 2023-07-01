@@ -168,7 +168,7 @@ class Primary:
         difference = size - len(vector)
         if difference > 0:
             return np.concatenate((vector, difference * [element]))
-        return vector
+        return np.array(vector)
 
     def _unpad_vector(vector: np.array, element: list) -> np.array:
         """Remove the empty elements appended to the right side of a

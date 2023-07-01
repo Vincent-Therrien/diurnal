@@ -93,7 +93,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         if file_io.is_downloaded(dst + dataset, ALLOWED_DATASETS[dataset]):
             if verbosity:
                 log.trace((f"The dataset `{dataset}` "
-                    + f"is already downloaded at {dst + dataset}."))
+                    + f"is already downloaded at `{dst + dataset}`."))
             continue
         # Information file.
         url = URL_PREFIX + "/" + dataset + INFO_FILE_ENDING
@@ -123,6 +123,60 @@ def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
             informative messages. 0 silences the function.
     """
     download(dst, ALLOWED_DATASETS, cleanup, verbosity)
+
+
+def _is_already_encoded(src: str, dst: str, size: int, primary_structure_map,
+        secondary_structure_map, family_map) -> bool:
+    """Check if a directory already contains already encoded data.
+
+    The function makes the following verifications:
+    - Ensure that the files for (1) the primary structure, (2) the
+      secondary structure, (3) the names, (4) the families, and (5) the
+      informative file are all present.
+    - The data points are of expected dimensions.
+    - The encoding for primary and secondary structures as well as
+      families are formatted as expected.
+
+    Args:
+        src (str): Directory of the raw data files.
+        dst (str): Directory of the formatted date files.
+        size (int): Maximum size of a structure.
+        primary_structure_map
+        secondary_structure_map
+        family_map
+
+    Returns (bool): True if data are formatted as expected, False
+        otherwise.
+    """
+    # Expected files.
+    filenames = os.listdir(dst)
+    expected_filenames = ['families.npy',
+        'info.rst',
+        'names.txt',
+        'primary_structures.npy',
+        'secondary_structures.npy']
+    if (filenames != expected_filenames):
+        return False
+    # Expected dimensions.
+    primary = np.load(dst + 'primary_structures.npy')
+    secondary = np.load(dst + 'secondary_structures.npy')
+    family = np.load(dst + 'families.npy')
+    if (primary.shape[1] != size or secondary.shape[1] != size):
+        return False
+    # Expected encoding.
+    for path in pathlib.Path(src).rglob('*.ct'):
+        _, bases, pairings = rna_data.read_ct_file(str(path))
+        if len(bases) <= size:
+            test_family_name = diurnal.family.get_name(str(path))
+            break
+    test_primary = primary_structure_map(bases, size)
+    test_secondary = secondary_structure_map(pairings, size)
+    test_family = family_map(test_family_name)
+    if (list(test_family) != list(family[0])
+            or test_primary.tolist() != primary[0].tolist()
+            or test_secondary.tolist() != secondary[0].tolist()):
+        return False
+    return True
 
 
 def format(src: str,
@@ -170,9 +224,14 @@ def format(src: str,
         verbosity (int): Verbosity level of the function. 1 (default)
             prints informative messages. 0 silences the function.
     """
-    if verbosity: log.info("Encode RNA data into Numpy files.")
-    # Create the directory if it des not exist.
+    if verbosity: log.info("Format RNA data into Numpy files.")
     if dst[-1] != '/': dst += '/'
+    # If the data is already encoded in the directory, exit.
+    if _is_already_encoded(src, dst, max_size, primary_structure_map,
+            secondary_structure_map, family_map):
+        log.trace(f"The directory {dst} already contains the formatted data.")
+        return
+    # Create the directory if it des not exist.
     if not os.path.exists(dst):
         os.makedirs(dst)
     # Obtain the list of files to read.
@@ -196,7 +255,7 @@ def format(src: str,
         Y.append(secondary_structure_map(pairings, max_size))
         F.append(family_map(family))
         if verbosity:
-            prefix = f"Encoding {len(paths)} files "
+            prefix = f"Encoding {len(paths)} files: "
             suffix = f" {path.name}"
             log.progress_bar(len(paths), i, prefix, suffix)
     if verbosity:

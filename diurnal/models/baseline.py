@@ -66,8 +66,40 @@ class Uniform(Basic):
         """Write the model."""
         self.symbol = np.load(directory + "model.npy")
 
+
 class Majority(Basic):
     """Baseline model that predicts a uniform vector whose elements are
     the most common element in the training data.
     """
-    pass
+    def __init__(self) -> None:
+        self.symbol = None
+
+    def _train(self, primary, secondary, family) -> None:
+        """Simulate a training of the model."""
+        symbols = {}
+        for structure in secondary:
+            for element in structure:
+                if sum(element) == 0:
+                    continue
+                # Since lists are unhashable, use their string representation
+                # to count their occurrences.
+                symbol = repr(element.tolist())
+                if symbol in symbols:
+                    symbols[symbol] += 1
+                else:
+                    symbols[symbol] = 1
+        k = list(symbols.keys())
+        v = list(symbols.values())
+        exec(f"self.symbol = {k[v.index(max(v))]}")
+
+    def _predict(self, primary) -> np.array:
+        """Predict a random secondary structure."""
+        return [self.symbol for _ in range(len(primary))]
+
+    def _save(self, directory) -> None:
+        """Save the model."""
+        np.save(directory + "model.npy", np.array(self.symbol))
+
+    def _load(self, directory) -> None:
+        """Write the model."""
+        self.symbol = np.load(directory + "model.npy")

@@ -25,7 +25,8 @@ DIM = 512
         (baseline.Uniform([1, 0, 0]), [0.1, 0.5]),
         (baseline.Uniform([0, 1, 0]), [0.1, 0.5]),
         (baseline.Uniform([0, 0, 1]), [0.1, 0.5]),
-        (baseline.Uniform([0, 0, 0]), [0.0, 0.0])
+        (baseline.Uniform([0, 0, 0]), [0.0, 0.0]),
+        (baseline.Majority(), [0.1, 0.5])
     ]
 )
 def test_pipeline_dryrun(tmp_rna_structure_files, model, f_range):
