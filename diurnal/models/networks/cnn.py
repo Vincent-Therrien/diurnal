@@ -1,17 +1,29 @@
-import torch
+"""
+    RNA secondary prediction models based on convolutional neural
+    networks (CNN).
+
+    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    Affiliation: Département d'informatique, UQÀM
+    File creation date: July 2023
+    License: MIT
+"""
+
+
 from torch import nn, reshape, cat
 import torch.nn.functional as F
 
+
+# TODO: Clean up neural networks
 class RNA_CNN_shadow(nn.Module):
     """
     Neural network used to determine the shadow of a sequence.
 
     Input: RNA sequence one-hot encoding represented as a 2D array.
         Example: [[0, 0, 0, 1], [1, 0, 0, 0], ...]
-    
+
     Output: RNA secondary structure shadow represented as a vector.
         Example: [1, 1, 1, 0 , 0, 0, 1, 1, 1] in which `1` represents
-        a paired nucleotide and `0`, and unpaired nucleotide. 
+        a paired nucleotide and `0`, and unpaired nucleotide.
     """
     def __init__(self, n: int):
         super().__init__()
@@ -41,7 +53,7 @@ class RNA_CNN(nn.Module):
 
     Input: RNA sequence one-hot encoding represented as a 2D array.
         Example: [[0, 0, 0, 1], [1, 0, 0, 0], ...]
-    
+
     Output: RNA secondary structure represented as a vector.
         Example: [1, 1, 1, 0 , 0, 0, -1, -1, -1] in which `1` represents
         a nucleotide paired to a downstream nucleotide, `0`, an unpaired
@@ -79,7 +91,7 @@ class RNA_CNN_classes(nn.Module):
 
     Input: RNA sequence one-hot encoding represented as a 2D array.
         Example: [[0, 0, 0, 1], [1, 0, 0, 0], ...]
-    
+
     Output: RNA secondary structure represented as a matrix whose element
         are vectors of 3 terms that correspond to the probabiliy of each class.
         Example: [[0, 0, 1], [0, 1, 0], [1, 0, 0]] in which `[0, 0, 1]`
@@ -113,11 +125,11 @@ class RNA_CNN_classes(nn.Module):
 class RNA_CNN_family_aware(nn.Module):
     """
     Neural network used to determine the secondary structure of a sequence by
-    considering the 
+    considering the
 
     Input: RNA sequence one-hot encoding represented as a 2D array.
         Example: [[0, 0, 0, 1], [1, 0, 0, 0], ...]
-    
+
     Output: RNA secondary structure represented as a matrix whose element
         are vectors of 3 terms that correspond to the probabiliy of each class.
         Example: [[0, 0, 1], [0, 1, 0], [1, 0, 0]] in which `[0, 0, 1]`

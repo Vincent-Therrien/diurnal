@@ -1,5 +1,5 @@
 """
-    Diurnal model package.
+    RNA secondary structure prediction model package.
 
     The package contains models designed to predict RNA secondary
     structures from primary structures. The models of the package
@@ -33,20 +33,26 @@
 from typing import Callable
 import numpy as np
 from datetime import datetime
+import torch.optim as optim
+from torch import cuda, nn
+from torch import load as torch_load
+from torch import save as torch_save
+from torch.utils.data import DataLoader
 
 from diurnal import evaluate, train, structure
-import diurnal.utils.file_io as file_io
+from diurnal.utils import file_io, log
 
-__all__ = ["baseline"]
+
+__all__ = ["baseline", "cnn", "mlp"]
 
 
 class Basic():
     """Diurnal basic RNA secondary structure prediction model."""
-    def train(self, data: dict) -> None:
+    def train(self, training_data: dict, validation_data: dict=None) -> None:
         """Train the model. Abstract method.
 
         Args:
-            data (dict): Training data organized as:
+            training_data (dict): Training data organized as:
 
                 .. block::
 
@@ -54,18 +60,21 @@ class Basic():
                         "primary_structures": <vector>,
                         "secondary_structures": <vector>,
                         "names": List[str]
-                        # The `families` field is not mandatory.
                         "families": <vector>
                     }
+
+            validation_data (dict)
         """
-        self.names = data["names"]
-        self.primary = data["primary_structures"]
-        self.secondary = data["secondary_structures"]
-        args = [self.primary, self.secondary]
-        if "families" in data:
-            self.families = data["families"]
-            args.append(self.families)
-        self._train(*args)
+        self.names = training_data["names"]
+        self.primary = training_data["primary_structures"]
+        self.secondary = training_data["secondary_structures"]
+        self.families = training_data["families"]
+        if validation_data:
+            self.validation_names = validation_data["names"]
+            self.validation_primary = validation_data["primary_structures"]
+            self.validation_secondary = validation_data["secondary_structures"]
+            self.validation_families = validation_data["families"]
+        self._train()
 
     def predict(self, primary) -> np.array:
         """Predict a random secondary structure.
@@ -131,3 +140,90 @@ class Basic():
             pred = structure.Secondary.to_bracket(pred)
             results.append(evaluation(true, pred))
         return results
+
+
+class NN(Basic):
+    """A model that relies on a neural network to make predictions."""
+    def __init__(self, model: nn,
+            N: int,
+            n_epochs: int,
+            optimizer: optim,
+            loss_fn: nn.functional,
+            optimizer_args: dict = None,
+            loss_fn_args: dict = None,
+            use_half: bool = True,
+            verbosity: int = 0) -> None:
+        self.device = "cuda" if cuda.is_available() else "cpu"
+        self.use_half = use_half
+        if self.use_half:
+            self.nn = model(N).to(self.device).half()
+        else:
+            self.nn = model(N).to(self.device)
+        # Optimizer
+        if optimizer_args:
+            args = ""
+            for arg, value in optimizer_args.items():
+                args += f"{arg}={value}, "
+            exec(f"self.optimizer = optimizer(self.nn.parameters(), {args})")
+        else:
+            self.optimizer = optimizer(self.nn.parameters())
+        # Loss function
+        if loss_fn_args:
+            args = ""
+            for arg, value in loss_fn_args.items():
+                args += f"{arg}={value}, "
+            exec(f"self.loss_fn = loss_fn({args})")
+        else:
+            self.loss_fn = loss_fn
+        # Other parameters
+        self.n_epochs = n_epochs
+        self.verbosity = verbosity
+
+    def _train(self) -> tuple:
+        """Train the neural network."""
+        self.nn.train()
+        losses = []
+        if self.verbosity:
+            threshold = int(len(self.primary) * 0.05)
+            threshold = 1 if threshold < 1 else threshold
+            log("Beginning training.")
+        training_set = DataLoader(
+            [self.primary, self.secondary, self.families], batch_size=32)
+        if self.validation_primary:
+            validation_set = DataLoader(
+                [self.validation_primary,
+                 self.validation_secondary,
+                 self.validation_families], batch_size=32)
+        for epoch in range(self.n_epochs):
+            for batch, (x, y, f) in enumerate(training_set):
+                if self.use_half:
+                    x = x.to(self.device).half()
+                    y = y.to(self.device).half()
+                    f = f.to(self.device).half()
+                else:
+                    x = x.to(self.device)
+                    y = y.to(self.device)
+                    f = f.to(self.device)
+                self.optimizer.zero_grad()
+                pred = self.nn(x)
+                loss = self.loss_fn(pred, y)
+                loss.backward()
+                self.optimizer.step()
+                losses.append(loss.item())
+                if self.verbosity > 1 and batch % threshold == 0:
+                    progress = f"{batch} / {len(self.verbosity)}"
+                    log.trace(f"Loss: {loss:.4f}    Batch {progress}", 1)
+            if self.verbosity:
+                prefix = f"{epoch} / {self.n_epochs} "
+                log.progress_bar(self.n_epochs, epoch, prefix)
+        if self.verbosity:
+            print()
+
+    def _predict(self, primary: np.ndarray) -> np.ndarray:
+        return self.nn(primary)
+
+    def _save(self, path: str) -> None:
+        torch_save(self.nn.state_dict(), path)
+
+    def _load(self, path: str) -> None:
+        self.nn.load_state_dict(torch_load(path))

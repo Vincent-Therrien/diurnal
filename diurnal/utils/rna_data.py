@@ -7,6 +7,7 @@
     License: MIT
 """
 
+
 def read_ct_file(path: str) -> tuple:
     """
     Read a CT (Connect table) file and return its information.

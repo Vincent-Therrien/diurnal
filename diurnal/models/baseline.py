@@ -1,12 +1,12 @@
 """
     Baseline models to ensure the validity of predictions.
 
-    This module contains functions that predict the secondary structure
+    This module contains models that predict the secondary structure
     of RNA molecules without any knowledge of the primary structure. For
-    example, it predicts all nucleotides as unpaired or randomly assigns
-    a result to each nucleotide. The purpose of this module is to
-    provide baseline results to demonstrate that predictive models offer
-    higher performances than chance.
+    example, they may predict all nucleotides as unpaired or randomly
+    assign a prediction to each nucleotide. The purpose of this module
+    is to provide baseline results to demonstrate that predictive models
+    offer higher performances than chance.
 
     Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
     Affiliation: Département d'informatique, UQÀM
@@ -25,9 +25,9 @@ class Random(Basic):
     def __init__(self) -> None:
         self.symbols = []
 
-    def _train(self, primary, secondary, family) -> None:
+    def _train(self) -> None:
         """Simulate a training of the model."""
-        for symbol in secondary[0]:
+        for symbol in self.secondary[0]:
             symbol = symbol.tolist()
             if symbol not in self.symbols:
                 self.symbols.append(symbol)
@@ -50,7 +50,7 @@ class Uniform(Basic):
     def __init__(self, symbol) -> None:
         self.symbol = symbol
 
-    def _train(self, primary, secondary, family) -> None:
+    def _train(self) -> None:
         """Simulate a training of the model."""
         pass
 
@@ -74,10 +74,10 @@ class Majority(Basic):
     def __init__(self) -> None:
         self.symbol = None
 
-    def _train(self, primary, secondary, family) -> None:
+    def _train(self) -> None:
         """Simulate a training of the model."""
         symbols = {}
-        for structure in secondary:
+        for structure in self.secondary:
             for element in structure:
                 if sum(element) == 0:
                     continue
