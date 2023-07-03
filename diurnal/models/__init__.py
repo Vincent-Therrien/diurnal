@@ -37,13 +37,14 @@ import torch.optim as optim
 from torch import cuda, nn
 from torch import load as torch_load
 from torch import save as torch_save
+from torch import from_numpy
 from torch.utils.data import DataLoader
 
 from diurnal import evaluate, train, structure
 from diurnal.utils import file_io, log
 
 
-__all__ = ["baseline", "cnn", "mlp"]
+__all__ = ["baseline", "networks"]
 
 
 class Basic():
@@ -66,14 +67,19 @@ class Basic():
             validation_data (dict)
         """
         self.names = training_data["names"]
-        self.primary = training_data["primary_structures"]
-        self.secondary = training_data["secondary_structures"]
-        self.families = training_data["families"]
+        self.primary = np.array(training_data["primary_structures"])
+        self.secondary = np.array(training_data["secondary_structures"])
+        self.families = np.array(training_data["families"])
         if validation_data:
             self.validation_names = validation_data["names"]
             self.validation_primary = validation_data["primary_structures"]
             self.validation_secondary = validation_data["secondary_structures"]
             self.validation_families = validation_data["families"]
+        else:
+            self.validation_names = None
+            self.validation_primary = None
+            self.validation_secondary = None
+            self.validation_families = None
         self._train()
 
     def predict(self, primary) -> np.array:
@@ -174,7 +180,7 @@ class NN(Basic):
                 args += f"{arg}={value}, "
             exec(f"self.loss_fn = loss_fn({args})")
         else:
-            self.loss_fn = loss_fn
+            self.loss_fn = loss_fn()
         # Other parameters
         self.n_epochs = n_epochs
         self.verbosity = verbosity
@@ -186,9 +192,13 @@ class NN(Basic):
         if self.verbosity:
             threshold = int(len(self.primary) * 0.05)
             threshold = 1 if threshold < 1 else threshold
-            log("Beginning training.")
-        training_set = DataLoader(
-            [self.primary, self.secondary, self.families], batch_size=32)
+            log.trace("Beginning training.")
+        # TMP
+        data = []
+        for i in range(self.primary.shape[0]):
+            data.append([self.primary[i].T, self.secondary[i], self.families[i]])
+        # TMP
+        training_set = DataLoader(data, batch_size=32)
         if self.validation_primary:
             validation_set = DataLoader(
                 [self.validation_primary,
@@ -220,7 +230,13 @@ class NN(Basic):
             print()
 
     def _predict(self, primary: np.ndarray) -> np.ndarray:
-        return self.nn(primary)
+        self.nn.eval()
+        primary = from_numpy(np.array([primary.T]))
+        if self.use_half:
+            primary = primary.to(self.device).half()
+        else:
+            primary = primary.to(self.device)
+        return self.nn(primary)[0]
 
     def _save(self, path: str) -> None:
         torch_save(self.nn.state_dict(), path)

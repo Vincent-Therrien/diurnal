@@ -266,7 +266,7 @@ def categorize_vector(prediction: list) -> list:
 
     Returns: Reformatted secondary structure.
     """
-    if type(prediction) == np.ndarray:
+    if type(prediction) in (np.ndarray, torch.Tensor):
         pred_vector = prediction.tolist()
     else:
         pred_vector = list(prediction)

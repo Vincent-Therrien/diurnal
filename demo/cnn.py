@@ -4,28 +4,37 @@
 """
 
 import torch
-from torch.utils.data import DataLoader
 
-from diurnal import train, evaluate
-from diurnal.models import DiurnalBasicModel
-from diurnal.networks import cnn as diurnalCNN
+from diurnal import database, train
+import diurnal.models
+from diurnal.models.networks import cnn
 
-# Load data from `.npy` files.
-data, names = train.load_data("./data/formatted/")
 
-# Split the data in training and test sets.
-train_set, test_set = train.split_data(data, [0.8, 0.2])
+SIZE = 512
 
-# Create the RNA secondary structure prediction model.
-model = DiurnalBasicModel(
-        diurnalCNN.RNA_CNN_classes, [512],
-        torch.optim.Adam, [1e-04],
-        torch.nn.MSELoss()
-    )
+print("1. Obtaining raw data.")
+database.download("./data/", "archiveII")
+database.format(
+    "./data/archiveII", # Directory of the raw data to format.
+    "./data/formatted", # Formatted data output directory.
+    SIZE, # Normalized size.
+)
 
-model.train(DataLoader(train_set, batch_size=32), 5)
-f1 = model.test(DataLoader(test_set, batch_size=32),
-    evaluate.three_class_f1)
+print("2. Obtaining formatted data.")
+test_set, other_data = train.load_inter_family("./data/formatted", "5s")
+train_set, validate_set = train.split_data(other_data, [0.8, 0.2])
 
-# Display performances.
-evaluate.summarize_results(f1, "CNN, Three-class evaluation")
+print("3. Training the model.")
+model = diurnal.models.NN(cnn.Pairings_1,
+    SIZE,
+    3,
+    torch.optim.Adam,
+    torch.nn.MSELoss,
+    {"eps": 1e-4},
+    None,
+    verbosity=1)
+model.train(train_set)
+
+print("4. Testing the model.")
+f = model.test(test_set)
+print(f"Average F1-score: {sum(f)/len(f):.4}")
