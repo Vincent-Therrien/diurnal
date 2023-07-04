@@ -135,7 +135,8 @@ def _read_npy_files(path: str) -> tuple:
     Returns (tuple(list)):  List-converted file content in the following
         order: (primary structure, secondary structure, families, names)
     """
-    if path[-1] != '/': path += '/'
+    if path[-1] != '/':
+        path += '/'
     # Load data.
     relative_paths = [
         "primary_structures.npy",
@@ -239,8 +240,8 @@ def load_inter_family(path: str, family: str, randomize: bool = True) -> list:
         raise ValueError
     data = _read_npy_files(path)
     family_vector = diurnal.family.to_vector(family)
-    k = [[], [], [], []] # Test family
-    n = [[], [], [], []] # Other families
+    k = [[], [], [], []]  # Test family
+    n = [[], [], [], []]  # Other families
     for i in range(len(data[0])):
         if np.array_equal(data[3][i], family_vector):
             for j in range(4):

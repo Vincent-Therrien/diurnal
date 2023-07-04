@@ -34,9 +34,8 @@ def clean_dir_path(directory: str) -> str:
     return directory
 
 
-def download(url: str, dst: str, verbosity: int, name: str="") -> None:
-    """
-    Download a file through HTTPS.
+def download(url: str, dst: str, verbosity: int, name: str = "") -> None:
+    """Download a file through HTTPS.
 
     Args:
         url (str): Location of the file to download.
@@ -65,8 +64,9 @@ def download(url: str, dst: str, verbosity: int, name: str="") -> None:
         print()
 
 
-def decompress(filename: str, mode: str, dst: str,
-               verbosity: int, name: str="") -> None:
+def decompress(
+        filename: str, mode: str, dst: str,
+        verbosity: int, name: str = "") -> None:
     """
     Decompress a TAR file.
 

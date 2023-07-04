@@ -22,9 +22,9 @@ PAIRING_COLORS = {
     "GC":       (0.0, 0.7, 0.0),
     "GU":       (0.0, 0.0, 0.4),
     "UG":       (0.0, 0.0, 0.7),
-    "unpaired": (0.5, 0.5, 0.5),    # Unpaired base.
-    "invalid":  (0.85, 0.85, 0.85), # Impossible pairing (e.g. AA).
-    "padding":  (0.95, 0.95, 0.95)  # Padding elements.
+    "unpaired": (0.5, 0.5, 0.5),     # Unpaired base.
+    "invalid":  (0.85, 0.85, 0.85),  # Impossible pairing (e.g. AA).
+    "padding":  (0.95, 0.95, 0.95)   # Padding elements.
 }
 PAIRING_CMAP = [(i, v) for i, v in enumerate(PAIRING_COLORS.values())]
 
@@ -37,7 +37,8 @@ def structure_length_per_family(path: str) -> None:
             files.
     """
     # Read data.
-    if path[-1] != '/': path += '/'
+    if path[-1] != '/':
+        path += '/'
     P = np.load(path + "primary_structures.npy")
     F = np.load(path + "families.npy")
     # Obtain lengths.
@@ -51,7 +52,8 @@ def structure_length_per_family(path: str) -> None:
     # Plot data
     n_bins = 50
     for family, lengths in families.items():
-        plt.hist(lengths, n_bins, density=True, histtype='bar',
+        plt.hist(
+            lengths, n_bins, density=True, histtype='bar',
             label=f"{family}, N = {len(lengths)}")
     plt.legend()
     plt.title("Number of Bases in RNA Molecules")
@@ -60,9 +62,11 @@ def structure_length_per_family(path: str) -> None:
     plt.show()
 
 
-def potential_pairings(matrix: list,
-        title: str="RNA Molecule Potential Pairings",
-        map: dict=diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS) -> None:
+def potential_pairings(
+        matrix: list,
+        title: str = "RNA Molecule Potential Pairings",
+        map: dict = diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS
+        ) -> None:
     """Display a heatmap of potential pairings."""
     # Obtain data.
     matrix = diurnal.structure.Primary.unpad_matrix(matrix)

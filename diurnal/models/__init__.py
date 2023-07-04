@@ -49,7 +49,7 @@ __all__ = ["baseline", "networks"]
 
 class Basic():
     """Diurnal basic RNA secondary structure prediction model."""
-    def train(self, training_data: dict, validation_data: dict=None) -> None:
+    def train(self, training_data: dict, validation_data: dict = None) -> None:
         """Train the model. Abstract method.
 
         Args:
@@ -125,7 +125,8 @@ class Basic():
             self.names - f.read().split('\n')
         self._load(directory)
 
-    def test(self, data: list,
+    def test(
+            self, data: list,
             evaluation: Callable = evaluate.Vector.get_f1) -> list:
         """Evaluate the performance of the model.
 
@@ -150,7 +151,8 @@ class Basic():
 
 class NN(Basic):
     """A model that relies on a neural network to make predictions."""
-    def __init__(self, model: nn,
+    def __init__(
+            self, model: nn,
             N: int,
             n_epochs: int,
             optimizer: optim,
@@ -196,7 +198,8 @@ class NN(Basic):
         # TMP
         data = []
         for i in range(self.primary.shape[0]):
-            data.append([self.primary[i].T, self.secondary[i], self.families[i]])
+            d = [self.primary[i].T, self.secondary[i], self.families[i]]
+            data.append(d)
         # TMP
         training_set = DataLoader(data, batch_size=32)
         if self.validation_primary:

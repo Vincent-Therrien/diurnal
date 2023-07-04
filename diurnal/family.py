@@ -14,9 +14,9 @@ from diurnal.utils import log
 
 
 NAMES = [
-    ["5s"],  # 5s ribosomal RNA (rRNA)
-    ["16s"], # 16s ribosomal RNA (rRNA)
-    ["23s"], # 23s ribosomal RNA (rRNA)
+    ["5s"],   # 5s ribosomal RNA (rRNA)
+    ["16s"],  # 16s ribosomal RNA (rRNA)
+    ["23s"],  # 23s ribosomal RNA (rRNA)
     ["grp1", "group_I_introns"],
     ["grp2", "group_II_introns"],
     ["RNaseP"],

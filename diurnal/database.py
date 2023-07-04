@@ -41,7 +41,8 @@ import diurnal.structure
 import diurnal.family
 
 # Constant values.
-URL_PREFIX ="https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/"
+URL_PREFIX = (
+    "https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/")
 DATA_FILE_ENDING = ".tar.gz"
 INFO_FILE_ENDING = ".rst"
 ALLOWED_DATASETS = {
@@ -57,8 +58,9 @@ def available_datasets() -> None:
     log.info(f"Available datasets: {ALLOWED_DATASETS}")
 
 
-def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
-             ) -> None:
+def download(
+        dst: str, datasets: list, cleanup: bool = True, verbosity: int = 1
+        ) -> None:
     """Download and unpack RNA secondary structure databases.
 
     Download the datasets listed in the `datasets` argument, places them
@@ -74,7 +76,8 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         verbosity (int): Verbosity of the function. 1 (default) prints
             informative messages. 0 silences the function.
     """
-    if verbosity: log.info("Download and install an RNA database.")
+    if verbosity:
+        log.info("Download and install an RNA database.")
     if dst[-1] != '/':
         dst += '/'
     if not os.path.exists(dst):
@@ -84,7 +87,8 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         datasets = [datasets]
     for dataset in datasets:
         if dataset not in ALLOWED_DATASETS:
-            log.info(f"The dataset `{dataset}` is not allowed. "
+            log.info(
+                f"The dataset `{dataset}` is not allowed. "
                 + f"Allowed databases are {ALLOWED_DATASETS}.")
             raise FileNotFoundError
     # Data obtention.
@@ -92,8 +96,9 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
         # Check if the data have already been downloaded.
         if file_io.is_downloaded(dst + dataset, ALLOWED_DATASETS[dataset]):
             if verbosity:
-                log.trace((f"The dataset `{dataset}` "
-                    + f"is already downloaded at `{dst + dataset}`."))
+                log.trace(
+                    f"The dataset `{dataset}` "
+                    + f"is already downloaded at `{dst + dataset}`.")
             continue
         # Information file.
         url = URL_PREFIX + "/" + dataset + INFO_FILE_ENDING
@@ -110,7 +115,7 @@ def download(dst: str, datasets: list, cleanup: bool=True, verbosity: int=1
             log.info(f"Files installed in `{dst + dataset}`.", 1)
 
 
-def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
+def download_all(dst: str, cleanup: bool = True, verbosity: int = 1) -> None:
     """Download all available RNA secondary structure datasets
     (archiveII and RNASTRalign).
 
@@ -125,7 +130,8 @@ def download_all(dst: str, cleanup: bool=True, verbosity: int=1) -> None:
     download(dst, ALLOWED_DATASETS, cleanup, verbosity)
 
 
-def _is_already_encoded(src: str, dst: str, size: int, primary_structure_map,
+def _is_already_encoded(
+        src: str, dst: str, size: int, primary_structure_map,
         secondary_structure_map, family_map) -> bool:
     """Check if a directory already contains already encoded data.
 
@@ -150,11 +156,13 @@ def _is_already_encoded(src: str, dst: str, size: int, primary_structure_map,
     """
     # Expected files.
     filenames = os.listdir(dst)
-    expected_filenames = ['families.npy',
+    expected_filenames = [
+        'families.npy',
         'info.rst',
         'names.txt',
         'primary_structures.npy',
-        'secondary_structures.npy']
+        'secondary_structures.npy'
+    ]
     if (filenames != expected_filenames):
         return False
     # Expected dimensions.
@@ -179,13 +187,14 @@ def _is_already_encoded(src: str, dst: str, size: int, primary_structure_map,
     return True
 
 
-def format(src: str,
-          dst: str,
-          max_size: int,
-          primary_structure_map = diurnal.structure.Primary.to_vector,
-          secondary_structure_map = diurnal.structure.Secondary.to_vector,
-          family_map = diurnal.family.to_vector,
-          verbosity: int=1) -> None:
+def format(
+        src: str,
+        dst: str,
+        max_size: int,
+        primary_structure_map: any = diurnal.structure.Primary.to_vector,
+        secondary_structure_map: any = diurnal.structure.Secondary.to_vector,
+        family_map: any = diurnal.family.to_vector,
+        verbosity: int = 1) -> None:
     """ Transform the original datasets into the representation provided
     by the arguments.
 
@@ -224,10 +233,13 @@ def format(src: str,
         verbosity (int): Verbosity level of the function. 1 (default)
             prints informative messages. 0 silences the function.
     """
-    if verbosity: log.info("Format RNA data into Numpy files.")
-    if dst[-1] != '/': dst += '/'
+    if verbosity:
+        log.info("Format RNA data into Numpy files.")
+    if dst[-1] != '/':
+        dst += '/'
     # If the data is already encoded in the directory, exit.
-    if _is_already_encoded(src, dst, max_size, primary_structure_map,
+    if _is_already_encoded(
+            src, dst, max_size, primary_structure_map,
             secondary_structure_map, family_map):
         log.trace(f"The directory {dst} already contains the formatted data.")
         return
@@ -239,11 +251,11 @@ def format(src: str,
     for path in pathlib.Path(src).rglob('*.ct'):
         paths.append(path)
     # Encode the content of each file.
-    names = [] # RNA molecule names included in the dataset.
-    rejected_names = [] # RNA molecule names excluded from the dataset.
-    X = [] # Primary structure
-    Y = [] # Secondary structure
-    F = [] # Family
+    names = []           # RNA molecule names included in the dataset.
+    rejected_names = []  # RNA molecule names excluded from the dataset.
+    X = []               # Primary structure
+    Y = []               # Secondary structure
+    F = []               # Family
     for i, path in enumerate(paths):
         _, bases, pairings = rna_data.read_ct_file(str(path))
         family = diurnal.family.get_name(str(path))
@@ -259,36 +271,44 @@ def format(src: str,
             suffix = f" {path.name}"
             log.progress_bar(len(paths), i, prefix, suffix)
     if verbosity:
-        print() # Change the line after the progress bar.
+        print()  # Change the line after the progress bar.
         i = len(names)
         r = len(rejected_names)
         log.trace(f"Encoded {i} files. Rejected {r} files.")
     # Write the encoded file content into Numpy files.
     if not X:
-        if verbosity: log.trace(f"No structure to write.")
+        if verbosity:
+            log.trace(f"No structure to write.")
         return
     s1 = dst + "primary_structures"
-    if verbosity: log.trace(f"Writing primary structures at `{s1}.npy`.")
+    if verbosity:
+        log.trace(f"Writing primary structures at `{s1}.npy`.")
     np.save(s1, np.asarray(X, dtype=np.float32))
     s2 = dst + "secondary_structures"
-    if verbosity: log.trace(f"Writing secondary structures at `{s2}.npy`.")
+    if verbosity:
+        log.trace(f"Writing secondary structures at `{s2}.npy`.")
     np.save(s2, np.asarray(Y, dtype=np.float32))
     f = dst + "families"
-    if verbosity: log.trace(f"Writing families at `{f}.npy`.")
+    if verbosity:
+        log.trace(f"Writing families at `{f}.npy`.")
     np.save(f, np.asarray(F, dtype=np.float32))
     n = dst + "names.txt"
-    if verbosity: log.trace(f"Writing names at `{n}`.")
+    if verbosity:
+        log.trace(f"Writing names at `{n}`.")
     with open(n, "w") as outfile:
         outfile.write("\n".join(names))
     # Write an informative file to sum up the content of the formatted folder.
     info = dst + "info.rst"
-    if verbosity: log.trace(f"Writing an informative file at `{info}`.")
+    if verbosity:
+        log.trace(f"Writing an informative file at `{info}`.")
     with open(info, "w") as outfile:
-        outfile.write(summarize(dst, primary_structure_map,
+        outfile.write(summarize(
+            dst, primary_structure_map,
             secondary_structure_map, family_map))
 
 
-def summarize(path: str,
+def summarize(
+        path: str,
         primary_structure_map,
         secondary_structure_map,
         family_map) -> str:
@@ -306,7 +326,7 @@ def summarize(path: str,
         - Secondary structure encoding example
         - Family encoding example
     """
-    content =  "[> DIURNAL] RNA Database File Formatting\n"
+    content = "[> DIURNAL] RNA Database File Formatting\n"
     content += "========================================\n\n"
     content += f"Generation timestamp: {datetime.utcnow()} UTC\n\n"
     X = np.load(path + "primary_structures.npy")
@@ -330,7 +350,7 @@ def summarize(path: str,
         content += "----------------------------\n\n"
         content += f"File: `{path + 'secondary_structures.npy'}`\n\n"
         content += f"Shape: {Y.shape}\n\n"
-        example = [2, -1, 0] # Corresponds to `(.)` in bracket notation.
+        example = [2, -1, 0]  # Corresponds to `(.)` in bracket notation.
         content += f"Encoding of the structure `{example}`:\n"
         code = secondary_structure_map(example)
         for i in range(len(example)):

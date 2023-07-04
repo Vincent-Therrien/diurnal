@@ -53,7 +53,7 @@ def error(message: str) -> None:
     _print_with_datetime(f"{Fore.RED}> ERROR{Style.RESET_ALL} {message}")
 
 
-def progress_bar(N: int, n: int, prefix: str="", suffix: str="") -> None:
+def progress_bar(N: int, n: int, prefix: str = "", suffix: str = "") -> None:
     """
     Print a progress bar in the standard output.
 

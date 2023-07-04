@@ -83,21 +83,20 @@ def test_categorize_vectors():
     [
         (
             list("AAACCCUUUCC"),
-            [8, 7, 6, -1, -1, -1, 2, 1, 0, -1, -1], # (((...)))..
-            [8, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1] # (((........
+            [8, 7, 6, -1, -1, -1, 2, 1, 0, -1, -1],    # (((...)))..
+            [8, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1]  # (((........
         ),
         (
             list("AAACCCUUUCC-----"),
-            [8, 7, 6, -1, -1, -1, 2, 1, 0, -1, -1], # (((...)))..
-            [8, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1] # (((........
+            [8, 7, 6, -1, -1, -1, 2, 1, 0, -1, -1],    # (((...)))..
+            [8, 7, 6, -1, -1, -1, -1, -1, -1, -1, -1]  # (((........
         )
     ]
 )
 def test_prediction_post_processing(bases, true, pred):
     """Ensure that the ending of predictions can be removed."""
     bases_v = Primary.to_vector(bases)
-    true_v  = Secondary.to_vector(true, len(bases))
-    pred_v  = Secondary.to_vector(pred, len(bases))
+    true_v = Secondary.to_vector(true, len(bases))
+    pred_v = Secondary.to_vector(pred, len(bases))
     b, t, p = train.clean_vectors(bases_v, true_v, pred_v)
     assert len(b) == len(t) == len(p), "Non-homogeneous vector dimensions."
-

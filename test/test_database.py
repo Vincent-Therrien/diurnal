@@ -35,6 +35,7 @@ def test_ct_file_format(tmp_rna_structure_files):
             values = np.load(path, allow_pickle=True)
             length = len(values[0])
             assert length == DIM, \
-                f"Incorrect dimension for {path}; expected {DIM}, got {length}."
+                (f"Incorrect dimension for `{path}`; "
+                 + f"expected {DIM}, got {length}.")
         if path.endswith("families.npy"):
             values = np.load(path, allow_pickle=True)

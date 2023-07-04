@@ -59,9 +59,9 @@ class Schemes:
         "GC":       [0, 0, 0, 1, 0, 0, 0, 0],
         "GU":       [0, 0, 0, 0, 1, 0, 0, 0],
         "UG":       [0, 0, 0, 0, 0, 1, 0, 0],
-        "unpaired": [0, 0, 0, 0, 0, 0, 1, 0], # Unpaired base.
-        "invalid":  [0, 0, 0, 0, 0, 0, 0, 1], # Impossible pairing (e.g. AA).
-        "-":        [0, 0, 0, 0, 0, 0, 0, 0]  # Padding element (i.e. empty).
+        "unpaired": [0, 0, 0, 0, 0, 0, 1, 0],  # Unpaired base.
+        "invalid":  [0, 0, 0, 0, 0, 0, 0, 1],  # Impossible pairing (e.g. AA).
+        "-":        [0, 0, 0, 0, 0, 0, 0, 0]   # Padding element (i.e. empty).
     }
 
     BRACKET_TO_ONEHOT = {
@@ -72,10 +72,10 @@ class Schemes:
     }
 
     SHADOW_ENCODING = {
-        "(" : 1,
-        "." : 0,
-        ")" : 1,
-        " " : 0
+        "(": 1,
+        ".": 0,
+        ")": 1,
+        " ": 0
     }
 
 
@@ -123,7 +123,8 @@ class Primary:
                 pairing = bases[row] + bases[col]
                 if row == col:
                     matrix[row][col] = map["unpaired"]
-                elif abs(row - col)<N_MINIMUM_DISTANCE or len(set(pairing))==1:
+                elif (abs(row - col) < N_MINIMUM_DISTANCE
+                      or len(set(pairing)) == 1):
                     matrix[row][col] = map["invalid"]
                 elif pairing in map:
                     matrix[row][col] = map[pairing]
@@ -131,7 +132,9 @@ class Primary:
                     matrix[row][col] = map["invalid"]
         return np.array(matrix)
 
-    def to_bases(vector, strip: bool = True, map=Schemes.IUPAC_TO_ONEHOT)->list:
+    def to_bases(
+            vector, strip: bool = True, map: dict = Schemes.IUPAC_TO_ONEHOT
+            ) -> list:
         """Transform a vector into a sequence of bases.
 
         Args:

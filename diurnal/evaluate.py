@@ -64,8 +64,8 @@ class Vector:
         Returns (tuple): A tuple containing the confusion matrix and a
             list of symbols that correspond to each row of the matrix.
         """
-        scalar_true, scalar_pred, symbols=Vector._convert_to_scalars(true, pred)
-        return confusion_matrix(scalar_true, scalar_pred), symbols
+        t, p, symbols = Vector._convert_to_scalars(true, pred)
+        return confusion_matrix(t, p), symbols
 
 
 class Matrix:
@@ -83,8 +83,10 @@ class TwoClassVector:
 
     These metrics are derived from the work of Wang et al., ATTFold.
     """
-    def get_TP(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
-        """ Compute the true positive value (predicted paired bases that
+    def get_TP(
+            true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
+            ) -> float:
+        """Compute the true positive value (predicted paired bases that
         are actually paired).
         """
         tp = 0
@@ -93,7 +95,9 @@ class TwoClassVector:
                 tp += 1
         return tp
 
-    def get_TN(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+    def get_TN(
+            true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
+            ) -> float:
         """Compute the true negative value (predicted unpaired bases
         that are actually unpaired).
         """
@@ -103,7 +107,9 @@ class TwoClassVector:
                 tn += 1
         return tn
 
-    def get_FP(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+    def get_FP(
+            true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
+            ) -> float:
         """Compute the false positive value (predicted paired bases that
         are actually unpaired).
         """
@@ -113,7 +119,9 @@ class TwoClassVector:
                 fp += 1
         return fp
 
-    def get_FN(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+    def get_FN(
+            true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
+            ) -> float:
         """Compute the false negative value (predicted unpaired bases
         that are actually unpaired).
         """
@@ -123,8 +131,9 @@ class TwoClassVector:
                 fn += 1
         return fn
 
-    def get_sensitivity(true, pred,
-            unpaired_symbol=Schemes.BRACKET_TO_ONEHOT['.']):
+    def get_sensitivity(
+            true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
+            ) -> float:
         """Compute the sensitivity value (SEN) obtained by comparing two
         secondary structures. The sensitivity is defined as:
 
@@ -139,7 +148,9 @@ class TwoClassVector:
         else:
             return 0.0
 
-    def get_PPV(true, pred, unpaired_symbol = Schemes.BRACKET_TO_ONEHOT['.']):
+    def get_PPV(
+            true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
+            ) -> float:
         """Compute the positive predictive value (PPV) obtained by
         comparing two secondary structures. The PPV is defined as:
 
