@@ -41,8 +41,8 @@ import diurnal.structure
 import diurnal.family
 
 # Constant values.
-URL_PREFIX = (
-    "https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/")
+URL_PREFIX = \
+    "https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/"
 DATA_FILE_ENDING = ".tar.gz"
 INFO_FILE_ENDING = ".rst"
 ALLOWED_DATASETS = {

@@ -25,9 +25,9 @@ from diurnal.models import baseline
 print("1. Obtaining raw data.")
 database.download("./data/", "archiveII")
 database.format(
-    "./data/archiveII", # Directory of the raw data to format.
-    "./data/formatted", # Formatted data output directory.
-    512, # Normalized size.
+    "./data/archiveII",  # Directory of the raw data to format.
+    "./data/formatted",  # Formatted data output directory.
+    512,  # Normalized size.
 )
 
 print("2. Obtaining formatted data.")
