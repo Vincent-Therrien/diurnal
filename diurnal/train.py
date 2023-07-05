@@ -179,27 +179,6 @@ def _convert_data_to_dict(data: list) -> dict:
     }
 
 
-def _convert_to_tensor(data: list) -> torch.Tensor:
-    """Convert matrix-like objects into pyTorch tensors.
-
-    Args:
-        data (list-like): Array of number to convert into a tensor.
-
-    Returns (torch.Tensor): Tensor-converted data.
-    """
-    tensors = []
-    if len(data) < 1:
-        return None
-    for i in range(len(data[0])):
-        tensor = [
-            torch.tensor(data[0][i].T, dtype=torch.float32),
-            torch.tensor(data[1][i],   dtype=torch.float32),
-            torch.tensor(data[2][i],   dtype=torch.float32)
-        ]
-        tensors.append(tensor)
-    return tensors
-
-
 def load_data(path: str, randomize: bool = True) -> tuple:
     """Read formatted data into tensors.
 

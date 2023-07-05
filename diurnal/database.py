@@ -5,24 +5,13 @@
     RNA dataset and manipulate the data into matrix formats usable by
     processing algorithms. Note: the word `dataset` is used to refer to
     a given set of RNA secondary structures (e.g. archiveII or
-    RNASTRalign). The collection of datasets is refered as the database.
+    RNASTRalign). The collection of datasets is referred as the database.
 
     Example:
-        blocks:: python
 
-            import diurnal.database as db
-            import diurnal.structure as structure
-            import diurnal.family as family
-
-            # Download the dataset.
-            db.download("./data/", "archiveII")
-
-            # Format the dataset into numpy `.npy` files.
-            db.format(
-                "./data/archiveII", # Directory of the raw data to format.
-                "./data/formatted", # Formatted data output directory.
-                512 # Normalized size.
-            )
+        import diurnal.database as db
+        db.download("./data/", "archiveII")
+        db.format("./data/archiveII", "./data/formatted", 512)
 
     Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
     Affiliation: Département d'informatique, UQÀM

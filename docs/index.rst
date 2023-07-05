@@ -7,11 +7,13 @@ diurnal
 This project aims at simplifying RNA secondary structure prediction by providing
 a set of routines that automate commun tasks among prediction tools.
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Library Documentation:
+.. Generate the source code documentation file with `sphinx-apidoc -o ./source ../diurnal`
 
-   modules
+.. toctree::
+   :maxdepth: 3
+
+   source/modules
+
 
 Main Features
 -------------

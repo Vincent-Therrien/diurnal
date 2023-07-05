@@ -5,7 +5,7 @@
 
 import torch
 
-from diurnal import database, train
+from diurnal import database, train, visualize
 import diurnal.models
 from diurnal.models.networks import cnn
 
@@ -40,7 +40,7 @@ model.save("saved_model")
 
 del model
 
-model2 = diurnal.models.NN(
+loaded_model = diurnal.models.NN(
     cnn.Pairings_1,
     SIZE,
     3,
@@ -49,7 +49,12 @@ model2 = diurnal.models.NN(
     {"eps": 1e-4},
     None,
     verbosity=1)
-model2.load("saved_model")
+loaded_model.load("saved_model")
 
-f = model2.test(test_set)
+f = loaded_model.test(test_set)
 print(f"Average F1-score of the saved model: {sum(f)/len(f):.4}")
+
+print(f"\nSample prediction from the test set (`{test_set['names'][0]}`).")
+p = test_set["primary_structures"][0]
+s = test_set["secondary_structures"][0]
+visualize.prediction(p, s, loaded_model.predict(p))

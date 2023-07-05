@@ -38,6 +38,7 @@ model.train(train_set)
 f = model.test(test_set)
 print(f"Average F1-score: {sum(f)/len(f):.4}")
 
+print(f"Sample prediction (`{test_set['names'][0]}`).")
 p = test_set["primary_structures"][0]
 s = test_set["secondary_structures"][0]
 visualize.prediction(p, s, model.predict(p))

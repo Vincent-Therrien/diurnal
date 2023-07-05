@@ -7,7 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   diurnal.networks
+   diurnal.models
    diurnal.utils
 
 Submodules
@@ -29,10 +29,18 @@ diurnal.evaluate module
    :undoc-members:
    :show-inheritance:
 
-diurnal.models module
+diurnal.family module
 ---------------------
 
-.. automodule:: diurnal.models
+.. automodule:: diurnal.family
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+diurnal.structure module
+------------------------
+
+.. automodule:: diurnal.structure
    :members:
    :undoc-members:
    :show-inheritance:
@@ -45,10 +53,10 @@ diurnal.train module
    :undoc-members:
    :show-inheritance:
 
-diurnal.transform module
+diurnal.visualize module
 ------------------------
 
-.. automodule:: diurnal.transform
+.. automodule:: diurnal.visualize
    :members:
    :undoc-members:
    :show-inheritance:

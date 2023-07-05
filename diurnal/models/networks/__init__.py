@@ -1,1 +1,1 @@
-__all__ = ["cnn", "mlp", "similarity_model"]
+__all__ = ["cnn", "mlp"]
