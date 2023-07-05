@@ -7,12 +7,14 @@
     License: MIT
 """
 
+import shutil
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import diurnal.family
 import diurnal.structure
+import diurnal.train
 
 
 PAIRING_COLORS = {
@@ -88,3 +90,25 @@ def potential_pairings(
     plt.grid()
     plt.title(title)
     plt.show()
+
+
+def prediction(primary, true, pred) -> None:
+    """Compare true and predicted secondary structures."""
+    columns, rows = shutil.get_terminal_size()
+    primary, true, pred = diurnal.train.clean_vectors(primary, true, pred)
+    true = diurnal.structure.Secondary.to_bracket(true)
+    pred = diurnal.structure.Secondary.to_bracket(pred)
+    differences = ""
+    correct = 0
+    for i in range(len(primary)):
+        if true[i] == pred[i]:
+            differences += "_"
+            correct += 1
+        else:
+            differences += "^"
+    print(f"       Primary structure: {''.join(primary)}")
+    print(f"True secondary structure: {''.join(true[:len(primary)])}")
+    print(f"Predicted sec. structure: {''.join(pred[:len(primary)])}")
+    ratio = str(correct) + "/" + str(len(primary))
+    prefix = " " * (14 - len(ratio))
+    print(f"{prefix}Matches ({ratio}): {differences}")

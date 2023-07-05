@@ -29,7 +29,7 @@ class Random(Basic):
         """Simulate a training of the model."""
         for symbol in self.secondary[0]:
             symbol = symbol.tolist()
-            if symbol not in self.symbols:
+            if symbol not in self.symbols and sum(symbol):
                 self.symbols.append(symbol)
 
     def _predict(self, primary) -> np.array:

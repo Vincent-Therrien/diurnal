@@ -29,8 +29,7 @@ def clean_dir_path(directory: str) -> str:
     if not directory.endswith("/"):
         directory += "/"
     if not os.path.isdir(directory):
-        log(f"Invalid directory: {directory}", -1)
-        raise RuntimeError
+        os.mkdir(directory)
     return directory
 
 

@@ -49,7 +49,9 @@ __all__ = ["baseline", "networks"]
 
 class Basic():
     """Diurnal basic RNA secondary structure prediction model."""
-    def train(self, training_data: dict, validation_data: dict = None) -> None:
+    def train(
+            self, training_data: dict, validation_data: dict = None,
+            verbose: bool = True) -> None:
         """Train the model. Abstract method.
 
         Args:
@@ -65,7 +67,14 @@ class Basic():
                     }
 
             validation_data (dict)
+            verbose (bool): Print informative messages.
         """
+        if verbose:
+            N = len(training_data["names"])
+            log.info(f"Training the model with {N} data points.")
+            if validation_data:
+                n = len(validation_data["names"])
+                log.trace(f"Using {n} data points for validation.")
         self.names = training_data["names"]
         self.primary = np.array(training_data["primary_structures"])
         self.secondary = np.array(training_data["secondary_structures"])
@@ -92,52 +101,61 @@ class Basic():
         """
         return self._predict(primary)
 
-    def save(self, directory: str) -> None:
+    def save(self, directory: str, verbose: bool = True) -> None:
         """Write a model into the filesystem.
 
         Args:
             directory (str): Directory into which the model is written.
+            verbose (bool): Print informative messages.
         """
         directory = file_io.clean_dir_path(directory)
+        if verbose:
+            log.info(f"Saving the model at `{directory}`.")
         with open(directory + "training_molecule_list.txt", "w") as f:
-            f.writelines(self.names)
+            for name in self.names:
+                f.write(name + "\n")
         with open(directory + "ìnfo.rst", "w") as f:
-            f.writelines(
-                [
-                    f"RNA Secondary Structure Prediction Model",
-                    f"========================================",
-                    f"",
-                    f"Generation timestamp: {datetime.utcnow()} UTC",
-                    f"",
-                    f"Training data listed in ``training_molecule_list.txt``."
-                ]
-            )
+            f.writelines([
+                "RNA Secondary Structure Prediction Model\n",
+                "========================================\n",
+                "\n",
+                f"Generation timestamp: {datetime.utcnow()} UTC\n",
+                "\n",
+                "Training data listed in ``training_molecule_list.txt``.\n",
+                f"{len(self.primary)} molecules were used for training.\n"])
         self._save(directory)
 
-    def load(self, directory: str) -> None:
+    def load(self, directory: str, verbose: bool = True) -> None:
         """Read a model from a directory.
 
         Args:
             directory (str): Directory into which the model is written.
+            verbose (bool): Print informative messages.
         """
         directory = file_io.clean_dir_path(directory)
+        if verbose:
+            log.info(f"Loading the model from the files at `{directory}`.")
         with open(directory + "training_molecule_list.txt", "r") as f:
-            self.names - f.read().split('\n')
+            self.names = f.read().split('\n')
         self._load(directory)
 
     def test(
             self, data: list,
-            evaluation: Callable = evaluate.Vector.get_f1) -> list:
+            evaluation: Callable = evaluate.Vector.get_f1,
+            verbose: bool = True) -> list:
         """Evaluate the performance of the model.
 
         Args:
             data (list): List of primary structures for predictions.
             evaluation (Callable): Evaluation function.
+            verbose (bool): Print informative messages.
 
         Returns (list): The evaluation obtained for each structure.
         """
         results = []
         n = len(data["primary_structures"])
+        if verbose:
+            log.info(f"Testing the model with {n} data points.")
         for i in range(n):
             primary = data["primary_structures"][i]
             true = data["secondary_structures"][i]
@@ -242,7 +260,7 @@ class NN(Basic):
         return self.nn(primary)[0]
 
     def _save(self, path: str) -> None:
-        torch_save(self.nn.state_dict(), path)
+        torch_save(self.nn.state_dict(), path + "model.pt")
 
     def _load(self, path: str) -> None:
-        self.nn.load_state_dict(torch_load(path))
+        self.nn.load_state_dict(torch_load(path + "model.pt"))

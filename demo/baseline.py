@@ -18,11 +18,10 @@
     License: MIT
 """
 
-from diurnal import database, train, utils
+from diurnal import database, train, visualize
 from diurnal.models import baseline
 
 
-print("1. Obtaining raw data.")
 database.download("./data/", "archiveII")
 database.format(
     "./data/archiveII",  # Directory of the raw data to format.
@@ -30,14 +29,15 @@ database.format(
     512,  # Normalized size.
 )
 
-print("2. Obtaining formatted data.")
 test_set, other_data = train.load_inter_family("./data/formatted", "5s")
 train_set, validate_set = train.split_data(other_data, [0.8, 0.2])
 
-print("3. Training the model.")
 model = baseline.Random()
 model.train(train_set)
 
-print("4. Testing the model.")
 f = model.test(test_set)
 print(f"Average F1-score: {sum(f)/len(f):.4}")
+
+p = test_set["primary_structures"][0]
+s = test_set["secondary_structures"][0]
+visualize.prediction(p, s, model.predict(p))

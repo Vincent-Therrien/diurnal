@@ -219,7 +219,9 @@ def load_data(path: str, randomize: bool = True) -> tuple:
     return _convert_data_to_dict(data)
 
 
-def load_inter_family(path: str, family: str, randomize: bool = True) -> list:
+def load_inter_family(
+        path: str, family: str, randomize: bool = True,
+        verbose: bool = True) -> list:
     """Read formatted data into a tensor that contains the specified
     family and another tensor that contains all the other families.
 
@@ -228,6 +230,7 @@ def load_inter_family(path: str, family: str, randomize: bool = True) -> list:
             written by the function `diurnal.database.format`.
         family (str): Family to place in a different tensor.
         randomize (bool): Randomize data if set to True.
+        verbose (bool): Print informative messages.
 
     Returns:
         tuple: Loaded data represented as
@@ -235,6 +238,8 @@ def load_inter_family(path: str, family: str, randomize: bool = True) -> list:
             The first element is the test family. The second element
             comprises all other families.
     """
+    if verbose:
+        log.info(f"Loading data at `{path}`. `{family}` is the test set.")
     if not diurnal.family.is_known(family):
         log.error(f"Family `{family}` not recognized.")
         raise ValueError

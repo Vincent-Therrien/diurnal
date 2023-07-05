@@ -1,6 +1,7 @@
 draw_rna/
 /data/
 .vscode/
+saved_model/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
