@@ -7,16 +7,16 @@
     a given set of RNA secondary structures (e.g. archiveII or
     RNASTRalign). The collection of datasets is referred as the database.
 
-    Example:
+    ::
 
-        import diurnal.database as db
-        db.download("./data/", "archiveII")
-        db.format("./data/archiveII", "./data/formatted", 512)
+       import diurnal.database as db
+       db.download("./data/", "archiveII")
+       db.format("./data/archiveII", "./data/formatted", 512)
 
-    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
-    Affiliation: Département d'informatique, UQÀM
-    File creation date: April 2023
-    License: MIT
+    - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    - Affiliation: Département d'informatique, UQÀM
+    - File creation date: April 2023
+    - License: MIT
 """
 
 import os

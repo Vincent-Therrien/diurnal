@@ -2,10 +2,10 @@
     RNA secondary prediction models based on convolutional neural
     networks (CNN).
 
-    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
-    Affiliation: Département d'informatique, UQÀM
-    File creation date: July 2023
-    License: MIT
+    - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    - Affiliation: Département d'informatique, UQÀM
+    - File creation date: July 2023
+    - License: MIT
 """
 
 

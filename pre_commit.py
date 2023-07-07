@@ -16,8 +16,15 @@ from diurnal.utils import log
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
-log.trace("Documentation analysis.")
+if os.name == 'nt':
+    r = subprocess.run(["py", "setup.py", "install"], capture_output=True)
+else:
+    r = subprocess.run(["python3", "setup.py", "install"], capture_output=True)
+
+log.trace("Building the documentation.")
 doc_failed = False
+path = os.path.join('docs', 'make')
+r = subprocess.run([path, "clean"], capture_output=True, shell=True)
 r = subprocess.run(
     ["sphinx-apidoc", "-o", "./docs/source", "./diurnal"],
     capture_output=True, text=True)
@@ -55,7 +62,8 @@ else:
     log.info("Detected no style errors.")
 
 log.trace("Test execution.")
-r = subprocess.run(["pytest", "test"], capture_output=True, text=True)
+r = subprocess.run(
+    ["pytest", "test", "--tb=short"], capture_output=True, text=True)
 print(r.stdout)
 tests_failed = True if r.returncode != 0 else False
 if tests_failed:

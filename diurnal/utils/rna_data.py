@@ -1,10 +1,10 @@
 """
     Handle RNA structure data files.
 
-    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
-    Affiliation: Département d'informatique, UQÀM
-    File creation date: June 2023
-    License: MIT
+    - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    - Affiliation: Département d'informatique, UQÀM
+    - File creation date: June 2023
+    - License: MIT
 """
 
 

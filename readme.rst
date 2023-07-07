@@ -11,80 +11,26 @@ Predict RNA Secondary Structures
 This project aims at predicting RNA secondary structures with neural networks.
 It comprises the following subdirectories.
 
-- ``demo`` : Python scripts that illustrate the usage of the library.
-- ``docs`` : Documentation file written with ``Sphinx``.
-- ``diurnal`` : Library source code.
-- ``test`` : Automated test framework written with ``pytest``.
-
-Execute the following commands to install the library with pip.
+**Install** the library with the following command:
 
 .. code-block:: bash
 
-   cd diurnal
-   pip install .
+   pip install diurnal
 
-You can also install the library with setup script.
-
-Linux :
-
-.. code-block:: bash
-
-   pip install -r requirements.txt
-   python3 setup.py install
-
-Windows :
-
-.. code-block:: bash
-
-   pip install -r requirements.txt
-   py setup.py install
-
-
-Demonstration Scripts
-`````````````````````
-
-The directory  ``./demo`` comprises commented usages of the library.
-
-
-Documentation
-``````````````
-
-The following commands generate the documentation. The Sphinx library has to be
-installed.
+The **documentation** can be built with the command:
 
 .. code-block:: bash
 
    cd docs
    make html
 
+The directory ``demo`` contains usage examples of the library.
 
-Dataset Obtention
-`````````````````
+The **test suite** can be executed with the command:
 
-The library allows you to download the following datasets:
+.. code-block:: bash
 
-- ArchiveII
-- RNASTRalign
-- RNA_STRAND
-
-Execute the following Python script to download the data:
-
-.. code-block:: python
-
-   import diurnal.database as db
-   db.download_all("./data/")
-
-
-Test Framwork
-`````````````
-
-The repository contains an automated test framework developed with the
-``pytest`` library. Run the following commands to execute it.
-
-.. code-block:: python
-
-   cd test
-   pytest
+   pytest test
 
 
 .. _Français - fr:

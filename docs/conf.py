@@ -22,7 +22,8 @@ copyright = '2023, Vincent Therrien'
 author = 'Vincent Therrien'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
+with open("../version.txt", "r") as file:
+    release = file.read()
 
 
 # -- General configuration ---------------------------------------------------

@@ -24,10 +24,12 @@
     - `_save(directory) -> None` (save the model)
     - `_load(directory) -> None` (load a model from files)
 
-    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
-    Affiliation: Département d'informatique, UQÀM
-    File creation date: June 2023
-    License: MIT
+    File information:
+
+    - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    - Affiliation: Département d'informatique, UQÀM
+    - File creation date: June 2023
+    - License: MIT
 """
 
 from typing import Callable

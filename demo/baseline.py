@@ -12,10 +12,10 @@
     The creation of the model (step 2) can be replaced by the creation
     of another model to test other prediction methods.
 
-    Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
-    Affiliation: Département d'informatique, UQÀM
-    File creation date: June 2023
-    License: MIT
+    - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    - Affiliation: Département d'informatique, UQÀM
+    - File creation date: June 2023
+    - License: MIT
 """
 
 from diurnal import database, train, visualize
