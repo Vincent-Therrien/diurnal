@@ -42,11 +42,6 @@ ALLOWED_DATASETS = {
 
 
 # Installation functions.
-def available_datasets() -> None:
-    """Print available RNA datasets."""
-    log.info(f"Available datasets: {ALLOWED_DATASETS}")
-
-
 def download(
         dst: str, datasets: list, cleanup: bool = True, verbosity: int = 1
         ) -> None:

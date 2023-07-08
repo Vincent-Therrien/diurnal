@@ -1,3 +1,5 @@
+.. _source-code-documentation:
+
 Source Code Documentation
 =========================
 

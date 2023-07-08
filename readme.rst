@@ -8,8 +8,8 @@ diurnal
 Predict RNA Secondary Structures
 --------------------------------
 
-This project aims at predicting RNA secondary structures with neural networks.
-It comprises the following subdirectories.
+This project is a Python library that can predict RNA secondary structures with
+neural networks.
 
 **Install** the library with the following command:
 
@@ -24,7 +24,13 @@ The **documentation** can be built with the command:
    cd docs
    make html
 
-The directory ``demo`` contains usage examples of the library.
+The directory ``demo`` contains usage examples of the library. You can execute
+them as Python script, as shown below:
+
+.. code-block:: bash
+
+   python3 demo/baseline.py # On Linux
+   py demo/baseline.py # On Windows
 
 The **test suite** can be executed with the command:
 

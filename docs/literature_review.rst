@@ -3,27 +3,62 @@
 Literature Review
 =================
 
-This page presents relevant research efforts conducted in the field of RNA
-structure prediction.
+.. bibliography:: references.bib
+   :filter: False
+
+This page presents research efforts conducted in the field of RNA structure
+prediction.
 
 
-References
-----------
+Classical Prediction Models
+---------------------------
 
-**Models**:
 
-- CNNFold: https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-021-04540-7
-- ATTFold: https://www.frontiersin.org/articles/10.3389/fgene.2020.612086
-- UFold: https://academic.oup.com/nar/article/50/3/e14/6430845
-- MXFolx2: https://www.nature.com/articles/s41467-021-21194-4
-- CDPFold: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6540740/
+Prediction Models Based on Neural Networks
+------------------------------------------
 
-**Datasets**:
+CNNFold
+'''''''
+
+:cite:`cnnfold`
+
+ATTFold
+'''''''
+
+:cite:`attfold`
+
+UFold
+'''''
+
+:cite:`ufold`
+
+MXFold2
+'''''''
+
+:cite:`mxfold2`
+
+CDPFold
+'''''''
+
+:cite:`cdpfold`
+
+General Observations
+''''''''''''''''''''
+
+:cite:`szikszai22`
+
+
+Datasets
+--------
+
+:cite:`rnastrand`
 
 - RNAStralign: https://www.urmc.rochester.edu/rna/
 - RNAalign: https://drive.google.com/drive/folders/19KPRYJjjMJh1qdMhtmUoYA_ncw3ocAHc
 - RFam: https://rfam.org/
 
-**Comments**:
 
-- Szikszai: https://academic.oup.com/bioinformatics/article/38/16/3892/6617348
+References
+----------
+
+.. bibliography:: references.bib
