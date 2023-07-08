@@ -282,7 +282,7 @@ def format(
     with open(n, "w") as outfile:
         outfile.write("\n".join(names))
     # Write an informative file to sum up the content of the formatted folder.
-    info = dst + "info.rst"
+    info = dst + "redme.rst"
     if verbosity:
         log.trace(f"Writing an informative file at `{info}`.")
     with open(info, "w") as outfile:

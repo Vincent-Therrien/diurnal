@@ -14,7 +14,7 @@ import statistics
 import numpy as np
 from sklearn.metrics import f1_score, confusion_matrix
 
-from diurnal.utils import file_io, log
+from diurnal.utils import log
 from diurnal.structure import Schemes
 
 
