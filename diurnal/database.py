@@ -150,9 +150,18 @@ def _is_already_encoded(
     ]
     if (filenames != expected_filenames):
         return False
-    # Expected dimensions.
     primary = np.load(dst + 'primary_structures.npy')
     secondary = np.load(dst + 'secondary_structures.npy')
+    # Expected number of data points
+    n_families = len(open(dst + 'families.txt').read().split('\n'))
+    n_names = len(open(dst + 'names.txt').read().split('\n'))
+    n_primary = primary.shape[0]
+    n_secondary = secondary.shape[0]
+    if n_families == n_names == n_primary == n_secondary:
+        pass
+    else:
+        return False
+    # Expected dimensions.
     if (primary.shape[1] != size or secondary.shape[1] != size):
         return False
     # Expected encoding.
