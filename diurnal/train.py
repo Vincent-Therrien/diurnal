@@ -219,7 +219,10 @@ def load_families(
     if type(families) is str:
         families = [families]
     if verbose:
-        log.info(f"Loading the families {families} from `{path}`.")
+        if len(families) > 1:
+            log.info(f"Loading the families {families} from `{path}`.")
+        else:
+            log.info(f"Loading the family {families[0]} from `{path}`.")
     data = _read_formatted_data(path)
     selected_data = [[], [], [], []]
     for family in families:

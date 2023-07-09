@@ -172,8 +172,7 @@ secondary structure prediction, there are a few ways to divide data:
   how well the model can predict the structure of unfamiliar molecules.
 - In **sequence testing** (also called *sequence-wise cross-validation*
   by Sato et al. :cite:`mxfold2`), the model is trained and tested with datasets
-  that comprise the same RNA families (i.e. RNA families are not taken into
-  consideration). Therefore, training and testing data
+  that comprise the same RNA families. Therefore, training and testing data
   are structurally similar. Consequently, this type of testing is expected to
   yield more accurate results than inter-family testing.
 - In **intra-family testing**, models are trained and tested with RNA molecules
@@ -256,6 +255,43 @@ processing pipeline works well.
 
 Evaluate Results
 ^^^^^^^^^^^^^^^^
+
+The are two main ways to evaluate secondary structure predictions.
+
+The first and most widespread method consists in using the **recall** and
+**precision** :cite:`cnnfold` :cite:`mxfold2` :cite:`attfold` :cite:`ufold`
+:cite:`cdpfold`. This evaluation method uses the following metrics:
+
+- True positives (TP): number of paired bases that are correctly predicted to
+  be paired.
+- True negative (TN): number of unpaired bases that are correctly predicted to
+  be unpaired.
+- False positives (FP): number of paired bases that are erroneously predicted
+  to be unpaired.
+- False negatives (FN): number of unpaired bases that are erroneously predicted
+  to be paired.
+
+Recall (or *true positive rate* or *sensitivity*) is the probability that a
+positive prediction is actually positive. It is computed with the following
+equation:
+
+.. math::
+
+    recall = \frac{TP}{TP + FN}
+
+Precision (or *positive predictive value*) is the fraction of relevant elements
+among retrieved elements. It is computed with the following equation:
+
+.. math::
+
+    precision = \frac{TP}{TP + FP}
+
+The geometric mean of these two values is the **F1-score**, which is
+also called *F1*, *F1-measure*, *F-score*, or *F-measure*:
+
+.. math::
+
+    F1 = 2 \times \frac{recall \times precision}{recall + precision}
 
 
 Save and Load Models

@@ -14,27 +14,26 @@ from diurnal import evaluate
 
 
 @pytest.mark.parametrize(
-    "true, pred, S, P, F",
+    "true, pred, R, P, F",
     [
         (list("(((...)))"), list("(((...)))"), 1.0, 1.0, 1.0),
         (list("(((...)))"), list("(((...((("), 1.0, 1.0, 1.0),
         (list("(((...)))"), list("(((......"), 0.5, 1.0, 2/3),
     ]
 )
-def test_two_class_metrics(true, pred, S, P, F):
+def test_two_class_metrics(true, pred, R, P, F):
     """
-    Test the validity of sensitivity and positive predictive value
-    evaluation criteria.
+    Test the validity of recall and precision evaluation criteria.
 
     Args:
         true: True secondary structure.
         pred: Predicted secondary structure.
-        S: Expected sensitivity.
-        P: Expected positive predictive value.
+        R: Expected recall.
+        P: Expected precision.
         F: Expected F-score.
     """
-    s, p, f = evaluate.TwoClassVector.get_sen_PPV_f1(true, pred)
-    assert s == S, "Incorrect sensitivity."
+    r, p, f = evaluate.TwoClassVector.get_recall_precision_f1(true, pred)
+    assert r == R, "Incorrect sensitivity."
     assert p == P, "Incorrect positive predictive value."
     assert f == F, "Incorrect F1-score."
 

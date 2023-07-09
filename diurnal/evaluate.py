@@ -131,13 +131,13 @@ class TwoClassVector:
                 fn += 1
         return fn
 
-    def get_sensitivity(
+    def get_recall(
             true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
             ) -> float:
-        """Compute the sensitivity value (SEN) obtained by comparing two
-        secondary structures. The sensitivity is defined as:
+        """Compute the recall value obtained by comparing two
+        secondary structures. Recall is defined as:
 
-        .. :math:
+        .. math::
 
             TP / (TP + FN).
         """
@@ -148,13 +148,13 @@ class TwoClassVector:
         else:
             return 0.0
 
-    def get_PPV(
+    def get_precision(
             true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
             ) -> float:
-        """Compute the positive predictive value (PPV) obtained by
-        comparing two secondary structures. The PPV is defined as:
+        """Compute the precision obtained by comparing two
+        secondary structures. Precision is defined as:
 
-        .. :math:
+        .. math::
 
             TP / (TP + FP).
         """
@@ -165,23 +165,21 @@ class TwoClassVector:
         else:
             return 0.0
 
-    def get_sen_PPV_f1(true, pred, unpaired_symbol="."):
+    def get_recall_precision_f1(true, pred, unpaired_symbol="."):
         """Compute the F1-score obtained by comparing two secondary
         structures. The f1-score is defined as:
 
-        .. :math:
+        .. math::
 
-            2 * ((SEN*PPV) / (SEN+PPV)).
-
-        Also return the sensitivity and precision.
+            F1 = 2 \times \frac{recall \times precision}{recall + precision}
         """
-        sen = TwoClassVector.get_sensitivity(true, pred, unpaired_symbol)
-        ppv = TwoClassVector.get_PPV(true, pred, unpaired_symbol)
-        if sen + ppv:
-            f1 = 2 * ((sen*ppv) / (sen+ppv))
-            return sen, ppv, f1
+        recall = TwoClassVector.get_recall(true, pred, unpaired_symbol)
+        precision = TwoClassVector.get_precision(true, pred, unpaired_symbol)
+        if recall + precision:
+            f1 = 2 * ((recall*precision) / (recall+precision))
+            return recall, precision, f1
         else:
-            return sen, ppv, 0.0
+            return recall, precision, 0.0
 
 
 # Result presentation
