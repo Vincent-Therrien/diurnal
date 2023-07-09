@@ -125,7 +125,7 @@ def shuffle_data(*args) -> tuple:
 
 
 # Training functions
-def _read_npy_files(path: str) -> tuple:
+def _read_formatted_data(path: str) -> tuple:
     """Read an RNA dataset encoded into .npy Numpy files.
 
     Args:
@@ -142,7 +142,7 @@ def _read_npy_files(path: str) -> tuple:
         "primary_structures.npy",
         "secondary_structures.npy",
         "names.txt",
-        "families.npy"
+        "families.txt"
     ]
     data = []
     for p in relative_paths:
@@ -191,53 +191,48 @@ def load_data(path: str, randomize: bool = True) -> tuple:
         list: Loaded data represented as
             [primary structure, secondary structure, family].
     """
-    data = _read_npy_files(path)
+    data = _read_formatted_data(path)
     # Shuffle data.
     if randomize:
         data = list(shuffle_data(*data))
     return _convert_data_to_dict(data)
 
 
-def load_inter_family(
-        path: str, family: str, randomize: bool = True,
+def load_families(
+        path: str, families: list, randomize = True,
         verbose: bool = True) -> list:
-    """Read formatted data into a tensor that contains the specified
-    family and another tensor that contains all the other families.
+    """Read formatted molecules of the specified RNA family.
 
     Args:
         path (str): Name of the directory that contains the Numpy files
             written by the function `diurnal.database.format`.
-        family (str): Family to place in a different tensor.
+        families (List(str) | str): Families to read.
         randomize (bool): Randomize data if set to True.
         verbose (bool): Print informative messages.
 
-    Returns:
-        tuple: Loaded data represented as
-            [primary structure, secondary structure, family].
-            The first element is the test family. The second element
-            comprises all other families.
+    Returns (dict): Loaded data represented as
+        `{"primary_structure": list,
+          "secondary_structure": list,
+          "names": list(str),
+          "family": list}`.
     """
+    if type(families) is str:
+        families = [families]
     if verbose:
-        log.info(f"Loading data at `{path}`. `{family}` is the test set.")
-    if not diurnal.family.is_known(family):
-        log.error(f"Family `{family}` not recognized.")
-        raise ValueError
-    data = _read_npy_files(path)
-    family_vector = diurnal.family.to_vector(family)
-    k = [[], [], [], []]  # Test family
-    n = [[], [], [], []]  # Other families
+        log.info(f"Loading the families {families} from `{path}`.")
+    data = _read_formatted_data(path)
+    selected_data = [[], [], [], []]
+    for family in families:
+        if not diurnal.family.is_known(family):
+            log.error(f"Family `{family}` not recognized.")
+            raise ValueError
     for i in range(len(data[0])):
-        if np.array_equal(data[3][i], family_vector):
+        if data[-1][i] in families:
             for j in range(4):
-                k[j].append(data[j][i])
-        else:
-            for j in range(4):
-                n[j].append(data[j][i])
-    # Shuffle data.
+                selected_data[j].append(data[j][i])
     if randomize:
-        k = list(shuffle_data(*k))
-        n = list(shuffle_data(*n))
-    return _convert_data_to_dict(k), _convert_data_to_dict(n)
+        selected_data = list(shuffle_data(*selected_data))
+    return _convert_data_to_dict(selected_data)
 
 
 # Output data manipulation

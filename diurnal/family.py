@@ -26,14 +26,48 @@ NAMES = [
     ["tRNA"]
 ]
 
-NAME_SET = []
+_NAME_SET = []
 for name in NAMES:
     for alias in name:
-        NAME_SET.append(alias)
+        _NAME_SET.append(alias)
 
 ONEHOT = dict()
 for i, name in enumerate(NAMES):
     ONEHOT[name[0]] = [1 if x == i else 0 for x in range(len(NAMES))]
+
+
+def is_known(family: str) -> bool:
+    """Check if an RNA family is recognized.
+
+    Args:
+        family (str): Family test name.
+
+    Returns (bool): True if the family is recognized, False otherwise.
+    """
+    return family in _NAME_SET
+
+
+def all_but(families: list) -> bool:
+    """Return all RNA family names except those provided as arguments.
+
+    Args:
+        families (List(str) | str): RNA families to exclude.
+
+    Returns (List(str)): The list of selected RNA families.
+    """
+    if type(families) is str:
+        families = [families]
+    excluded_families = []
+    for family in families:
+        for name in NAMES:
+            if family in name:
+                excluded_families.append(name[0])
+    excluded_families = set(excluded_families)
+    selected_families = []
+    for name in NAMES:
+        if name[0] not in excluded_families:
+            selected_families.append(name[0])
+    return selected_families
 
 
 def to_vector(family: str) -> list:
@@ -92,14 +126,3 @@ def get_name(filename: str) -> str:
         for candidate in candidates:
             c[filename.upper().find(candidate.upper())] = candidate
         return c[max(c.keys())]
-
-
-def is_known(family: str) -> bool:
-    """Check if a family is recognized.
-
-    Args:
-        family (str): Family test name.
-
-    Returns (bool): True if the family is recognized, False otherwise.
-    """
-    return family in NAME_SET

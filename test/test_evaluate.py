@@ -10,7 +10,7 @@
 import pytest
 import numpy as np
 
-import diurnal.evaluate as evaluate
+from diurnal import evaluate
 
 
 @pytest.mark.parametrize(

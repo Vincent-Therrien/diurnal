@@ -5,7 +5,7 @@
 
 import torch
 
-from diurnal import database, train, visualize
+from diurnal import database, train, visualize, family
 import diurnal.models
 from diurnal.models.networks import cnn
 
@@ -19,8 +19,11 @@ database.format(
     SIZE,  # Normalized size.
 )
 
-test_set, other_data = train.load_inter_family("./data/formatted", "5s")
-train_set, validate_set = train.split_data(other_data, [0.8, 0.2])
+test_family = "5s"
+train_families = family.all_but(test_family)
+
+test_set = train.load_families("./data/formatted", test_family)
+train_set = train.load_families("./data/formatted", train_families)
 
 model = diurnal.models.NN(
     model=cnn.Pairings_1,

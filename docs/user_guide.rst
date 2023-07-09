@@ -73,9 +73,9 @@ of the files all follow the same syntax, which is presented in the table below:
 +---------+-------------------------------------------------------------------+
 | 2       | Nucleotide (A, C, G, or U)                                        |
 +---------+-------------------------------------------------------------------+
-| 3       | Neighboring nucleotide in the 5' direction (i.e. upstream)        |
+| 3       | Neighboring nucleotide index in the 5' direction (i.e. upstream)  |
 +---------+-------------------------------------------------------------------+
-| 4       | Neighboring nucleotide in the 3' direction (i.e. downstream)      |
+| 4       | Neighboring nucleotide index in the 3' direction (i.e. downstream)|
 +---------+-------------------------------------------------------------------+
 | 5       | Index of the paired nucleotide. If the nucleotide is unpaired,    |
 |         | the value ``0`` is used.                                          |
@@ -155,36 +155,45 @@ Executing this function will generate the following files:
 - ``primary_structures.npy``: Encoded primary structures.
 - ``secondary_structures.npy``: Encoded secondary structures.
 
-The ``.npy`` files can be read with the function ``numpy.load(filename)``.
+The ``.npy`` files can be read with the function ``numpy.load(filename)``,
+which returns a ``numpy.array`` object.
 
 
 Prepare Data for Training
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
- Formatted data can be loaded and split for training. In the context of RNA
- secondary structure prediction, there are two main ways to divide data:
+Formatted data can be loaded and split for training. In the context of RNA
+secondary structure prediction, there are a few ways to divide data:
 
-- In **inter-family testing**, molecules of one RNA molecule are used as the
-  test set and all the other molecules of the dataset are used for training.
-  The point of this type of training is to measure how well the model can
-  predict the structure of unfamiliar molecules.
-- In **intra-family testing**, molecules of the dataset are randomly sampled to
-  elaborate the test set. Since the model is trained with all families of
-  molecules, it can better predict secondary structures than in inter-family
-  testing.
+- In **inter-family testing** (also called *family-wise cross-validation* by
+  Sato et al. :cite:`mxfold2`), the model is trained and tested with datasets
+  that comprise different RNA families. Therefore, training and testing data
+  are structurally different. The point of this type of training is to measure
+  how well the model can predict the structure of unfamiliar molecules.
+- In **sequence testing** (also called *sequence-wise cross-validation*
+  by Sato et al. :cite:`mxfold2`), the model is trained and tested with datasets
+  that comprise the same RNA families (i.e. RNA families are not taken into
+  consideration). Therefore, training and testing data
+  are structurally similar. Consequently, this type of testing is expected to
+  yield more accurate results than inter-family testing.
+- In **intra-family testing**, models are trained and tested with RNA molecules
+  that belong to the same family. Therefore, training and testing data
+  are structurally very similar and results are expected to yield more accurate
+  results than sequence testing. This type of testing does not appear to be
+  discussed in published work, but it can be useful to validate models.
 
-The code snippet below shows how to load data for the two types of testing:
+The code snippet below shows how to load data for inter-family and sequence
+testing.
 
 .. code-block:: python
 
-   from diurnal import train
+   from diurnal import train, family
 
    # Inter-family testing.
-   # Load formatted data for inter-family testing with the `5s` family.
-   test_set, train_set = train.load_inter_family("./data/formatted", "5s")
+   test_set = train.load_families("./data/formatted", "5s")
+   train_set = train.load_families("./data/formatted", family.all_but("5s"))
 
-   # Intra-family testing.
-   # Load all formatted data and randomize the order of molecules.
+   # Sequence testing.
    data = train.load_data("./data/formatted", randomize = True)
    # Divide data in training (80 % of points) and test sets (20 % of points).
    train_set, test_set = train.split_data(data, [0.8, 0.2])
@@ -200,6 +209,7 @@ One may also divide data to perform K-fold validation, as shown below:
    data = train.load_data("./data/formatted", randomize = True)
    for i in range(K)
        train_set, test_set = train.k_fold_split(data, [0.8, 0.2], K, i)
+       # Train and test a model for this K-split.
 
 
 Train Models

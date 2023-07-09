@@ -64,8 +64,8 @@ class Basic():
                     {
                         "primary_structures": <vector>,
                         "secondary_structures": <vector>,
-                        "names": List[str]
-                        "families": <vector>
+                        "names": List[str],
+                        "families": List[str]
                     }
 
             validation_data (dict)
@@ -78,9 +78,9 @@ class Basic():
                 n = len(validation_data["names"])
                 log.trace(f"Using {n} data points for validation.")
         self.names = training_data["names"]
-        self.primary = np.array(training_data["primary_structures"])
-        self.secondary = np.array(training_data["secondary_structures"])
-        self.families = np.array(training_data["families"])
+        self.primary = training_data["primary_structures"]
+        self.secondary = training_data["secondary_structures"]
+        self.families = training_data["families"]
         if validation_data:
             self.validation_names = validation_data["names"]
             self.validation_primary = validation_data["primary_structures"]
@@ -217,26 +217,25 @@ class NN(Basic):
             log.trace("Beginning training.")
         # TMP
         data = []
+        self.primary = np.array(self.primary)
+        self.secondary = np.array(self.secondary)
         for i in range(self.primary.shape[0]):
-            d = [self.primary[i].T, self.secondary[i], self.families[i]]
+            d = [self.primary[i].T, self.secondary[i]]
             data.append(d)
         # TMP
         training_set = DataLoader(data, batch_size=32)
         if self.validation_primary:
             validation_set = DataLoader(
                 [self.validation_primary,
-                 self.validation_secondary,
-                 self.validation_families], batch_size=32)
+                 self.validation_secondary], batch_size=32)
         for epoch in range(self.n_epochs):
-            for batch, (x, y, f) in enumerate(training_set):
+            for batch, (x, y) in enumerate(training_set):
                 if self.use_half:
                     x = x.to(self.device).half()
                     y = y.to(self.device).half()
-                    f = f.to(self.device).half()
                 else:
                     x = x.to(self.device)
                     y = y.to(self.device)
-                    f = f.to(self.device)
                 self.optimizer.zero_grad()
                 pred = self.nn(x)
                 loss = self.loss_fn(pred, y)

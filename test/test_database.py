@@ -37,5 +37,3 @@ def test_ct_file_format(tmp_rna_structure_files):
             assert length == DIM, \
                 (f"Incorrect dimension for `{path}`; "
                  + f"expected {DIM}, got {length}.")
-        if path.endswith("families.npy"):
-            values = np.load(path, allow_pickle=True)

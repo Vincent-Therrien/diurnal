@@ -116,7 +116,7 @@ def download_all(dst: str, cleanup: bool = True, verbosity: int = 1) -> None:
 
 def _is_already_encoded(
         src: str, dst: str, size: int, primary_structure_map,
-        secondary_structure_map, family_map) -> bool:
+        secondary_structure_map) -> bool:
     """Check if a directory already contains already encoded data.
 
     The function makes the following verifications:
@@ -133,18 +133,19 @@ def _is_already_encoded(
         size (int): Maximum size of a structure.
         primary_structure_map
         secondary_structure_map
-        family_map
 
     Returns (bool): True if data are formatted as expected, False
         otherwise.
     """
     # Expected files.
+    if not os.path.isdir(dst):
+        return False
     filenames = os.listdir(dst)
     expected_filenames = [
-        'families.npy',
-        'info.rst',
+        'families.txt',
         'names.txt',
         'primary_structures.npy',
+        'readme.rst',
         'secondary_structures.npy'
     ]
     if (filenames != expected_filenames):
@@ -152,20 +153,16 @@ def _is_already_encoded(
     # Expected dimensions.
     primary = np.load(dst + 'primary_structures.npy')
     secondary = np.load(dst + 'secondary_structures.npy')
-    family = np.load(dst + 'families.npy')
     if (primary.shape[1] != size or secondary.shape[1] != size):
         return False
     # Expected encoding.
     for path in pathlib.Path(src).rglob('*.ct'):
         _, bases, pairings = rna_data.read_ct_file(str(path))
         if len(bases) <= size:
-            test_family_name = diurnal.family.get_name(str(path))
             break
     test_primary = primary_structure_map(bases, size)
     test_secondary = secondary_structure_map(pairings, size)
-    test_family = family_map(test_family_name)
-    if (list(test_family) != list(family[0])
-            or test_primary.tolist() != primary[0].tolist()
+    if (test_primary.tolist() != primary[0].tolist()
             or test_secondary.tolist() != secondary[0].tolist()):
         return False
     return True
@@ -177,7 +174,6 @@ def format(
         max_size: int,
         primary_structure_map: any = diurnal.structure.Primary.to_vector,
         secondary_structure_map: any = diurnal.structure.Secondary.to_vector,
-        family_map: any = diurnal.family.to_vector,
         verbosity: int = 1) -> None:
     """ Transform the original datasets into the representation provided
     by the arguments.
@@ -211,9 +207,6 @@ def format(
         secondary_structure_map: A dictionary or function that maps
             an RNA secondary structure symbol to a vector (e.g. map '.'
             to [0, 1, 0]). If None, the file `y.np` is not written.
-        family_map: A dictionary or function that maps an RNA
-            family name (e.g. '5s') to a vector (e.g. '[1, 0, 0]).
-            If None, the file `family.np` is not written.
         verbosity (int): Verbosity level of the function. 1 (default)
             prints informative messages. 0 silences the function.
     """
@@ -224,7 +217,7 @@ def format(
     # If the data is already encoded in the directory, exit.
     if _is_already_encoded(
             src, dst, max_size, primary_structure_map,
-            secondary_structure_map, family_map):
+            secondary_structure_map):
         log.trace(f"The directory {dst} already contains the formatted data.")
         return
     # Create the directory if it des not exist.
@@ -237,9 +230,9 @@ def format(
     # Encode the content of each file.
     names = []           # RNA molecule names included in the dataset.
     rejected_names = []  # RNA molecule names excluded from the dataset.
+    families = []        # Family
     X = []               # Primary structure
     Y = []               # Secondary structure
-    F = []               # Family
     for i, path in enumerate(paths):
         _, bases, pairings = rna_data.read_ct_file(str(path))
         family = diurnal.family.get_name(str(path))
@@ -247,9 +240,9 @@ def format(
             rejected_names.append(str(path))
             continue
         names.append(str(path))
+        families.append(family)
         X.append(primary_structure_map(bases, max_size))
         Y.append(secondary_structure_map(pairings, max_size))
-        F.append(family_map(family))
         if verbosity:
             prefix = f"Encoding {len(paths)} files: "
             suffix = f" {path.name}"
@@ -272,34 +265,40 @@ def format(
     if verbosity:
         log.trace(f"Writing secondary structures at `{s2}.npy`.")
     np.save(s2, np.asarray(Y, dtype=np.float32))
-    f = dst + "families"
+    filename = dst + "families.txt"
     if verbosity:
-        log.trace(f"Writing families at `{f}.npy`.")
-    np.save(f, np.asarray(F, dtype=np.float32))
-    n = dst + "names.txt"
+        log.trace(f"Writing families at `{filename}`.")
+    with open(filename, "w") as outfile:
+        outfile.write("\n".join(families))
+    filename = dst + "names.txt"
     if verbosity:
-        log.trace(f"Writing names at `{n}`.")
-    with open(n, "w") as outfile:
+        log.trace(f"Writing names at `{filename}`.")
+    with open(filename, "w") as outfile:
         outfile.write("\n".join(names))
     # Write an informative file to sum up the content of the formatted folder.
-    info = dst + "redme.rst"
+    info = dst + "readme.rst"
     if verbosity:
         log.trace(f"Writing an informative file at `{info}`.")
     with open(info, "w") as outfile:
         outfile.write(summarize(
             dst, primary_structure_map,
-            secondary_structure_map, family_map))
+            secondary_structure_map))
 
 
 def summarize(
         path: str,
         primary_structure_map,
-        secondary_structure_map,
-        family_map) -> str:
+        secondary_structure_map) -> str:
     """Summarize the content of the formatted file directory.
 
     Args:
         path (str): File path of the formatted data.
+        primary_structure_map: A dictionary or function that maps
+            an RNA primary structure symbol to a vector (e.g. map A to
+            [1, 0, 0, 0]). If None, the file `x.np` is not written.
+        secondary_structure_map: A dictionary or function that maps
+            an RNA secondary structure symbol to a vector (e.g. map '.'
+            to [0, 1, 0]). If None, the file `y.np` is not written.
 
     Returns (str): Informative file containing:
         - Title
@@ -308,13 +307,14 @@ def summarize(
         - Structure size (number of nucleotides)
         - Primary structure encoding example
         - Secondary structure encoding example
-        - Family encoding example
     """
     content = "[> DIURNAL] RNA Database File Formatting\n"
     content += "========================================\n\n"
     content += f"Generation timestamp: {datetime.utcnow()} UTC\n\n"
     X = np.load(path + "primary_structures.npy")
-    content += f"Number of structures: {X.shape[0]}\n\n\n"
+    content += f"Number of structures: {X.shape[0]}\n\n"
+    content += "RNA molecule **names** are listed in `names.txt`.\n\n"
+    content += "RNA molecule **families** are listed in `families.txt`.\n\n"
     if X.any():
         content += "Primary Structure Encoding\n"
         content += "--------------------------\n\n"
@@ -341,19 +341,5 @@ def summarize(
             content += f"    {example[i]} -> {code[i]}\n"
         content += "\nExample:\n"
         content += str(Y[0])
-        content += "\n\n\n"
-    F = np.load(path + "families.npy")
-    if F.any():
-        content += "Family Encoding\n"
-        content += "---------------\n\n"
-        content += f"File: `{path + 'families.npy'}`\n\n"
-        content += f"Shape: {F.shape}\n\n"
-        content += "Encoding:\n"
-        for f in diurnal.family.NAMES:
-            name = family_map(f[0])
-            content += f"    {f[0]} -> {name}"
-            content += "\n"
-        content += "\nExample: \n"
-        content += str(F[0])
-        content += "\n"
+        content += "\n\n"
     return content
