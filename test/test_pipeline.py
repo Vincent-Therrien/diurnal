@@ -62,5 +62,5 @@ def test_pipeline_dryrun(tmp_rna_structure_files, model, f_range):
     true = structure.Secondary.to_bracket(true)
     pred = structure.Secondary.to_bracket(pred)
     # Evaluation
-    f1 = evaluate.Vector.get_f1(true, pred)
+    f1 = evaluate.micro_f1(true, pred)
     assert f_range[0] <= f1 <= f_range[1], f"Abnormal F1-score: {f1}."

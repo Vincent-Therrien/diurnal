@@ -19,7 +19,7 @@
 
     Subclasses must implement the following methods:
 
-    - `_train(primary, secondary) -> None` (train the model)
+    - `_train(data) -> None` (train the model)
     - `_predict(primary) -> np.array` (make a prediction)
     - `_save(directory) -> None` (save the model)
     - `_load(directory) -> None` (load a model from files)
@@ -143,7 +143,7 @@ class Basic():
 
     def test(
             self, data: list,
-            evaluation: Callable = evaluate.Vector.get_f1,
+            evaluation: Callable = evaluate.micro_f1,
             verbose: bool = True) -> list:
         """Evaluate the performance of the model.
 

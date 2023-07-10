@@ -246,11 +246,29 @@ which make basic predictions. For instance, in the code below,
    model = baseline.Random()
    model.train(train_set)
 
-the model makes random predictions. When using bracket notation (``(``, ``.``,
-``)``), the model with generate random sequences of the three possible
-characters. The F1-score of predictions should be at around 0.3. This can be
-useful to compare performances with other models and ensure that the data
-processing pipeline works well.
+the model makes random predictions. This can be useful to compare performances
+with other models and ensure that the data processing pipeline works well.
+
+
+Predict Structures
+^^^^^^^^^^^^^^^^^^
+
+You can predict structures as shown below:
+
+.. code-block:: python
+
+   from diurnal import structure
+
+   # Assume that `model` is a trained `diurnal.model` object. The method
+   # `predict` accepts primary structures encoded in the same format
+   # that was used for training (in this case, one-hot encoding).
+   primary_structure = list("AAAACCCCUUUU")
+   encoded_primary_structure = structure.Primary.to_vector(primary_structure)
+   prediction = model.predict(encoded_primary_structure)
+
+The data format returned by the ``predict`` method depends on the architecture
+of the ``model`` object. For example, a model may return a one-hot encoded
+bracket notation of the secondary structure.
 
 
 Evaluate Results
@@ -293,39 +311,98 @@ also called *F1*, *F1-measure*, *F-score*, or *F-measure*:
 
     F1 = 2 \times \frac{recall \times precision}{recall + precision}
 
-
-Save and Load Models
-^^^^^^^^^^^^^^^^^^^^
+These evaluation metrics can be computed with the function
+``diurnal.evaluate.recall_precision_f1``, as shown below:
 
 .. code-block:: python
 
-   # Write the model into the `saved_model` directory.
-   model.save("saved_model")
+   from diurnal import evaluate
 
-   # Erase the model to clear space.
-   del model
+    true = list("(((....)))")
+    prediction = list("((......))")
+    r, p, f1 = evaluate.recall_precision_f1(true, prediction)
 
-   # Load the model stored in the `saved_model` directory.
-   loaded_model = diurnal.models.NN(
-       cnn.Pairings_1,
-       SIZE,
-       3,
-       torch.optim.Adam,
-       torch.nn.MSELoss,
-       {"eps": 1e-4},
-       None,
-       verbosity=1)
-   loaded_model.load("saved_model")
+One drawback of these evaluation metrics is that they do not make a distinction
+about whether a nucleotide is paired with a base in the 5' or 3' direction.
+Therefore, when comparing the structures ``(((....)))`` and ``)))....(((``, the
+precision, recall, and f1-score all have a perfect value of 1 even though the
+predicted structure is inaccurate. The ``diurnal`` library therefore uses
+another metric, the *micro f1-score*, which generalizes precision and recall to
+classification problems that rely on more than two classes. One can also obtain
+the confusion matrix of predicted structures. The code snippet below
+shows how to compute the micro f1-score and confusion matrix:
 
-   # Test the model. Should obtain the same result as before.
-   f = loaded_model.test(test_set)
-   print(f"Average F1-score of the saved model: {sum(f)/len(f):.4}")
+.. code-block:: python
 
-   # Visualize an example of a prediction.
-   print(f"\nSample prediction from the test set (`{test_set['names'][0]}`).")
-   p = test_set["primary_structures"][0]
-   s = test_set["secondary_structures"][0]
-   visualize.prediction(p, s, loaded_model.predict(p))
+    from diurnal import evaluate
+
+    true = list("(((....)))")
+    prediction = list("((......))")
+    micro_f1 = evaluate.micro_f1(true, prediction)
+    confusion_matrix = evaluate.get_confusion_matrix(true, prediction)
+
+
+Save Models
+^^^^^^^^^^^
+
+Predictive models can be written in files for subsequent reuse, as shown below:
+
+.. code-block:: python
+
+   # Assume that `model` is a trained `diurnal.model` object.
+   model.save(directory = "saved_model")
+
+In addition to writing the model in the provided directory, the library also
+generates:
+
+- a file containing the list of the names of the molecules that were used for
+  training the model, and
+- an informative file containing metadata.
+
+
+Load Models
+^^^^^^^^^^^
+
+Predictive models can be loaded from saved files, as shown below:
+
+.. code-block:: python
+
+   from diurnal import models
+
+   model = models.NN(
+      cnn.Pairings_1,
+      SIZE,
+      None,
+      torch.optim.Adam,
+      torch.nn.MSELoss,
+      {"eps": 1e-4},
+      None,
+      verbosity=1)
+   model.load("saved_model")
+
+
+Visualize Results
+^^^^^^^^^^^^^^^^^
+
+The module ``diurnal.visualize`` contains utility functions that can help users
+visualize results with graphs or console output.
+
+
+Elaborate Predictive Models
+---------------------------
+
+The class ``diurnal.models.Basic`` represents a basic predictive model. One may
+derive this class to create a new predictive model. Four methods need to be
+implemented in the derived class:
+
+- ``_train(data)``: Train the model.
+- ``_predict(primary)``: Predict and return a secondary structure.
+- ``_save(directory)``: Write the model in files.
+- ``_load(directory)``: Read the model from files.
+
+The class ``diurnal.models.NN`` is an example of a predictive model that
+is derived from the class ``diurnal.models.Basic``. The ``NN`` class is used
+to represent predictive models based on neural networks.
 
 
 References

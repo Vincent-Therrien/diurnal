@@ -32,7 +32,7 @@ def test_two_class_metrics(true, pred, R, P, F):
         P: Expected precision.
         F: Expected F-score.
     """
-    r, p, f = evaluate.TwoClassVector.get_recall_precision_f1(true, pred)
+    r, p, f = evaluate.recall_precision_f1(true, pred)
     assert r == R, "Incorrect sensitivity."
     assert p == P, "Incorrect positive predictive value."
     assert f == F, "Incorrect F1-score."
@@ -46,7 +46,7 @@ def test_two_class_metrics(true, pred, R, P, F):
         (list("(((...)))"), list("(((......"), 2/3),
     ]
 )
-def test_vector_f1(pred, true, F):
+def test_micro_f1(pred, true, F):
     """
     Test the validity of sensitivity and positive predictive value
     evaluation criteria.
@@ -56,7 +56,7 @@ def test_vector_f1(pred, true, F):
         pred: Predicted secondary structure.
         F: Expected F-score.
     """
-    f = evaluate.Vector.get_f1(true, pred)
+    f = evaluate.micro_f1(true, pred)
     assert f == F, "Incorrect F1-score."
 
 
@@ -68,7 +68,7 @@ def test_vector_f1(pred, true, F):
         ("(((...)))", "(((......", False),
     ]
 )
-def test_vector_confusion_matrix(pred, true, is_diagonal):
+def test_confusion_matrix(pred, true, is_diagonal):
     """
     Test the confusion matrix of the vector-based evaluations.
 
@@ -78,7 +78,7 @@ def test_vector_confusion_matrix(pred, true, is_diagonal):
         is_diagonal (bool): True if the expected confusion matrix is
             diagonal, False otherwise.
     """
-    cm, _ = evaluate.Vector.get_confusion_matrix(true, pred)
+    cm, _ = evaluate.get_confusion_matrix(true, pred)
     cm_is_diagonal = np.count_nonzero(cm - np.diag(np.diagonal(cm))) == 0
     assert cm_is_diagonal == is_diagonal, \
         "Confusion matrix does not match the expected result."
