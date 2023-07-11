@@ -11,6 +11,7 @@ import shutil
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import networkx as nx
 
 import diurnal.family
 import diurnal.structure
@@ -112,3 +113,19 @@ def prediction(primary, true, pred) -> None:
     ratio = str(correct) + "/" + str(len(primary))
     prefix = " " * (14 - len(ratio))
     print(f"{prefix}Matches ({ratio}): {differences}")
+
+
+def secondary_structure(pairings) -> None:
+    """Plot the secondary structure."""
+    G = nx.Graph()
+    for i in range(len(pairings) - 1):
+        G.add_edge(i, i + 1)
+    for i, p in enumerate(pairings):
+        if p >= 0:
+            G.add_edge(i, p)
+    pos = nx.spiral_layout(G)
+    nx.draw_networkx_nodes(G, pos)
+    nx.draw_networkx_labels(G, pos)
+    nx.draw_networkx_edges(G, pos, edge_color='r', arrows=True)
+    nx.draw_networkx_edges(G, pos, arrows=False)
+    plt.show()

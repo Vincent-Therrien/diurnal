@@ -7,6 +7,8 @@
     - License: MIT
 """
 
+import pytest
+
 import diurnal.structure as structure
 
 
@@ -166,6 +168,52 @@ def test_secondary_structure_vector_to_brackets():
     decoding = structure.Secondary.to_bracket(encoding)
     assert decoding == list("(((...   "), \
         "Primary structure decoding produced an unexpected result."
+
+
+@pytest.mark.parametrize(
+    "brackets, pairings",
+    [
+        ("(((...)))", [8, 7, 6, -1, -1, -1, 2, 1, 0]),
+        ("(((((((((....((((((((.....((((((............))))..))....))))))"
+         + ".)).(((((......(((((.(((....)))))))).....))))).))))))))).",
+         [117, 116, 115, 114, 113, 112, 111, 110, 109, -1, -1, -1, -1, 64,
+          63, 61, 60, 59, 58, 57, 56, -1, -1, -1, -1, -1, 51, 50, 47, 46,
+          45, 44, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 31, 30,
+          29, 28, -1, -1, 27, 26, -1, -1, -1, -1, 20, 19, 18, 17, 16, 15,
+          -1, 14, 13, -1, 107, 106, 105, 104, 103, -1, -1, -1, -1, -1, -1,
+          97, 96, 95, 94, 93, -1, 92, 91, 90, -1, -1, -1, -1, 85, 84, 83,
+          81, 80, 79, 78, 77, -1, -1, -1, -1, -1, 70, 69, 68, 67, 66, -1,
+          8, 7, 6, 5, 4, 3, 2, 1, 0, -1]
+         )
+    ]
+)
+def test_bracket_to_pairings(brackets, pairings):
+    """Ensure that the function `Secondary.to_pairing` works well.
+
+    The second structure is the molecule `5s_Acanthamoeba-castellanii-1`
+    from the archiveII dataset.
+    """
+    encoding = structure.Secondary.to_pairings(brackets)
+    assert pairings == encoding, \
+        f"Pairings `{encoding}` do not match `{brackets}`."
+
+
+@pytest.mark.parametrize(
+    "bracket, elements",
+    [
+        ("(((((((((...((((((.........))))))........((((((.......)))))).."
+            + ")))))))))",
+         "sssssssssmmmsssssshhhhhhhhhssssssmmmmmmmmsssssshhhhhhhssssssmms"
+            + "ssssssss"),
+        ("..((...((.....))...)).....", "eessiiisshhhhhssiiisseeeee"),
+        ("((...((.....))))......", "ssbbbsshhhhhsssseeeeee")
+    ]
+)
+def test_structure_elements(bracket, elements):
+    """Ensure that secondary structure elements can be accurately
+    identified.
+    """
+    assert elements == structure.Secondary.to_elements(bracket)
 
 
 def test_secondary_structure_to_matrix():

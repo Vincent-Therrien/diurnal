@@ -11,6 +11,8 @@
 import inspect
 import numpy as np
 
+from diurnal.utils import log
+
 
 class Schemes:
     """RNA structural codes to transform data into other representations.
@@ -290,6 +292,40 @@ class Secondary:
                     encoding.append(characters[p.index(max(p))])
             return encoding
 
+    def to_pairings(bracket: list) -> list:
+        """Convert the bracket notation to a list of pairings.
+
+        Args:
+            bracket (List[str] | str): Secondary structure.
+
+        Returns (List[int]): List of pairings.
+        """
+        pairings = []
+        for i, b in enumerate(bracket):
+            if b == ".":
+                pairings.append(-1)
+            elif b == '(':
+                count = 0
+                for j in range(i + 1, len(bracket)):
+                    if bracket[j] == '(':
+                        count += 1
+                    if bracket[j] == ')':
+                        count -= 1
+                        if count < 0:
+                            pairings.append(j)
+                            break
+            elif b == ')':
+                count = 0
+                for j in range(i - 1, -1, -1):
+                    if bracket[j] == ')':
+                        count += 1
+                    if bracket[j] == '(':
+                        count -= 1
+                        if count < 0:
+                            pairings.append(j)
+                            break
+        return pairings
+
     def _pad(vector: np.array, size: int, element: list) -> np.array:
         """Append elements at the right extremity of a vector.
 
@@ -304,3 +340,133 @@ class Secondary:
         if difference > 0:
             return np.concatenate((vector, difference * [element]))
         return vector
+
+    def _find_external_loops(bracket: list) -> str:
+        """Find external loops, i.e. unpaired endings."""
+        elements = list(" " * len(bracket))
+        for i in range(len(bracket)):
+            if bracket[i] == ".":
+                elements[i] = "e"
+            else:
+                break
+        for i in range(len(bracket) - 1, 0, -1):
+            if bracket[i] == ".":
+                elements[i] = "e"
+            else:
+                break
+        return "".join(elements)
+
+    def _find_hairpin_loops(bracket: list) -> str:
+        """Find hairpin loops in a secondary structure in bracket
+        notation.
+
+        There is a hairpin loop if and only if:
+
+        - bases `i` and `j` are paired and
+        - all bases between `i` and `j` are unpaired.
+
+        Reference: https://math.mit.edu/classes/18.417/Slides/rna-prediction-zuker.pdf
+        """
+        elements = list(" " * len(bracket))
+        for i in range(len(bracket)):
+            if bracket[i] == ")":
+                for j in range(i - 1, 0, -1):
+                    if bracket[j] == "(":
+                        for e in range(j + 1, i):
+                            elements[e] = "h"
+                        break
+                    if bracket[j] == ")":
+                        break
+        return "".join(elements)
+
+    def _find_internal_loops(pairings: list) -> str:
+        """Find internal loops in the secondary structure.
+
+        Let (i, j) be a pairing and (i', j') be another pairing with
+        i < i' < j' < j. (i, j) and (i', j') form an internal loop if
+        bases i + 1 to i' - 1 and j + 1 to j' - 1 are unpaired.
+        """
+        elements = list(" " * len(pairings))
+        for i in range(len(pairings) - 1):
+            j = pairings[i]
+            if i < j and pairings[i + 1] == -1:
+                for i_prime in range(i + 1, j):
+                    j_prime = pairings[i_prime]
+                    if j_prime > -1:
+                        break
+                i_bulge = set(pairings[i + 1:i_prime - 1]) == {-1}
+                j_bulge = set(pairings[j_prime + 1:j - 1]) == {-1}
+                len_i = i_prime - i - 1
+                len_j = j - j_prime - 1
+                if i_bulge and j_bulge:
+                    elements[i + 1:i_prime] = ["i"] * len_i
+                    elements[j_prime + 1:j] = ["i"] * len_j
+                elif i_bulge and len_j == 0:
+                    elements[i + 1:i_prime] = ["b"] * len_i
+                elif j_bulge and len_i == 0:
+                    elements[j_prime + 1:j] = ["b"] * len_j
+        return "".join(elements)
+
+    def _find_stems(pairings: list) -> str:
+        """Find stems in a secondary structure in bracket notation.
+
+        There is a stem if and only if:
+
+        - bases `i` and `j` are paired and
+        - bases `i + 1` and `j - 1` are paired.
+
+        Reference: https://math.mit.edu/classes/18.417/Slides/rna-prediction-zuker.pdf
+        """
+        elements = list(" " * len(pairings))
+        for i in range(len(pairings)):
+            j = pairings[i]
+            if j == -1:
+                continue
+            if j == len(pairings) - 1 and i == 0:
+                elements[i] = "s"
+            elif j == 0 and i == len(pairings) - 1:
+                elements[i] = "s"
+            elif pairings[i + 1] == j - 1:
+                elements[i] = "s"
+            elif pairings[i - 1] == j + 1:
+                elements[i] = "s"
+        return "".join(elements)
+
+    def to_elements(pairings: list) -> str:
+        """Convert pairings into secondary structure elements.
+
+        The possible *elements* or *loops* are:
+
+        | element         | character |
+        +=================+===========+
+        | bulge           | `b`       |
+        | external loop   | `e`       |
+        | hairpin loop    | `h`       |
+        | internal loop   | `i`       |
+        | multiloop       | `m`       |
+        | stem / stacking | `s`       |
+        """
+        if type(pairings[0]) is not str:
+            bracket = Secondary.to_bracket(pairings)
+        elif type(pairings[0]) is str:
+            bracket = pairings
+            pairings = Secondary.to_pairings(bracket)
+        # Find structural elements.
+        e = Secondary._find_external_loops(bracket)
+        h = Secondary._find_hairpin_loops(bracket)
+        i = Secondary._find_internal_loops(pairings)
+        s = Secondary._find_stems(pairings)
+        # Assemble elements.
+        possibilities = [e, h, i, s]
+        elements = list(" " * len(pairings))
+        for i in range(len(pairings)):
+            for possibility in possibilities:
+                if possibility[i] != " ":
+                    if elements[i] == " ":
+                        elements[i] = possibility[i]
+                    else:
+                        log.error(f"Conflict at position {i}.")
+                        raise RuntimeError
+            if elements[i] == " ":
+                elements[i] = 'm'  # TODO: Reliably detect multiloops.
+        return "".join(elements)
