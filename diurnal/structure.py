@@ -407,7 +407,7 @@ class Secondary:
                     elements[j_prime + 1:j] = ["b"] * len_j
         return "".join(elements)
 
-    def _find_stems(pairings: list) -> str:
+    def _find_stems(bracket: list) -> str:
         """Find stems in a secondary structure in bracket notation.
 
         There is a stem if and only if:
@@ -417,18 +417,9 @@ class Secondary:
 
         Reference: https://math.mit.edu/classes/18.417/Slides/rna-prediction-zuker.pdf
         """
-        elements = list(" " * len(pairings))
-        for i in range(len(pairings)):
-            j = pairings[i]
-            if j == -1:
-                continue
-            if j == len(pairings) - 1 and i == 0:
-                elements[i] = "s"
-            elif j == 0 and i == len(pairings) - 1:
-                elements[i] = "s"
-            elif pairings[i + 1] == j - 1:
-                elements[i] = "s"
-            elif pairings[i - 1] == j + 1:
+        elements = list(" " * len(bracket))
+        for i in range(len(bracket)):
+            if bracket[i] in ['(', ')']:
                 elements[i] = "s"
         return "".join(elements)
 
@@ -455,7 +446,7 @@ class Secondary:
         e = Secondary._find_external_loops(bracket)
         h = Secondary._find_hairpin_loops(bracket)
         i = Secondary._find_internal_loops(pairings)
-        s = Secondary._find_stems(pairings)
+        s = Secondary._find_stems(bracket)
         # Assemble elements.
         possibilities = [e, h, i, s]
         elements = list(" " * len(pairings))

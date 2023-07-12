@@ -42,6 +42,11 @@ CDPFold
 
 :cite:`cdpfold`
 
+SPOT-RNA
+''''''''
+
+:cite:`spotrna`
+
 General Observations
 ''''''''''''''''''''
 
