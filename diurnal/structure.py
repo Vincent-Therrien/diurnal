@@ -292,6 +292,13 @@ class Secondary:
                     encoding.append(characters[p.index(max(p))])
             return encoding
 
+    def to_shadow(pairings: list) -> list:
+        """Return the shadow of a secondary structure."""
+        if type(pairings[0]) == int:
+            return [0 if p == -1 else 1 for p in pairings]
+        else:
+            return [0 if p == '.' else 1 for p in pairings]
+
     def to_pairings(bracket: list) -> list:
         """Convert the bracket notation to a list of pairings.
 

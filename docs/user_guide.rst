@@ -318,9 +318,9 @@ These evaluation metrics can be computed with the function
 
    from diurnal import evaluate
 
-    true = list("(((....)))")
-    prediction = list("((......))")
-    r, p, f1 = evaluate.recall_precision_f1(true, prediction)
+   true = list("(((....)))")
+   prediction = list("((......))")
+   r, p, f1 = evaluate.recall_precision_f1(true, prediction)
 
 One drawback of these evaluation metrics is that they do not make a distinction
 about whether a nucleotide is paired with a base in the 5' or 3' direction.
@@ -334,12 +334,12 @@ shows how to compute the micro f1-score and confusion matrix:
 
 .. code-block:: python
 
-    from diurnal import evaluate
+   from diurnal import evaluate
 
-    true = list("(((....)))")
-    prediction = list("((......))")
-    micro_f1 = evaluate.micro_f1(true, prediction)
-    confusion_matrix = evaluate.get_confusion_matrix(true, prediction)
+   true = list("(((....)))")
+   prediction = list("((......))")
+   micro_f1 = evaluate.micro_f1(true, prediction)
+   confusion_matrix = evaluate.get_confusion_matrix(true, prediction)
 
 
 Save Models
