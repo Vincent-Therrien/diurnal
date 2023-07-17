@@ -13,6 +13,6 @@ database.format(
     "./data/formatted_matrix",  # Formatted data output directory.
     256,  # Normalized size.
     structure.Primary.to_matrix,    # RNA encoding scheme.
-    structure.Secondary.to_vector,  # RNA encoding scheme.
-    family.to_vector
+    structure.Secondary.to_onehot,  # RNA encoding scheme.
+    family.to_onehot
 )

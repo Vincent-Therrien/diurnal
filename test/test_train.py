@@ -95,8 +95,8 @@ def test_categorize_vectors():
 )
 def test_prediction_post_processing(bases, true, pred):
     """Ensure that the ending of predictions can be removed."""
-    bases_v = Primary.to_vector(bases)
-    true_v = Secondary.to_vector(true, len(bases))
-    pred_v = Secondary.to_vector(pred, len(bases))
+    bases_v = Primary.to_onehot(bases)
+    true_v = Secondary.to_onehot(true, len(bases))
+    pred_v = Secondary.to_onehot(pred, len(bases))
     b, t, p = train.clean_vectors(bases_v, true_v, pred_v)
     assert len(b) == len(t) == len(p), "Non-homogeneous vector dimensions."

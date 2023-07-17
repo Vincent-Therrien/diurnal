@@ -271,5 +271,5 @@ def clean_vectors(primary: list, true: list, pred: list) -> tuple:
       - stripped true secondary structure
       - stripped predicted secondary structure
     """
-    bases = diurnal.structure.Primary.to_bases(primary)
+    bases = diurnal.structure.Primary.to_sequence(primary)
     return bases, true[:len(bases)], categorize_vector(pred[:len(bases)])

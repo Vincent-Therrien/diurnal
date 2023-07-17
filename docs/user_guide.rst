@@ -117,15 +117,15 @@ into other formats, as shown below:
    # Encode the list of bases into a one-hot vector. For instance, if `primary`
    # contains the value `['A', 'C']`, the encoded structure will be
    # `[[1, 0, 0, 0], [0, 1, 0, 0]]`.
-   primary_onehot = Primary.to_vector(primary)
+   primary_onehot = Primary.to_onehot(primary)
 
    # Encode the list of pairings into a one-hot vector. For instance, if
    # `secondary` contains the value `[2, -1, 0]`, the encoded structure will be
    # `[[1, 0, 0], [0, 1, 0], [0, 0, 1]]`, which correspond to `(.)`.
-   secondary_onehot = Secondary.to_vector(secondary)
+   secondary_onehot = Secondary.to_onehot(secondary)
 
    # Obtain the list of bases from an encoded vector.
-   primary = Primary.to_bases(primary_onehot)
+   primary = Primary.to_sequence(primary_onehot)
 
    # Obtain the bracket notation from an encoded vector.
    bracket = Secondary.to_bracket(secondary_onehot)
@@ -143,8 +143,8 @@ following code snippet shows how to do that:
        "./data/archiveII",  # Directory of the raw data to format.
        "./data/formatted",  # Formatted data output directory.
        512,  # Normalized size. Short molecules are padded at the 3' end.
-       structure.Primary.to_vector,  # Primary to vector map.
-       structure.Secondary.to_vector  # Secondary to vector map.
+       structure.Primary.to_onehot,  # Primary to vector map.
+       structure.Secondary.to_onehot  # Secondary to vector map.
    )
 
 Executing this function will generate the following files:
@@ -263,7 +263,7 @@ You can predict structures as shown below:
    # `predict` accepts primary structures encoded in the same format
    # that was used for training (in this case, one-hot encoding).
    primary_structure = list("AAAACCCCUUUU")
-   encoded_primary_structure = structure.Primary.to_vector(primary_structure)
+   encoded_primary_structure = structure.Primary.to_onehot(primary_structure)
    prediction = model.predict(encoded_primary_structure)
 
 The data format returned by the ``predict`` method depends on the architecture

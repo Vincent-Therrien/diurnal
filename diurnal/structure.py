@@ -20,13 +20,13 @@ class Schemes:
     Attributes:
         IUPAC_TO_ONEHOT (dict): One-hot encoding dictionary for IUPAC
             symbols. See: https://www.bioinformatics.org/sms/iupac.html
-        IUPAC_ONEHOT_PAIRINGS (dict): One-hot encoded nucleotide
+        IUPAC_ONEHOT_PAIRINGS_VECTOR (dict): One-hot encoded nucleotide
             pairings, including normal ones (AU, UA, CG, and GC) and
-            wobble pairs (GU and UG).
+            wobble pairs (GU and UG). Taken from CNNFold by Booy et al.
         BRACKET_TO_ONEHOT (dict): One-hot encoding dictionary for a
             secondary structure that relies on the bracket notation. `.`
             is an unpaired base. `(` is a base paired to a downstream
-            base. `)` is a base paired to an upstream base. ` ` is a
+            base. `)` is a base paired to an upstream base. `-` is a
             padding (i.e. empty) base.
         SHADOW_ENCODING (dict): One-hot encoding dictionary to encode
             the shadow of the secondary structure (i.e. the symbols `(`
@@ -54,7 +54,7 @@ class Schemes:
         "N": [1, 1, 1, 1],
     }
 
-    IUPAC_ONEHOT_PAIRINGS = {
+    IUPAC_ONEHOT_PAIRINGS_VECTOR = {
         "AU":       [1, 0, 0, 0, 0, 0, 0, 0],
         "UA":       [0, 1, 0, 0, 0, 0, 0, 0],
         "CG":       [0, 0, 1, 0, 0, 0, 0, 0],
@@ -66,40 +66,59 @@ class Schemes:
         "-":        [0, 0, 0, 0, 0, 0, 0, 0]   # Padding element (i.e. empty).
     }
 
+    IUPAC_ONEHOT_PAIRINGS_SCALARS = {
+        "AU":       2,
+        "UA":       2,
+        "CG":       3,
+        "GC":       3,
+        "GU":       1,
+        "UG":       1,
+        "unpaired": 0,  # Unpaired base.
+        "invalid":  -1,  # Impossible pairing (e.g. AA).
+        "-":        -1   # Padding element (i.e. empty).
+    }
+
     BRACKET_TO_ONEHOT = {
         "(": [1, 0, 0],
         ".": [0, 1, 0],
         ")": [0, 0, 1],
-        " ": [0, 0, 0],
+        "-": [0, 0, 0],
     }
 
     SHADOW_ENCODING = {
         "(": 1,
         ".": 0,
         ")": 1,
-        " ": 0
+        "-": 0
     }
 
 
 class Primary:
     """Transform RNA primary structures into useful formats."""
 
-    def to_vector(bases: list, size: int = 0) -> np.array:
-        """Transform a sequence of bases into a vector.
+    def to_onehot(
+            bases: list, size: int = 0,
+            map: dict = Schemes.IUPAC_TO_ONEHOT) -> np.array:
+        """Transform a sequence of bases into a one-hot encoded vector.
 
         Args:
-            bases (list(str)): A sequence of bases. E.g.: ``['A', 'U']``.
+            bases (List[str] | str): A sequence of bases.
+                E.g.: ``['A', 'U']`` or ``AU``.
             size (int): Size of a normalized vector. `0` for no padding.
+            map (dict): Assign an input to a vector.
 
         Returns (np.array): One-hot encoded primary structure.
+            E.g.: ``[[1, 0, 0, 0], [0, 1, 0, 0]]``
         """
-        vector = [Schemes.IUPAC_TO_ONEHOT[base] for base in bases]
+        vector = [map[base] for base in bases]
         if size:
-            element = Schemes.IUPAC_TO_ONEHOT['.']
+            element = map['.']
             return Primary._pad_vector(vector, size, element)
         return np.array(vector)
 
-    def to_matrix(bases: list, size: int = 0) -> np.array:
+    def to_matrix(
+            bases: list, size: int = 0,
+            map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR) -> np.array:
         """Encode a primary structure in a matrix of potential pairings.
 
         Create an `n` by `n` matrix, where `n` is the number of bases,
@@ -111,13 +130,13 @@ class Primary:
         Args:
             bases (list(str)): Sequence of bases.
             size (int): Matrix dimension. `0` for no padding.
+            map (dict): Assign a pairing to a matrix element.
 
         Returns (np.array): Encoded matrix.
         """
         N_MINIMUM_DISTANCE = 4
         if size == 0:
             size = len(bases)
-        map = Schemes.IUPAC_ONEHOT_PAIRINGS
         empty = map['-']
         matrix = [[empty for _ in range(size)] for _ in range(size)]
         for row in range(len(bases)):
@@ -134,10 +153,10 @@ class Primary:
                     matrix[row][col] = map["invalid"]
         return np.array(matrix)
 
-    def to_bases(
+    def to_sequence(
             vector, strip: bool = True, map: dict = Schemes.IUPAC_TO_ONEHOT
             ) -> list:
-        """Transform a vector into a sequence of bases.
+        """Transform a one-hot encoded vector into a sequence of bases.
 
         Args:
             vector (list-like): One-hot encoded primary structure.
@@ -196,17 +215,20 @@ class Primary:
             i -= 1
         return vector
 
-    def unpad_matrix(matrix: np.array) -> np.array:
+    def unpad_matrix(
+            matrix: np.array, map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
+            ) -> np.array:
         """Strip a matrix of its padding elements.
 
         Args:
             matrix: Input matrix (Numpy array of Python lists).
+            map (dict): Assign a pairing to a matrix element.
 
         Returns (list): Unpadded matrix.
         """
         for i, row in enumerate(matrix):
             element = list(row[0])
-            if element == Schemes.IUPAC_ONEHOT_PAIRINGS["-"]:
+            if element == map["-"]:
                 return matrix[:i, :i]
         return matrix
 
@@ -214,8 +236,10 @@ class Primary:
 class Secondary:
     """Transform RNA secondary structures into useful formats."""
 
-    def to_vector(pairings: list, size: int = 0) -> np.array:
-        """Encode pairings in a one-hot bracket-based secondary
+    def to_onehot(
+            pairings: list, size: int = 0,
+            map: dict = Schemes.BRACKET_TO_ONEHOT) -> np.array:
+        """Encode pairings in a one-hot encoded dot-bracket secondary
         structure.
 
         Args:
@@ -223,6 +247,8 @@ class Secondary:
                 The pairing `(((...)))` can be represented as
                 `[8, 7, 6, -1, -1, -1, 2, 1, 0]` or
                 `['(', '(', '(', '.', '.', '.', ')', ')', ')']`.
+            size (int): Size of the output. `0` for no padding.
+            map (dict): Assign an input to a vector.
 
         Returns (np.array): One-hot encoded secondary structure.
         """
@@ -232,10 +258,10 @@ class Secondary:
             bracket = pairings
         else:
             raise RuntimeError(f"Unrecognized type: {type(pairings[0])}")
-        vector = [Schemes.BRACKET_TO_ONEHOT[symbol] for symbol in bracket]
+        vector = [map[symbol] for symbol in bracket]
         vector = np.array(vector)
         if size:
-            element = Schemes.BRACKET_TO_ONEHOT[' ']
+            element = map['-']
             vector = Secondary._pad(vector, size, element)
         return vector
 
@@ -248,9 +274,9 @@ class Secondary:
 
         Args:
             pairings (list(int): List of base pairings.
-            size (int): Dimension of the matrix. `0` for default.
+            size (int): Dimension of the matrix. `0` for no padding.
 
-        Returns (np.array): Matrix encoding of the secondary structure.
+        Returns (np.array): Encoded matrix of the secondary structure.
         """
         if size == 0:
             size = len(pairings)
@@ -287,7 +313,7 @@ class Secondary:
             for p in pairings:
                 p = p.tolist() if type(p) == np.ndarray else p
                 if sum(p) == 0:
-                    encoding.append(" ")
+                    encoding.append("-")
                 else:
                     encoding.append(characters[p.index(max(p))])
             return encoding
@@ -350,7 +376,7 @@ class Secondary:
 
     def _find_external_loops(bracket: list) -> str:
         """Find external loops, i.e. unpaired endings."""
-        elements = list(" " * len(bracket))
+        elements = list("-" * len(bracket))
         for i in range(len(bracket)):
             if bracket[i] == ".":
                 elements[i] = "e"
@@ -374,7 +400,7 @@ class Secondary:
 
         Reference: https://math.mit.edu/classes/18.417/Slides/rna-prediction-zuker.pdf
         """
-        elements = list(" " * len(bracket))
+        elements = list("-" * len(bracket))
         for i in range(len(bracket)):
             if bracket[i] == ")":
                 for j in range(i - 1, 0, -1):
@@ -393,7 +419,7 @@ class Secondary:
         i < i' < j' < j. (i, j) and (i', j') form an internal loop if
         bases i + 1 to i' - 1 and j + 1 to j' - 1 are unpaired.
         """
-        elements = list(" " * len(pairings))
+        elements = list("-" * len(pairings))
         for i in range(len(pairings) - 1):
             j = pairings[i]
             if i < j and pairings[i + 1] == -1:
@@ -424,7 +450,7 @@ class Secondary:
 
         Reference: https://math.mit.edu/classes/18.417/Slides/rna-prediction-zuker.pdf
         """
-        elements = list(" " * len(bracket))
+        elements = list("-" * len(bracket))
         for i in range(len(bracket)):
             if bracket[i] in ['(', ')']:
                 elements[i] = "s"
@@ -456,15 +482,15 @@ class Secondary:
         s = Secondary._find_stems(bracket)
         # Assemble elements.
         possibilities = [e, h, i, s]
-        elements = list(" " * len(pairings))
+        elements = list("-" * len(pairings))
         for i in range(len(pairings)):
             for possibility in possibilities:
-                if possibility[i] != " ":
-                    if elements[i] == " ":
+                if possibility[i] != "-":
+                    if elements[i] == "-":
                         elements[i] = possibility[i]
                     else:
                         log.error(f"Conflict at position {i}.")
                         raise RuntimeError
-            if elements[i] == " ":
+            if elements[i] == "-":
                 elements[i] = 'm'  # TODO: Reliably detect multiloops.
         return "".join(elements)

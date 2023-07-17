@@ -12,7 +12,7 @@ import pytest
 import diurnal.structure as structure
 
 
-def test_primary_structure_to_vector():
+def test_primary_structure_to_onehot():
     """
     Validate the encoding of a text-based primary structure to a one-hot
     encoding determined by the IUPAC symbol list.
@@ -29,12 +29,12 @@ def test_primary_structure_to_vector():
         [0, 0, 0, 1],
         [0, 0, 0, 1]
     ]
-    encoding = structure.Primary.to_vector(sequence)
+    encoding = structure.Primary.to_onehot(sequence)
     assert (expected_encoding == encoding).all(), \
         "Primary structure is incorrectly encoded."
 
 
-def test_primary_structure_to_vector_padding():
+def test_primary_structure_to_onehot_padding():
     """Ensure that primary structures are well padded."""
     sequence = list("AAACCC")
     total_size = 9
@@ -49,12 +49,12 @@ def test_primary_structure_to_vector_padding():
         [0, 0, 0, 0],
         [0, 0, 0, 0]
     ]
-    encoding = structure.Primary.to_vector(sequence, total_size)
+    encoding = structure.Primary.to_onehot(sequence, total_size)
     assert (expected_encoding == encoding).all(), \
         "Primary structure is incorrectly padded."
 
 
-def test_primary_structure_vector_to_bases():
+def test_primary_structure_vector_to_sequence():
     """Ensure than a vectorized primary structure can be converted back
     to a sequence of characters."""
     encoding = [
@@ -68,10 +68,10 @@ def test_primary_structure_vector_to_bases():
         [0, 0, 0, 0],
         [0, 0, 0, 0]
     ]
-    decoding_unpadded = structure.Primary.to_bases(encoding)
+    decoding_unpadded = structure.Primary.to_sequence(encoding)
     assert decoding_unpadded == list("AAACCC"), \
         "Primary structure unpadded decoding produced an unexpected result."
-    decoding_padded = structure.Primary.to_bases(encoding, False)
+    decoding_padded = structure.Primary.to_sequence(encoding, False)
     assert decoding_padded == list("AAACCC..."), \
         "Primary structure padded decoding produced an unexpected result."
 
@@ -80,11 +80,11 @@ def test_primary_structure_bases_to_matrix():
     """Ensure that a sequence of bases can be encoded in a matrix of
     potential pairings."""
     bases = list("AAACCUUUU")
-    i = structure.Schemes.IUPAC_ONEHOT_PAIRINGS["invalid"]
-    u = structure.Schemes.IUPAC_ONEHOT_PAIRINGS["unpaired"]
-    z = structure.Schemes.IUPAC_ONEHOT_PAIRINGS["-"]
-    a = structure.Schemes.IUPAC_ONEHOT_PAIRINGS["UA"]
-    b = structure.Schemes.IUPAC_ONEHOT_PAIRINGS["AU"]
+    i = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["invalid"]
+    u = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["unpaired"]
+    z = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["-"]
+    a = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["UA"]
+    b = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["AU"]
     expected_matrix = [
         [u, i, i, i, i, b, b, b, b, z],
         [i, u, i, i, i, b, b, b, b, z],
@@ -107,7 +107,7 @@ def test_primary_structure_bases_to_matrix():
         f"Incorrectly encoded primary structure matrix. N errors: {n_errors}"
 
 
-def test_secondary_structure_to_vector():
+def test_secondary_structure_to_onehot():
     """
     Validate the encoding of a pairings-based primary structure to a
     one-hot ecoding.
@@ -124,12 +124,12 @@ def test_secondary_structure_to_vector():
         [0, 0, 1],
         [0, 0, 1],
     ]
-    encoding = structure.Secondary.to_vector(pairings)
+    encoding = structure.Secondary.to_onehot(pairings)
     assert (expected_encoding == encoding).all(), \
         "Secondary structure is incorrectly encoded."
 
 
-def test_secondary_structure_to_vector_padding():
+def test_secondary_structure_to_onehot_padding():
     """Ensure that primary structures are well padded."""
     pairings = [8, 7, 6, -1, -1, -1, 2, 1, 0]
     total_size = 11
@@ -146,7 +146,7 @@ def test_secondary_structure_to_vector_padding():
         [0, 0, 0],
         [0, 0, 0]
     ]
-    encoding = structure.Secondary.to_vector(pairings, total_size)
+    encoding = structure.Secondary.to_onehot(pairings, total_size)
     assert (expected_encoding == encoding).all(), \
         "Secondary structure is incorrectly padded."
 
@@ -166,7 +166,7 @@ def test_secondary_structure_vector_to_brackets():
         [0, 0, 0]
     ]
     decoding = structure.Secondary.to_bracket(encoding)
-    assert decoding == list("(((...   "), \
+    assert decoding == list("(((...---"), \
         "Primary structure decoding produced an unexpected result."
 
 

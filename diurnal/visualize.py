@@ -50,7 +50,7 @@ def structure_length_per_family(path: str) -> None:
         family = diurnal.family.to_name(f)
         if family not in families:
             families[family] = []
-        bases = diurnal.structure.Primary.to_bases(p)
+        bases = diurnal.structure.Primary.to_sequence(p)
         families[family].append(len(bases))
     # Plot data
     n_bins = 50
@@ -68,7 +68,7 @@ def structure_length_per_family(path: str) -> None:
 def potential_pairings(
         matrix: list,
         title: str = "RNA Molecule Potential Pairings",
-        map: dict = diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS
+        map: dict = diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
         ) -> None:
     """Display a heatmap of potential pairings."""
     # Obtain data.

@@ -181,8 +181,8 @@ def format(
         src: str,
         dst: str,
         max_size: int,
-        primary_structure_map: any = diurnal.structure.Primary.to_vector,
-        secondary_structure_map: any = diurnal.structure.Secondary.to_vector,
+        primary_structure_map: any = diurnal.structure.Primary.to_onehot,
+        secondary_structure_map: any = diurnal.structure.Secondary.to_onehot,
         verbosity: int = 1) -> None:
     """ Transform the original datasets into the representation provided
     by the arguments.

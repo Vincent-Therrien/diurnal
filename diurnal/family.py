@@ -70,17 +70,18 @@ def all_but(families: list) -> bool:
     return selected_families
 
 
-def to_vector(family: str) -> list:
+def to_onehot(family: str, map: dict = ONEHOT) -> list:
     """Encode a family into a one-hot vector.
 
     Args:
         family (str): RNA family.
+        map (dict): A dictionary that assigns a family to a vector.
 
     Returns (list(int)): One-hot encoded family.
     """
     for name in NAMES:
         if family in name:
-            return ONEHOT[name[0]]
+            return map[name[0]]
     return None
 
 
