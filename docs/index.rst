@@ -36,23 +36,54 @@ how to contribute to it.
 Overview
 --------
 
-This library contains RNA secondary structure predictive models and utility
-components that automate training-related tasks.
+This library contains **RNA secondary structure predictive models**. It also
+comprises and utility components that automate data processing tasks.
 
 In short, RNA secondary structure describes the *pairings* of nucleotides. RNA
 (ribonucleic acid) is a molecule that performs a variety of biological
-functions. It is made of a chain of *nucleotides* that can fold onto itself. One
-can describe the structure of RNA molecules in different ways.
+functions. It is therefore the subject of interest for molecular biologists who
+aim at determining their function. An RNA molecules is made of a chain of
+*nucleotides* that can fold onto itself. One can describe the structure of RNA
+molecules in different ways.
 
-- The sequence of nucleotides is the *primary structure*.
-- The way that nucleotides combine with one another is the
-  *secondary structure*.
-- The 3D arrangement of the molecule is the *tertiary structure*.
+- The sequence of nucleotides is the *primary structure*. In general, RNA uses
+  four possible nucleotides: adenine, cytosine, guanine, and uracil. They are
+  represented by the letters ``A``, ``C``, ``G``, and ``U``, respectively.
+- The way that nucleotides combine with one another is the *secondary
+  structure*. One way to represent the secondary structure is to use the
+  **bracket notation**. Unpaired nucleotides are represented by a dot (``.``).
+  A nucleotide paired with a nucleotide closer to the 3' end of the molecule
+  (i.e. to the right) is represented by an opening parenthesis ( ``(`` ).
+  A nucleotide paired with a nucleotide closer to the 5' end of the molecule
+  (i.e. to the left) is represented by a closing parenthesis ( ``)`` )
+- The 3D arrangement of the molecule is the *tertiary structure*. The tertiary
+  structure is not studied in this project.
 
-Determining the function of an RNA molecule from its primary structure is
-difficult, so researchers rely on its secondary structure. Unfortunately,
+The image below displays the primary and secondary structures of a short RNA
+molecule.
+
+.. figure:: images/structure_example.png
+   :alt: Primary and secondary structures of a simple RNA molecule. The left
+       part of the image displays a straight chain of 31 nucleotides. This is
+       the primary structure. The right part of the image shows a 2D
+       representation of paired nucleotides that form stems and loops. This is
+       the secondary structure.
+
+   Primary and secondary structures of a short RNA molecule. Nucleotide sequence
+   taken from :cite:`cnnfold` and images generated with the ``forna``
+   :cite:`forna` visualization tool.
+
+In the example above:
+
+- The **primary structure** can be represented as
+  ``CGUGUCAGGUCCGGAAGGAAGCAGCACUAAC``.
+- The **secondary structure** can be represented as
+  ``.((((....(((....)))....))))....``.
+
+Since determining the function of an RNA molecule from its primary structure is
+difficult, researchers rely on its secondary structure. Unfortunately,
 determining secondary structures experimentally is costly and time-consuming.
-There is therefore an interest in reliably determining secondary structures from
+There is hence an interest in reliably determining secondary structures from
 primary structures to understand the function of RNA molecules more effectively.
 
 The ``diurnal`` library **predicts secondary structures from primary
