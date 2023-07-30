@@ -297,7 +297,7 @@ class Secondary:
 
         Returns (list): Secondary structure bracket notation.
         """
-        if type(pairings[0]) == int:
+        if type(pairings[0]) in (int, float, np.float16, np.float32):
             encoding = []
             for i, p in enumerate(pairings):
                 if p < 0:
@@ -318,12 +318,20 @@ class Secondary:
                     encoding.append(characters[p.index(max(p))])
             return encoding
 
-    def to_shadow(pairings: list) -> list:
-        """Return the shadow of a secondary structure."""
+    def to_shadow(pairings: list, size: int = 0) -> list:
+        """Return the shadow of a secondary structure.
+
+        Args:
+            Pairings (List[str]): Secondary structure.
+            size (int): Final sequence length.
+        """
         if type(pairings[0]) == int:
-            return [0 if p == -1 else 1 for p in pairings]
+            shadow = [0 if p == -1 else 1 for p in pairings]
         else:
-            return [0 if p == '.' else 1 for p in pairings]
+            shadow = [0 if p == '.' else 1 for p in pairings]
+        if size:
+            shadow += (size - len(shadow)) * [-1]
+        return np.array(shadow)
 
     def to_pairings(bracket: list) -> list:
         """Convert the bracket notation to a list of pairings.
@@ -492,5 +500,5 @@ class Secondary:
                         log.error(f"Conflict at position {i}.")
                         raise RuntimeError
             if elements[i] == "-":
-                elements[i] = 'm'  # TODO: Reliably detect multiloops.
+                elements[i] = 'm'
         return "".join(elements)

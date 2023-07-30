@@ -171,6 +171,20 @@ def test_secondary_structure_vector_to_brackets():
 
 
 @pytest.mark.parametrize(
+    "secondary_structure, shadow, size",
+    [
+        ("(((...)))", [1, 1, 1, 0, 0, 0, 1, 1, 1], 0),
+        ("((..))", [1, 1, 0, 0, 1, 1, -1, -1], 8)
+    ]
+)
+def test_secondary_structure_shadow(secondary_structure, shadow, size):
+    """Test shadow encoding."""
+    encoding = structure.Secondary.to_shadow(secondary_structure, size)
+    assert encoding.tolist() == shadow, \
+        f"Incorrectly encoded shadows: Expected {shadow}, got {encoding}."
+
+
+@pytest.mark.parametrize(
     "brackets, pairings",
     [
         ("(((...)))", [8, 7, 6, -1, -1, -1, 2, 1, 0]),

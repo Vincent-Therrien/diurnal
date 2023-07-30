@@ -149,6 +149,9 @@ class Basic():
 
         Args:
             data (list): List of primary structures for predictions.
+            map (Callable): A function that converts the output of the
+                model into a secondary structure. `None` for no
+                transformation.
             evaluation (Callable): Evaluation function.
             verbose (bool): Print informative messages.
 
@@ -163,8 +166,6 @@ class Basic():
             true = data["secondary_structures"][i]
             pred = self.predict(primary)
             _, true, pred = train.clean_vectors(primary, true, pred)
-            true = structure.Secondary.to_bracket(true)
-            pred = structure.Secondary.to_bracket(pred)
             results.append(evaluation(true, pred))
         return results
 
@@ -214,7 +215,7 @@ class NN(Basic):
         if self.verbosity:
             threshold = int(len(self.primary) * 0.05)
             threshold = 1 if threshold < 1 else threshold
-            log.trace("Beginning training.")
+            log.trace("Beginning the training.")
         # TMP
         data = []
         self.primary = np.array(self.primary)
@@ -258,7 +259,10 @@ class NN(Basic):
             primary = primary.to(self.device).half()
         else:
             primary = primary.to(self.device)
-        return self.nn(primary)[0]
+        pred = self.nn(primary)[0]
+        if self.device == "cuda":
+            return pred.detach().cpu().numpy()
+        return pred
 
     def _save(self, path: str) -> None:
         torch_save(self.nn.state_dict(), path + "model.pt")

@@ -222,9 +222,9 @@ demonstrated in the code snippet below:
    import torch
    from diurnal import models
 
-   # Load a `diurnal` neural network based on the `Pairings_1` architecture.
+   # Load a `diurnal` neural network based on the `Dot_Bracket` architecture.
    model = models.NN(
-       model=models.networks.cnn.Pairings_1,
+       model=models.networks.cnn.Dot_Bracket,
        N=SIZE,
        n_epochs=3,
        optimizer=torch.optim.Adam,
@@ -370,7 +370,7 @@ Predictive models can be loaded from saved files, as shown below:
    from diurnal import models
 
    model = models.NN(
-      cnn.Pairings_1,
+      cnn.Dot_Bracket,
       SIZE,
       None,
       torch.optim.Adam,

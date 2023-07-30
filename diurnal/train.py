@@ -253,6 +253,9 @@ def categorize_vector(prediction: list) -> list:
         pred_vector = prediction.tolist()
     else:
         pred_vector = list(prediction)
+    if (type(prediction[0]) in (int, float, np.float16, np.float32)
+            or len(prediction[0]) == 1):
+        return [round(p) for p in prediction]
     indices = [n.index(max(n)) if sum(n) else -1 for n in pred_vector]
     element_size = len(pred_vector[0])
     return [[1 if j == i else 0 for j in range(element_size)] for i in indices]

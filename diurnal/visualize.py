@@ -95,7 +95,6 @@ def potential_pairings(
 
 def prediction(primary, true, pred) -> None:
     """Compare true and predicted secondary structures."""
-    columns, rows = shutil.get_terminal_size()
     primary, true, pred = diurnal.train.clean_vectors(primary, true, pred)
     true = diurnal.structure.Secondary.to_bracket(true)
     pred = diurnal.structure.Secondary.to_bracket(pred)
@@ -112,6 +111,27 @@ def prediction(primary, true, pred) -> None:
     print(f"Predicted sec. structure: {''.join(pred[:len(primary)])}")
     ratio = str(correct) + "/" + str(len(primary))
     prefix = " " * (14 - len(ratio))
+    print(f"{prefix}Matches ({ratio}): {differences}")
+
+
+def shadow(primary, true, pred) -> None:
+    """Compare shadows."""
+    primary = diurnal.structure.Primary.to_sequence(primary)
+    true = ['0' if x < 0.5 else '1' for x in true]
+    pred = ['0' if x < 0.5 else '1' for x in pred]
+    differences = ""
+    correct = 0
+    for i in range(len(primary)):
+        if true[i] == pred[i]:
+            differences += "_"
+            correct += 1
+        else:
+            differences += "^"
+    print(f"Primary structure: {''.join(primary)}")
+    print(f"      True shadow: {''.join(true[:len(primary)])}")
+    print(f" Predicted shadow: {''.join(pred[:len(primary)])}")
+    ratio = str(correct) + "/" + str(len(primary))
+    prefix = " " * (7 - len(ratio))
     print(f"{prefix}Matches ({ratio}): {differences}")
 
 

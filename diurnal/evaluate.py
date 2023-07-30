@@ -16,6 +16,7 @@ from sklearn.metrics import f1_score, confusion_matrix
 
 from diurnal.utils import log
 from diurnal.structure import Schemes
+from diurnal import train
 
 
 def _convert_to_scalars(true, pred) -> tuple:
@@ -29,13 +30,15 @@ def _convert_to_scalars(true, pred) -> tuple:
 
     Returns (list): Tuple containing the scalar vectors.
     """
-    symbols = set(pred + true)
-    digits = {}
-    for i, s in enumerate(symbols):
-        digits[s] = i
-    pred = [digits[e] for e in pred]
-    true = [digits[e] for e in true]
-    return true, pred, symbols
+    if type(true[0]) == str:
+        symbols = set(pred + true)
+        digits = {}
+        for i, s in enumerate(symbols):
+            digits[s] = i
+        pred = [digits[e] for e in pred]
+        true = [digits[e] for e in true]
+        return true, pred, symbols
+    return train.categorize_vector(true), train.categorize_vector(pred), None
 
 
 def micro_f1(true, pred) -> float:

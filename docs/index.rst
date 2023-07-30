@@ -141,7 +141,7 @@ executing it as a Python script.
 
    # Create a predictive model.
    model = diurnal.models.NN(
-       model=cnn.Pairings_1,
+       model=cnn.Dot_Bracket,
        N=SIZE,
        n_epochs=3,
        optimizer=torch.optim.Adam,

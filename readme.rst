@@ -134,10 +134,8 @@ La liste suivante énumère des objectifs de développement du projet :
 
 - [ ] Élaborer un carnet interactif (en : *notebook*) pour illustrer le
   fonctionnement de l'outil.
-- [ ] Conteneuriser l'environnement de développement et des scripts de
-  validation avec Docker pour reproduire les résultats automatiquement.
-- [ ] Améliorer l'empaquetage des résultats (ex. : inclure les noms des
-   molécules utilisées pour l'entraînement)
+- [ ] Utiliser un vecteur d'appariement comme entrée au lieu de la notation
+  à parenthèses
 - [ ] Développer davantage les fonctionnalités de prédiction
   - [ ] Mieux décrire le fonctionnement des CNN
   - [ ] Réaliser des modèles basés sur les RNN
