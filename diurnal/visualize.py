@@ -7,11 +7,11 @@
     - License: MIT
 """
 
-import shutil
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import networkx as nx
+from matplotlib.ticker import AutoMinorLocator
 
 import diurnal.family
 import diurnal.structure
@@ -89,6 +89,37 @@ def potential_pairings(
     plt.xticks(np.arange(-.5, len(C), 1), np.arange(1, len(C) + 2, 1))
     plt.yticks(np.arange(-.5, len(C), 1), np.arange(1, len(C) + 2, 1))
     plt.grid()
+    plt.title(title)
+    plt.show()
+
+
+def pairing_matrix(
+        primary: list, matrix, title: str = "RNA Molecule Pairings") -> None:
+    """Display a heatmap of the secondary structure.
+
+    Args:
+        primary (List[str]): Primary structure.
+        matrix (List[List[bool]]): Secondary structure.
+        title (str)
+    """
+    C = []
+    for row in matrix:
+        line = []
+        for element in row:
+            if element:
+                line.append([0, 0, 0])
+            else:
+                line.append([255, 255, 255])
+        C.append(line)
+    plt.imshow(C, interpolation='none')
+    plt.xticks(np.arange(0, len(C), 1), primary)
+    index_base = [f"{i}: {b}" for i, b in enumerate(primary)]
+    plt.yticks(np.arange(0, len(C), 1), index_base)
+    minor_locator_x = AutoMinorLocator(2)
+    plt.gca().xaxis.set_minor_locator(minor_locator_x)
+    minor_locator_y = AutoMinorLocator(2)
+    plt.gca().yaxis.set_minor_locator(minor_locator_y)
+    plt.grid(which='minor')
     plt.title(title)
     plt.show()
 
