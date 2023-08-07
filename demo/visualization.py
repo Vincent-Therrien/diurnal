@@ -9,11 +9,21 @@
 import numpy as np
 
 from diurnal import visualize, structure
+import diurnal.utils.rna_data as rna_data
 
 
-visualize.structure_length_per_family("data/formatted")
+#visualize.structure_length_per_family("data/formatted")
+#matrices = np.load(
+#    "data/formatted_matrix/primary_structures.npy", mmap_mode='r')
+#example = structure.Primary.unpad_matrix(matrices[0])
 
-matrices = np.load(
-    "data/formatted_matrix/primary_structures.npy", mmap_mode='r')
-example = structure.Primary.unpad_matrix(matrices[0])
-visualize.potential_pairings(example)
+
+_, b, p = rna_data.read_ct_file("data/archiveII/5s_Acanthamoeba-castellanii-1.ct")
+
+b = list("AAAGGGUUU")
+p = [8, 7, 6, -1, -1, -1, 2, 1, 0]
+
+secondary = structure.Secondary.to_matrix(p)
+print(secondary)
+visualize.pairing_matrix(b, secondary)
+#visualize.potential_pairings(example)

@@ -6,10 +6,11 @@
 diurnal
 =======
 
-``diurnal`` is a Python library that helps to predict RNA secondary structures.
+``diurnal`` is a Python library that facilitates RNA secondary structure
+predictions.
 
 This library aims at streamlining the process of elaborating, training, and
-validating predictive models. Researchers can use it under the permissive MIT
+validating RNA structure predictive models. Researchers can use it under the MIT
 license to develop and publish models that can be easily replicated by other
 users.
 
@@ -37,7 +38,7 @@ Overview
 --------
 
 This library contains **RNA secondary structure predictive models**. It also
-comprises and utility components that automate data processing tasks.
+comprises utility components that automate data processing tasks.
 
 In short, RNA secondary structure describes the *pairings* of nucleotides. RNA
 (ribonucleic acid) is a molecule that performs a variety of biological
@@ -51,13 +52,14 @@ molecules in different ways.
   represented by the letters ``A``, ``C``, ``G``, and ``U``, respectively.
 - The way that nucleotides combine with one another is the *secondary
   structure*. One way to represent the secondary structure is to use the
-  **bracket notation**. Unpaired nucleotides are represented by a dot (``.``).
-  A nucleotide paired with a nucleotide closer to the 3' end of the molecule
-  (i.e. to the right) is represented by an opening parenthesis ( ``(`` ).
-  A nucleotide paired with a nucleotide closer to the 5' end of the molecule
-  (i.e. to the left) is represented by a closing parenthesis ( ``)`` )
+  **dot-bracket notation**. Unpaired nucleotides are represented by a dot
+  (``.``). A nucleotide paired with a nucleotide closer to the 3' end of the
+  molecule (i.e. to the right) is represented by an opening parenthesis
+  ( ``(`` ). A nucleotide paired with a nucleotide closer to the 5' end of the
+  molecule (i.e. to the left) is represented by a closing parenthesis ( ``)`` ).
 - The 3D arrangement of the molecule is the *tertiary structure*. The tertiary
-  structure is not studied in this project.
+  structure is not studied in this project but can be used to better understand
+  the function of the molecule.
 
 The image below displays the primary and secondary structures of a short RNA
 molecule.
@@ -119,7 +121,7 @@ executing it as a Python script.
 .. code-block:: python
 
    import torch
-   from diurnal import database, train, visualize
+   from diurnal import database, family, train
    import diurnal.models
    from diurnal.models.networks import cnn
 
@@ -135,9 +137,10 @@ executing it as a Python script.
    )
 
    # Use the `5s` family as the test set and others as the training set.
-   test_set, other_data = train.load_inter_family("./data/formatted", "5s")
-   # Divide the training set into training and validation sets.
-   train_set, validate_set = train.split_data(other_data, [0.8, 0.2])
+   test_family = "5s"
+   train_families = family.all_but(test_family)
+   test_set = train.load_families("./data/formatted", test_family)
+   train_set = train.load_families("./data/formatted", train_families)
 
    # Create a predictive model.
    model = diurnal.models.NN(

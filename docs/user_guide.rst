@@ -6,6 +6,9 @@ User Guide
 This page presents how to use the ``diurnal`` library to predict RNA secondary
 structures.
 
+The information presented on this page is also available in a
+`Jupyter notebook <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_.
+
 List of Modules
 ---------------
 
