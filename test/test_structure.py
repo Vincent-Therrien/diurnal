@@ -8,6 +8,7 @@
 """
 
 import pytest
+import numpy as np
 
 import diurnal.structure as structure
 
@@ -57,7 +58,7 @@ def test_primary_structure_to_onehot_padding():
 def test_primary_structure_vector_to_sequence():
     """Ensure than a vectorized primary structure can be converted back
     to a sequence of characters."""
-    encoding = [
+    encoding = np.array([
         [1, 0, 0, 0],
         [1, 0, 0, 0],
         [1, 0, 0, 0],
@@ -67,7 +68,7 @@ def test_primary_structure_vector_to_sequence():
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [0, 0, 0, 0]
-    ]
+    ])
     decoding_unpadded = structure.Primary.to_sequence(encoding)
     assert decoding_unpadded == list("AAACCC"), \
         "Primary structure unpadded decoding produced an unexpected result."

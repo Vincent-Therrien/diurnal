@@ -64,7 +64,7 @@ class Uniform(Basic):
 
     def _load(self, directory) -> None:
         """Write the model."""
-        self.symbol = np.load(directory + "model.npy")
+        self.symbol = np.load(directory + "model.npy", mmap_mode='r')
 
 
 class Majority(Basic):
@@ -102,4 +102,4 @@ class Majority(Basic):
 
     def _load(self, directory) -> None:
         """Write the model."""
-        self.symbol = np.load(directory + "model.npy")
+        self.symbol = np.load(directory + "model.npy", mmap_mode='r')

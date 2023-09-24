@@ -59,3 +59,21 @@ def read_ct_file(path: str) -> tuple:
                 break
 
     return title, bases, pairings
+
+
+def read_ct_file_length(path: str) -> int:
+    """Get the size of the sequence written in a CT file.
+
+    Args:
+        path (str): File path of the CT file.
+
+    Returns (int): Number of bases in the sequence.
+    """
+    length = 0
+    with open(path) as f:
+        header = f.readline()
+        if header[0] == ">":
+            length = int(header.split()[2])
+        else:
+            length = int(header.split()[0])
+    return length

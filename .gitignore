@@ -1,4 +1,6 @@
 draw_rna/
+tmp/
+demo/data/
 /data/
 .vscode/
 saved_model/

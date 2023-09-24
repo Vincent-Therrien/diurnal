@@ -208,7 +208,7 @@ class Primary:
         while i > 0:
             nonzero = False
             for j, e in enumerate(vector[i]):
-                if e != element[j]:
+                if e.all() != element[j]:
                     nonzero = True
             if nonzero:
                 return vector[0:i+1]

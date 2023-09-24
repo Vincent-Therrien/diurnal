@@ -42,8 +42,8 @@ def structure_length_per_family(path: str) -> None:
     # Read data.
     if path[-1] != '/':
         path += '/'
-    P = np.load(path + "primary_structures.npy")
-    F = np.load(path + "families.npy")
+    P = np.load(path + "primary_structures.npy", mmap_mode='r')
+    F = np.load(path + "families.npy", mmap_mode='r')
     # Obtain lengths.
     families = {}
     for p, f in zip(P, F):

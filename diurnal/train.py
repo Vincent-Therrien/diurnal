@@ -74,6 +74,20 @@ def split_data(data, fractions: list, offset: int = 0) -> list:
         return _split_arrays(data, fractions, offset)
 
 
+def split_indices(fractions: list, n: int) -> list:
+    """Split a range of indices in subsets according to the specified
+    fractions.
+
+    Args:
+        fractions: Proportion of each subset. For instance, to use 80% of the
+            data for training and 20% for testing, use [0.8, 0.2].
+        n: Number of indices.
+
+    Returns (list): A list containing the split data object.
+    """
+    return split_data(list(range(n)), fractions)
+
+
 def k_fold_split(data, fractions: list, k: int, i: int) -> list:
     """Split the data to make a K-fold split.
 
@@ -88,9 +102,31 @@ def k_fold_split(data, fractions: list, k: int, i: int) -> list:
         A tuple containing the split data object.
     """
     if k <= 0 or i >= k:
-        raise "Invalid K-fold parameters."
+        raise RuntimeError("Invalid K-fold parameters.")
     offset = (len(data) / k) * i
     return split_data(data, fractions, offset)
+
+
+def k_fold_indices(fractions: list, k: int, n: int) -> list:
+    """Return tuples of indices for K-fold splits.
+
+    Args:
+        fractions: Proportion of each subset. For instance, to use 80% of the
+            data for training and 20% for testing, use [0.8, 0.2].
+        k: Number of folds.
+        n: Number of indices.
+
+    Returns (list): `k` tuples containing `len(fractions)` of index lists.
+    """
+    if k <= 0 or k > n:
+        raise RuntimeError("Invalid K-fold parameters.")
+    indices = list(range(n))
+    shuffle(indices)
+    k_folds = []
+    for i in range(k):
+        offset = (n / k) * i
+        k_folds.append(offset)
+    return k_folds
 
 
 def shuffle_data(*args) -> tuple:
@@ -211,10 +247,12 @@ def load_families(
         verbose (bool): Print informative messages.
 
     Returns (dict): Loaded data represented as
-        `{"primary_structure": list,
-          "secondary_structure": list,
-          "names": list(str),
-          "family": list}`.
+        `{
+            "primary_structure": list,
+            "secondary_structure": list,
+            "names": list(str),
+            "family": list
+        }`
     """
     if type(families) is str:
         families = [families]

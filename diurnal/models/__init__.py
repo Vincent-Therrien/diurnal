@@ -42,7 +42,7 @@ from torch import save as torch_save
 from torch import from_numpy
 from torch.utils.data import DataLoader
 
-from diurnal import evaluate, train, structure
+from diurnal import evaluate, train
 from diurnal.utils import file_io, log
 
 
@@ -183,7 +183,7 @@ class NN(Basic):
             use_half: bool = True,
             verbosity: int = 0) -> None:
         self.device = "cuda" if cuda.is_available() else "cpu"
-        self.use_half = use_half
+        self.use_half = use_half and self.device == "cuda"
         if self.use_half:
             self.nn = model(N).to(self.device).half()
         else:
@@ -211,7 +211,6 @@ class NN(Basic):
     def _train(self) -> tuple:
         """Train the neural network."""
         self.nn.train()
-        losses = []
         if self.verbosity:
             threshold = int(len(self.primary) * 0.05)
             threshold = 1 if threshold < 1 else threshold
@@ -223,13 +222,20 @@ class NN(Basic):
         for i in range(self.primary.shape[0]):
             d = [self.primary[i].T, self.secondary[i]]
             data.append(d)
-        # TMP
-        training_set = DataLoader(data, batch_size=32)
+        training_set = DataLoader(data, batch_size=16)
         if self.validation_primary:
-            validation_set = DataLoader(
-                [self.validation_primary,
-                 self.validation_secondary], batch_size=32)
+            data = []
+            self.validation_primary = np.array(self.validation_primary)
+            self.validation_secondary = np.array(self.validation_secondary)
+            for i in range(self.validation_primary.shape[0]):
+                d = [self.validation_primary[i].T, self.validation_secondary[i]]
+                data.append(d)
+            validation_set = DataLoader(data, batch_size=16)
+        # TMP
+        patience = 2
+        average_losses = []
         for epoch in range(self.n_epochs):
+            losses = []
             for batch, (x, y) in enumerate(training_set):
                 if self.use_half:
                     x = x.to(self.device).half()
@@ -242,13 +248,33 @@ class NN(Basic):
                 loss = self.loss_fn(pred, y)
                 loss.backward()
                 self.optimizer.step()
-                losses.append(loss.item())
-                if self.verbosity > 1 and batch % threshold == 0:
-                    progress = f"{batch} / {len(self.verbosity)}"
-                    log.trace(f"Loss: {loss:.4f}    Batch {progress}", 1)
+                if self.verbosity > 1:
+                    log.trace(f"Loss: {loss:.4f}    Batch {batch}")
+            if validation_set:
+                losses = []
+                for batch, (x, y) in enumerate(validation_set):
+                    if self.use_half:
+                        x = x.to(self.device).half()
+                        y = y.to(self.device).half()
+                    else:
+                        x = x.to(self.device)
+                        y = y.to(self.device)
+                    pred = self.nn(x)
+                    losses.append(self.loss_fn(pred, y).item())
+                average_loss = sum(losses) / len(losses)
+                average_losses.append(average_loss)
+                if (len(average_losses) > 2
+                        and average_losses[-1] > average_losses[-2]):
+                    patience -= 1
+                    if patience <= 0:
+                        break
             if self.verbosity:
                 prefix = f"{epoch} / {self.n_epochs} "
-                log.progress_bar(self.n_epochs, epoch, prefix)
+                loss_value = average_losses[-1]
+                suffix = f" Validation loss: {loss_value}    Patience: {patience}"
+                log.progress_bar(self.n_epochs, epoch, prefix, suffix)
+                if self.verbosity > 1:
+                    print()
         if self.verbosity:
             print()
 

@@ -114,6 +114,32 @@ def download_all(dst: str, cleanup: bool = True, verbosity: int = 1) -> None:
     download(dst, ALLOWED_DATASETS, cleanup, verbosity)
 
 
+def _get_structure_shape(
+        max_size: int,
+        path: str,
+        primary_structure_map,
+        secondary_structure_map) -> tuple:
+    """Obtain the dimensions of formatted primary and secondary
+    structures.
+
+    Args:
+        max_size (int): Maximum number of nucleotides.
+        path (str): File path of a CT file to format.
+        primary_structure_map
+        secondary_structure_map
+
+    Returns (tuple): Shapes formatted as (primary, secondary) or () if
+        the structures are invalid.
+    """
+    length = rna_data.read_ct_file_length(str(path))
+    if length > max_size:
+        return (), ()
+    _, bases, pairings = rna_data.read_ct_file(str(path))
+    primary = primary_structure_map(bases, max_size)
+    secondary = secondary_structure_map(pairings, max_size)
+    return primary.shape, secondary.shape
+
+
 def _is_already_encoded(
         src: str, dst: str, size: int, primary_structure_map,
         secondary_structure_map) -> bool:
@@ -150,8 +176,8 @@ def _is_already_encoded(
     ]
     if (filenames != expected_filenames):
         return False
-    primary = np.load(dst + 'primary_structures.npy')
-    secondary = np.load(dst + 'secondary_structures.npy')
+    primary = np.load(dst + 'primary_structures.npy', mmap_mode='r')
+    secondary = np.load(dst + 'secondary_structures.npy', mmap_mode='r')
     # Expected number of data points
     n_families = len(open(dst + 'families.txt').read().split('\n'))
     n_names = len(open(dst + 'names.txt').read().split('\n'))
@@ -234,46 +260,51 @@ def format(
         os.makedirs(dst)
     # Obtain the list of files to read.
     paths = []
+    x_shape, y_shape = (), ()
+    n_samples = 0
     for path in pathlib.Path(src).rglob('*.ct'):
         paths.append(path)
+        if not x_shape:
+            x_shape, y_shape = _get_structure_shape(
+                max_size, path, primary_structure_map, secondary_structure_map)
+        if rna_data.read_ct_file_length(path) <= max_size:
+            n_samples += 1
+    x_shape = (n_samples, ) + x_shape
+    y_shape = (n_samples, ) + y_shape
     # Encode the content of each file.
     names = []           # RNA molecule names included in the dataset.
     rejected_names = []  # RNA molecule names excluded from the dataset.
     families = []        # Family
-    X = []               # Primary structure
-    Y = []               # Secondary structure
+    X_file = np.lib.format.open_memmap(  # Primary structure
+        dst + "primary_structures.npy",
+        dtype='float32', mode='w+', shape=x_shape)
+    Y_file = np.lib.format.open_memmap(  # Secondary structure
+        dst + "secondary_structures.npy",
+        dtype='float32', mode='w+', shape=y_shape)
+    offset = 0
     for i, path in enumerate(paths):
-        _, bases, pairings = rna_data.read_ct_file(str(path))
-        family = diurnal.family.get_name(str(path))
-        if len(bases) > max_size:
+        if rna_data.read_ct_file_length(str(path)) > max_size:
             rejected_names.append(str(path))
             continue
+        _, bases, pairings = rna_data.read_ct_file(str(path))
+        family = diurnal.family.get_name(str(path))
         names.append(str(path))
         families.append(family)
-        X.append(primary_structure_map(bases, max_size))
-        Y.append(secondary_structure_map(pairings, max_size))
+        X_file[offset] = primary_structure_map(bases, max_size)
+        X_file.flush()
+        Y_file[offset] = secondary_structure_map(pairings, max_size)
+        Y_file.flush()
+        offset += 1
         if verbosity:
-            prefix = f"Encoding {len(paths)} files: "
+            prefix = f"Encoding {n_samples} files: "
             suffix = f" {path.name}"
-            log.progress_bar(len(paths), i, prefix, suffix)
+            log.progress_bar(n_samples, offset, prefix, suffix)
     if verbosity:
         print()  # Change the line after the progress bar.
         i = len(names)
         r = len(rejected_names)
         log.trace(f"Encoded {i} files. Rejected {r} files.")
     # Write the encoded file content into Numpy files.
-    if not X:
-        if verbosity:
-            log.trace(f"No structure to write.")
-        return
-    s1 = dst + "primary_structures"
-    if verbosity:
-        log.trace(f"Writing primary structures at `{s1}.npy`.")
-    np.save(s1, np.asarray(X, dtype=np.float32))
-    s2 = dst + "secondary_structures"
-    if verbosity:
-        log.trace(f"Writing secondary structures at `{s2}.npy`.")
-    np.save(s2, np.asarray(Y, dtype=np.float32))
     filename = dst + "families.txt"
     if verbosity:
         log.trace(f"Writing families at `{filename}`.")
@@ -320,7 +351,7 @@ def summarize(
     content = "[> DIURNAL] RNA Database File Formatting\n"
     content += "========================================\n\n"
     content += f"Generation timestamp: {datetime.utcnow()} UTC\n\n"
-    X = np.load(path + "primary_structures.npy")
+    X = np.load(path + "primary_structures.npy", mmap_mode='r')
     content += f"Number of structures: {X.shape[0]}\n\n"
     content += "RNA molecule **names** are listed in `names.txt`.\n\n"
     content += "RNA molecule **families** are listed in `families.txt`.\n\n"
@@ -337,7 +368,7 @@ def summarize(
         content += "\nExample:\n"
         content += str(X[0])
         content += "\n\n\n"
-    Y = np.load(path + "secondary_structures.npy")
+    Y = np.load(path + "secondary_structures.npy", mmap_mode='r')
     if Y.any():
         content += "Secondary Structure Encoding\n"
         content += "----------------------------\n\n"
