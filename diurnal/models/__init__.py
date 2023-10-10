@@ -82,11 +82,13 @@ class Basic():
         self.secondary = training_data["secondary_structures"]
         self.families = training_data["families"]
         if validation_data:
+            self.validate = True
             self.validation_names = validation_data["names"]
             self.validation_primary = validation_data["primary_structures"]
             self.validation_secondary = validation_data["secondary_structures"]
             self.validation_families = validation_data["families"]
         else:
+            self.validate = False
             self.validation_names = None
             self.validation_primary = None
             self.validation_secondary = None
@@ -165,7 +167,10 @@ class Basic():
             primary = data["primary_structures"][i]
             true = data["secondary_structures"][i]
             pred = self.predict(primary)
-            _, true, pred = train.clean_vectors(primary, true, pred)
+            if (len(primary.shape)) == 2:
+                _, true, pred = train.clean_vectors(primary, true, pred)
+            elif (len(primary.shape)) == 3:
+                _, true, pred = train.clean_matrices(primary, true, pred)
             results.append(evaluation(true, pred))
         return results
 
@@ -206,7 +211,9 @@ class NN(Basic):
             self.loss_fn = loss_fn()
         # Other parameters
         self.n_epochs = n_epochs
+        print(self.n_epochs)
         self.verbosity = verbosity
+        self.batch = 16
 
     def _train(self) -> tuple:
         """Train the neural network."""
@@ -219,20 +226,23 @@ class NN(Basic):
         data = []
         self.primary = np.array(self.primary)
         self.secondary = np.array(self.secondary)
+        N = len(self.primary)
+        N_PRINTS = int(N / self.batch)
+        threshold = int((N / self.batch) / 10)
         for i in range(self.primary.shape[0]):
             d = [self.primary[i].T, self.secondary[i]]
             data.append(d)
-        training_set = DataLoader(data, batch_size=16)
-        if self.validation_primary:
+        training_set = DataLoader(data, batch_size=self.batch)
+        if self.validate:
             data = []
             self.validation_primary = np.array(self.validation_primary)
             self.validation_secondary = np.array(self.validation_secondary)
             for i in range(self.validation_primary.shape[0]):
                 d = [self.validation_primary[i].T, self.validation_secondary[i]]
                 data.append(d)
-            validation_set = DataLoader(data, batch_size=16)
+            validation_set = DataLoader(data, batch_size=self.batch)
         # TMP
-        patience = 2
+        patience = 5
         average_losses = []
         for epoch in range(self.n_epochs):
             losses = []
@@ -248,9 +258,9 @@ class NN(Basic):
                 loss = self.loss_fn(pred, y)
                 loss.backward()
                 self.optimizer.step()
-                if self.verbosity > 1:
-                    log.trace(f"Loss: {loss:.4f}    Batch {batch}")
-            if validation_set:
+                if self.verbosity > 1 and batch % threshold == 0:
+                    log.trace(f"Loss: {loss:.4f} | Batch {batch} / {N_PRINTS}")
+            if self.validate:
                 losses = []
                 for batch, (x, y) in enumerate(validation_set):
                     if self.use_half:
@@ -264,17 +274,20 @@ class NN(Basic):
                 average_loss = sum(losses) / len(losses)
                 average_losses.append(average_loss)
                 if (len(average_losses) > 2
-                        and average_losses[-1] > average_losses[-2]):
+                        and average_losses[-1] >= min(average_losses)):
                     patience -= 1
                     if patience <= 0:
                         break
             if self.verbosity:
                 prefix = f"{epoch} / {self.n_epochs} "
-                loss_value = average_losses[-1]
-                suffix = f" Validation loss: {loss_value}    Patience: {patience}"
-                log.progress_bar(self.n_epochs, epoch, prefix, suffix)
-                if self.verbosity > 1:
-                    print()
+                if self.validate:
+                    loss_value = f" Validation loss: {average_losses[-1]:.4f}"
+                    suffix = loss_value + f" | Patience: {patience}"
+                    log.progress_bar(self.n_epochs, epoch, prefix, suffix)
+                    if self.verbosity > 1:
+                        print()
+                else:
+                    log.progress_bar(self.n_epochs, epoch, prefix)
         if self.verbosity:
             print()
 

@@ -299,6 +299,14 @@ def categorize_vector(prediction: list) -> list:
     return [[1 if j == i else 0 for j in range(element_size)] for i in indices]
 
 
+def categorize_matrix(prediction: np.array) -> np.array:
+    pred = np.array(prediction)
+    for i in range(len(prediction)):
+        for j in range(len(prediction[i])):
+            pred[i][j] = round(prediction[i][j])
+    return pred
+
+
 def clean_vectors(primary: list, true: list, pred: list) -> tuple:
     """Prepare a secondary structure prediction for evaluation.
 
@@ -314,3 +322,25 @@ def clean_vectors(primary: list, true: list, pred: list) -> tuple:
     """
     bases = diurnal.structure.Primary.to_sequence(primary)
     return bases, true[:len(bases)], categorize_vector(pred[:len(bases)])
+
+
+def clean_matrices(primary: list, true: list, pred: list) -> tuple:
+    """Prepare a secondary structure prediction for evaluation.
+
+    Args:
+        primary (list): Vector-encoded primary structure.
+        true (list): True vector-encoded secondary structure.
+        pred (list): Predicted vector-encoded secondary structure.
+
+    Returns (tuple): A tuple of elements organized as:
+      - sequence of bases
+      - stripped true secondary structure matrix
+      - stripped predicted secondary structure matrix
+    """
+    bases = diurnal.structure.Primary.unpad_matrix(primary)
+    secondary = true[:len(bases), :len(bases)]
+    return (
+        bases,
+        secondary,
+        categorize_matrix(secondary)
+    )

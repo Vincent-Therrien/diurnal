@@ -47,7 +47,7 @@ def is_known(family: str) -> bool:
     return family in _NAME_SET
 
 
-def all_but(families: list) -> bool:
+def all_but(families: list[str]) -> bool:
     """Return all RNA family names except those provided as arguments.
 
     Args:

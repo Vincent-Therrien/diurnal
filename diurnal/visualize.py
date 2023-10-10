@@ -93,8 +93,21 @@ def potential_pairings(
     plt.show()
 
 
+def _add_pairing_element(value) -> int:
+    if type(value) is int:
+        if value:
+            return (0, 0, 0)
+        else:
+            return (255, 255, 255)
+    elif 0.0 <= value <= 1.0:
+        v = (1 - value) * 255
+        return (v, v, v)
+    return (0, 0, 0)
+
+
+
 def pairing_matrix(
-        primary: list, matrix, title: str = "RNA Molecule Pairings") -> None:
+        matrix, primary: list = None, title: str = "RNA Molecule Pairings") -> None:
     """Display a heatmap of the secondary structure.
 
     Args:
@@ -106,15 +119,13 @@ def pairing_matrix(
     for row in matrix:
         line = []
         for element in row:
-            if element:
-                line.append([0, 0, 0])
-            else:
-                line.append([255, 255, 255])
+            line.append(_add_pairing_element(element))
         C.append(line)
     plt.imshow(C, interpolation='none')
-    plt.xticks(np.arange(0, len(C), 1), primary)
-    index_base = [f"{i}: {b}" for i, b in enumerate(primary)]
-    plt.yticks(np.arange(0, len(C), 1), index_base)
+    if primary:
+        plt.xticks(np.arange(0, len(C), 1), primary)
+        index_base = [f"{i}: {b}" for i, b in enumerate(primary)]
+        plt.yticks(np.arange(0, len(C), 1), index_base)
     minor_locator_x = AutoMinorLocator(2)
     plt.gca().xaxis.set_minor_locator(minor_locator_x)
     minor_locator_y = AutoMinorLocator(2)

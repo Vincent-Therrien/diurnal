@@ -11,7 +11,11 @@ Predict RNA Secondary Structures
 This project is a Python library that can predict RNA secondary structures with
 neural networks.
 
-**Install** the library with the following command:
+The project requires Pytorch, which can be installed as described on the page
+https://pytorch.org/get-started/locally/.
+
+In a virtual environment in which Pytorch is installed, **install** the diurnal
+library with the following command:
 
 .. code-block:: bash
 
