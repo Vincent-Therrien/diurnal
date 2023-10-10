@@ -19,20 +19,21 @@ class PairingMatrix:
     prototyping.
     """
 
-    def single_pairing(dim: int, n: int) -> list[tuple[np.array, np.array]]:
+    def single_pairing(dim: int, n: int) -> tuple(list[np.array]):
         """Create pairing matrices that each have a single, random
         pairing.
-
-
 
         Args:
             dim (int): Dimension of the 2D pairing matrices.
             n (int): Number of samples.
+
+        Returns (tuple): Packed primary and secondary structures.
         """
         if dim < 4:
             print(f"Incorrect dimension ({dim}), minimum is 4.")
             return None
-        matrices = list()
+        P = list()
+        S = list()
         for _ in range(n):
             while True:
                 i = randint(4, dim - 1)
@@ -44,7 +45,14 @@ class PairingMatrix:
             secondary[j][i] = 1
             codes = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
             primary = np.zeros((dim, dim, len(codes["-"])))
-            primary[i][j] = codes["UA"]
-            primary[j][i] = codes["AU"]
-            matrices.append((primary, secondary))
-        return matrices
+            for x in range(dim):
+                for y in range(dim):
+                    if x == i and y == j:
+                        primary[x][y] = codes["UA"]
+                    elif x == j and y == i:
+                        primary[x][y] = codes["AU"]
+                    else:
+                        primary[x][y] = codes["unpaired"]
+            P.append(primary)
+            S.append(secondary)
+        return P, S

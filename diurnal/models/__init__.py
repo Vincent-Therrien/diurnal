@@ -72,10 +72,10 @@ class Basic():
             verbose (bool): Print informative messages.
         """
         if verbose:
-            N = len(training_data["names"])
+            N = len(training_data["primary_structures"])
             log.info(f"Training the model with {N} data points.")
             if validation_data:
-                n = len(validation_data["names"])
+                n = len(validation_data["primary_structures"])
                 log.trace(f"Using {n} data points for validation.")
         self.names = training_data["names"]
         self.primary = training_data["primary_structures"]

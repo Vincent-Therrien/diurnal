@@ -100,7 +100,7 @@ def _add_pairing_element(value) -> int:
         else:
             return (255, 255, 255)
     elif 0.0 <= value <= 1.0:
-        v = (1 - value) * 255
+        v = int((1 - value) * 255)
         return (v, v, v)
     return (0, 0, 0)
 
