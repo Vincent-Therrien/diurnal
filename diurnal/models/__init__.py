@@ -258,7 +258,7 @@ class NN(Basic):
                 loss = self.loss_fn(pred, y)
                 loss.backward()
                 self.optimizer.step()
-                if self.verbosity > 1 and batch % threshold == 0:
+                if self.verbosity > 2 and batch % threshold == 0:
                     log.trace(f"Loss: {loss:.4f} | Batch {batch} / {N_PRINTS}")
             if self.validate:
                 losses = []
@@ -274,14 +274,14 @@ class NN(Basic):
                 average_loss = sum(losses) / len(losses)
                 average_losses.append(average_loss)
                 if (len(average_losses) > 2
-                        and average_losses[-1] >= min(average_losses)):
+                        and average_losses[-1] >= min(average_losses[:-1])):
                     patience -= 1
                     if patience <= 0:
                         break
             if self.verbosity:
                 prefix = f"{epoch} / {self.n_epochs} "
                 if self.validate:
-                    loss_value = f" Validation loss: {average_losses[-1]:.4f}"
+                    loss_value = f" Validation loss: {average_losses[-1]:.10f}     Min: {min(average_losses):.10f}"
                     suffix = loss_value + f" | Patience: {patience}"
                     log.progress_bar(self.n_epochs, epoch, prefix, suffix)
                     if self.verbosity > 1:
