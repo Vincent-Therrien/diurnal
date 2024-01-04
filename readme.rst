@@ -14,12 +14,21 @@ neural networks.
 The project requires Pytorch, which can be installed as described on the page
 https://pytorch.org/get-started/locally/.
 
-In a virtual environment in which Pytorch is installed, **install** the diurnal
-library with the following command:
+
+Installation
+````````````
+
+Using an active Python virtual environment in which Pytorch is installed,
+**install** the diurnal library with the following command:
 
 .. code-block:: bash
 
-   pip install diurnal
+   cd diurnal
+   pip install .
+
+
+Documentation
+````````````
 
 The **documentation** can be built with the command:
 
@@ -28,6 +37,10 @@ The **documentation** can be built with the command:
    cd docs
    make html
 
+
+Demonstrations
+````````````
+
 The directory ``demo`` contains usage examples of the library. You can execute
 them as Python script, as shown below:
 
@@ -35,6 +48,10 @@ them as Python script, as shown below:
 
    python3 demo/baseline.py # On Linux
    py demo/baseline.py # On Windows
+
+
+Test Suite
+````````````
 
 The **test suite** can be executed with the command:
 
@@ -58,7 +75,12 @@ réseaux neuronaux. Il comprend les répertoires suivants :
 - ``test`` : Scripts utilisés pour valider le format des données et les
   modèles. Ils utilisent ``Python`` et la bibliothèque ``pytest``.
 
-Exécutez les commandes suivantes pour installer la bibliothèque:
+
+Installation
+````````````
+
+En utilisant un environnement Python actif dans lequel la bibliothèque PyTorch
+est installée, exécutez les commandes suivantes pour installer la bibliothèque:
 
 .. code-block:: bash
 
@@ -71,15 +93,15 @@ Linux :
 
 .. code-block:: bash
 
-   pip install -r requirements.txt # Installer les outils requis.
-   python3 setup.py install # Installer la bibliothèque diurnal.
+   pip install -r requirements.txt  # Installer les outils requis.
+   python3 setup.py install  # Installer la bibliothèque diurnal.
 
 Windows :
 
 .. code-block:: bash
 
-   pip install -r requirements.txt # Installer les outils requis.
-   py setup.py install # Installer la bibliothèque diurnal.
+   pip install -r requirements.txt  # Installer les outils requis.
+   py setup.py install  # Installer la bibliothèque diurnal.
 
 
 Scripts de démonstration
@@ -92,8 +114,13 @@ d'utilisation de la bibliothèque.
 Documentation
 ``````````````
 
-La commande suivante génère la documentation. La bibliothèque Sphinx doit être
-installée.
+Installez les modules requis avec la commande
+
+.. code-block:: bash
+
+   pip install -r docs/requirements.txt
+
+puis générez la documentation avec les commandes :
 
 .. code-block:: bash
 
@@ -127,29 +154,4 @@ Le dépôt contient un cadre de tests automatisés développé avec la biblioth�
 
 .. code-block:: bash
 
-   cd test
-   pytest
-
-
-Objectifs de développement
---------------------------
-
-La liste suivante énumère des objectifs de développement du projet :
-
-- [ ] Élaborer un carnet interactif (en : *notebook*) pour illustrer le
-  fonctionnement de l'outil.
-- [ ] Utiliser un vecteur d'appariement comme entrée au lieu de la notation
-  à parenthèses
-- [ ] Développer davantage les fonctionnalités de prédiction
-  - [ ] Mieux décrire le fonctionnement des CNN
-  - [ ] Réaliser des modèles basés sur les RNN
-  - [ ] Réaliser des modèles basés sur les transformateurs
-  - [ ] Réaliser des modèles basés sur les encodeurs / décodeurs
-  - [ ] Utiliser des mécanismes récursifs pour appliquer des contraintes rigides
-    sur les résultats.
-  - [ ] Introduire des informations liées à la thermodynamique des molécules
-    pour améliorer les prédictions.
-  - [ ] Ajouter des couches multi-branches
-- [ ] Investiguer l'utilisation de l'apprentissage par renforcement
-- [ ] Déployer un service Web pour permettre à des utilisateurs de tester les
-  modèle à partir d'un navigateur.
+   pytest test

@@ -38,10 +38,11 @@ model = diurnal.models.NN(
     use_half=True)
 model.train(train_set, validation_set)
 
-#visualize.potential_pairings(test_set["primary_structures"][0])
-#visualize.pairing_matrix(test_set["secondary_structures"][0])
+print(test_set["primary_structures"][0])
+visualize.primary_structure(test_set["primary_structures"][0])
+visualize.potential_pairings(test_set["primary_structures"][0])
+visualize.pairing_matrix(test_set["secondary_structures"][0])
 pred = model.predict(test_set["primary_structures"][0])
-print(pred)
 visualize.pairing_matrix(pred[0])
 
 f = model.test(test_set)

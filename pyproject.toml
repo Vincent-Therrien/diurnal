@@ -8,14 +8,18 @@ version = "1.0.0"
 authors = [
   { name="Vincent Therrien", email="therrien.vincent.2@courrier.uqam.ca" },
 ]
-description = "Rna secondary prediction library"
+description = "RNA secondary prediction library"
 readme = "readme.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: MIT License",
     "Operating System :: OS Independent",
 ]
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
 [project.urls]
 "Homepage" = "https://github.com/Vincent-Therrien/diurnal"

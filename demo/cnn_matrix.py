@@ -5,14 +5,15 @@
 
 import torch
 from torchsummary import summary
+import numpy as np
 
 from diurnal import database, train, visualize, family, structure
 import diurnal.models
 from diurnal.models.networks import cnn
 
 
-SIZE = 256
-PATH = "./data/formatted_matrix"
+SIZE = 128
+PATH = f"./data/formatted_matrix_{SIZE}"
 
 database.download("./data/", "archiveII")
 database.format(
@@ -28,18 +29,19 @@ train_families = family.all_but(test_family)
 
 test_set = train.load_families(PATH, test_family, randomize=False)
 train_set = train.load_families(PATH, train_families, randomize=False)
+train_set, validation_set = train.split_data(train_set, (0.9, 0.1))
 
 model = diurnal.models.NN(
     model=cnn.RNA_CNN,
     N=SIZE,
-    n_epochs=3,
+    n_epochs=10,
     optimizer=torch.optim.Adam,
     loss_fn=torch.nn.MSELoss,
     optimizer_args={"eps": 1e-4},
     loss_fn_args=None,
-    verbosity=1,
-    use_half=False)
-model.train(train_set)
+    verbosity=2,
+    use_half=True)
+model.train(train_set, validation_set)
 
 f = model.test(test_set)
 print(f"Average F1-score: {sum(f)/len(f):.4}")
@@ -51,14 +53,24 @@ del model
 loaded_model = diurnal.models.NN(
     model=cnn.RNA_CNN,
     N=SIZE,
-    n_epochs=3,
+    n_epochs=10,
     optimizer=torch.optim.Adam,
     loss_fn=torch.nn.MSELoss,
     optimizer_args={"eps": 1e-4},
     loss_fn_args=None,
     verbosity=2,
-    use_half=False)
+    use_half=True)
 loaded_model.load("saved_model")
+
+print(test_set["primary_structures"][0])
+visualize.potential_pairings(test_set["primary_structures"][0])
+print(test_set["secondary_structures"][0])
+visualize.pairing_matrix(test_set["secondary_structures"][0])
+pred = loaded_model.predict(test_set["primary_structures"][0])
+print(pred.shape)
+print(pred)
+np.save("test.npy", pred)
+visualize.pairing_matrix(pred[0])
 
 f = loaded_model.test(test_set)
 print(f"Average F1-score of the saved model: {sum(f)/len(f):.4}")

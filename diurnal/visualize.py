@@ -107,7 +107,8 @@ def _add_pairing_element(value) -> int:
 
 
 def pairing_matrix(
-        matrix, primary: list = None, title: str = "RNA Molecule Pairings") -> None:
+        matrix, primary: list = None, title: str = "RNA Molecule Pairings"
+        ) -> None:
     """Display a heatmap of the secondary structure.
 
     Args:
@@ -154,6 +155,26 @@ def prediction(primary, true, pred) -> None:
     ratio = str(correct) + "/" + str(len(primary))
     prefix = " " * (14 - len(ratio))
     print(f"{prefix}Matches ({ratio}): {differences}")
+
+
+def primary_structure(primary) -> None:
+    """Print the sequence of nucleotides from a one-hot encoded
+    primary structure.
+
+    Args:
+        primary: Primary structure.
+    """
+    bases = diurnal.structure.Primary.to_sequence(primary)
+    print(f"Primary structure: {''.join(bases)}")
+    N = len(bases)
+    if N > 10:
+        RULER = 10
+        ruler = ""
+        for i in range(0, N, RULER):
+            item = str(i)
+            ruler += item
+            ruler += " " * (RULER - len(item))
+        print(f"                   {ruler}")
 
 
 def shadow(primary, true, pred) -> None:
