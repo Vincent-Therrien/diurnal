@@ -30,7 +30,14 @@ Using an active Python virtual environment in which Pytorch is installed,
 Documentation
 ````````````
 
-The **documentation** can be built with the command:
+The **documentation** can be obtained by installing the requirement packages
+with the command:
+
+.. code-block:: bash
+
+   pip install -r docs/requirements.txt
+
+and generating the content with the following commands:
 
 .. code-block:: bash
 
