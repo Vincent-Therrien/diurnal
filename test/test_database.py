@@ -18,12 +18,13 @@ import utils.fileio as fileio
 
 def test_repository_availability():
     """Test the availability of the database repository."""
-    response = requests.get(database.URL_PREFIX)
+    file_URL = database.URL_PREFIX + database._DB_IDs["archiveII.rst"]
+    response = requests.get(file_URL)
     assert response.status_code == 200, \
         f"The address {database.URL_PREFIX} is unaccessible."
 
 
-def test_ct_file_format(tmp_rna_structure_files):
+def test_ct_file_format():
     """Ensure that CT files are correctly converted into a vector
     representation."""
     DIM = 512
