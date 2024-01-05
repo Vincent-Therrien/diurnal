@@ -18,10 +18,14 @@
     - License: MIT
 """
 
-from diurnal import database, train, visualize
+from diurnal import database, train, visualize, family
 from diurnal.models import baseline
+from diurnal.utils import log
 
 
+log.info(
+    "This model downloads and formats data and then makes random predictions."
+)
 database.download("./data/", "archiveII")
 database.format(
     "./data/archiveII",  # Directory of the raw data to format.
@@ -29,8 +33,11 @@ database.format(
     512,  # Normalized size.
 )
 
-test_set, other_data = train.load_inter_family("./data/formatted", "5s")
-train_set, validate_set = train.split_data(other_data, [0.8, 0.2])
+test_family = "5s"
+train_families = family.all_but(test_family)
+test_set = train.load_families("./data/formatted", test_family)
+train_set = train.load_families("./data/formatted", train_families)
+train_set, validate_set = train.split_data(train_set, [0.8, 0.2])
 
 model = baseline.Random()
 model.train(train_set)

@@ -30,8 +30,16 @@ import diurnal.structure
 import diurnal.family
 
 # Constant values.
-URL_PREFIX = \
-    "https://github.com/Vincent-Therrien/rna-2s-database/raw/main/data/"
+
+_DB_IDs = {
+    "RNA_STRAND.rst":     "1N4arnUYSgTkELcT7D43D-fUwFApd7Aee",
+    "RNA_STRAND.tar.gz":  "1knqptKWhZLJRZgdX76KwWK3y94eoPIpI",
+    "archiveII.rst":      "1yURblLBoBaJiW17lgnr6KflaIyNHrO84",
+    "archiveII.tar.gz":   "1K4SJKsFngX1GTJtzh7NohCtoOZWGz2BQ",
+    "RNASTRalign.rst":    "1PgwOk27mf8Uw0-zHffZfluuJeVinMnhw",
+    "RNASTRalign.tar.gz": "1CHA9YxvaJ0Kb97B18A0RFH5-vzpIOoXu"
+}
+URL_PREFIX = "https://drive.google.com/uc?export=download&confirm=1&id="
 DATA_FILE_ENDING = ".tar.gz"
 INFO_FILE_ENDING = ".rst"
 ALLOWED_DATASETS = {
@@ -85,18 +93,20 @@ def download(
                     + f"is already downloaded at `{dst + dataset}`.")
             continue
         # Information file.
-        url = URL_PREFIX + "/" + dataset + INFO_FILE_ENDING
-        file_name = dst + dataset + INFO_FILE_ENDING
+        file_name = dataset + INFO_FILE_ENDING
+        url = URL_PREFIX + _DB_IDs[file_name]
+        file_name = dst + file_name
         file_io.download(url, file_name, 0, dataset)
         # Data file.
-        url = URL_PREFIX + "/" + dataset + DATA_FILE_ENDING
-        file_name = dst + dataset + DATA_FILE_ENDING
+        file_name = dataset + DATA_FILE_ENDING
+        url = URL_PREFIX + _DB_IDs[file_name]
+        file_name = dst + file_name
         file_io.download(url, file_name, verbosity, dataset)
         file_io.decompress(file_name, "r:gz", dst, verbosity, dataset)
         if cleanup:
             os.remove(file_name)
         if verbosity:
-            log.info(f"Files installed in `{dst + dataset}`.", 1)
+            log.info(f"Files installed in `{dst + dataset}`.")
 
 
 def download_all(dst: str, cleanup: bool = True, verbosity: int = 1) -> None:
