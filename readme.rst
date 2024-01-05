@@ -56,6 +56,9 @@ them as Python script, as shown below:
    python3 demo/baseline.py # On Linux
    py demo/baseline.py # On Windows
 
+For a full example of how to use the library, you can look up the following
+`notebook <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_.
+
 
 Test Suite
 ````````````
@@ -95,13 +98,6 @@ est installée, exécutez les commandes suivantes pour installer la bibliothèqu
    pip install .
 
 
-Scripts de démonstration
-````````````````````````
-
-Consultez le répertoire ``./demo`` pour voir des exemples commentés
-d'utilisation de la bibliothèque.
-
-
 Documentation
 ``````````````
 
@@ -117,6 +113,17 @@ puis générez la documentation avec les commandes :
 
    cd docs
    make html
+
+
+Scripts de démonstration
+````````````````````````
+
+Consultez le répertoire ``./demo`` pour voir des exemples commentés
+d'utilisation de la bibliothèque.
+
+Le `carnet interactif <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_
+inclus dans le répertoire des démonstrations présente un cas d'utilisation
+complet de la bibliothèque.
 
 
 Obtenir l'ensemble de données
