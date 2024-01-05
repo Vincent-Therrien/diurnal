@@ -19,7 +19,7 @@ Installation
 ````````````
 
 Using an active Python virtual environment in which Pytorch is installed,
-**install** the diurnal library with the following command:
+install the diurnal library with the following commands:
 
 .. code-block:: bash
 
@@ -30,7 +30,7 @@ Using an active Python virtual environment in which Pytorch is installed,
 Documentation
 ````````````
 
-The **documentation** can be obtained by installing the requirement packages
+The documentation can be obtained by installing the requirement packages
 with the command:
 
 .. code-block:: bash
@@ -60,7 +60,7 @@ them as Python script, as shown below:
 Test Suite
 ````````````
 
-The **test suite** can be executed with the command:
+The test suite can be executed with the command:
 
 .. code-block:: bash
 
@@ -93,22 +93,6 @@ est installée, exécutez les commandes suivantes pour installer la bibliothèqu
 
    cd diurnal
    pip install .
-
-Il est aussi possible d'installer la bibliothèque avec le script ``setup.py``.
-
-Linux :
-
-.. code-block:: bash
-
-   pip install -r requirements.txt  # Installer les outils requis.
-   python3 setup.py install  # Installer la bibliothèque diurnal.
-
-Windows :
-
-.. code-block:: bash
-
-   pip install -r requirements.txt  # Installer les outils requis.
-   py setup.py install  # Installer la bibliothèque diurnal.
 
 
 Scripts de démonstration

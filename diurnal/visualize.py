@@ -174,7 +174,7 @@ def primary_structure(primary) -> None:
             item = str(i)
             ruler += item
             ruler += " " * (RULER - len(item))
-        print(f"                   {ruler}")
+        print(f"      Base number: {ruler}")
 
 
 def shadow(primary, true, pred) -> None:
