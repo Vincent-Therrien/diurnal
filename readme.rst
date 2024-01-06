@@ -4,6 +4,9 @@ diurnal
 - `English (en) <#Predict-RNA-Secondary-Structures>`_
 - `Français (fr) <#Prédire-les-structures-secondaires-de-lARN>`_
 
+.. image:: docs/images/structure_example_no_text.png
+   :alt: The primary and secondary structures of a short RNA molecule.
+   :align: center
 
 Predict RNA Secondary Structures
 --------------------------------
