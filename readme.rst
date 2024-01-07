@@ -53,16 +53,17 @@ and building the content with the following commands:
 Demonstrations
 ````````````
 
+The following
+`notebook <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_
+presents a full use case of the library.
+
 The directory ``demo`` contains usage examples of the library. You can execute
-them as Python script, as shown below:
+them as Python scripts, as shown below:
 
 .. code-block:: bash
 
    python3 demo/baseline.py # On Linux
    py demo/baseline.py # On Windows
-
-For a full example of how to use the library, you can look up the following
-`notebook <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_.
 
 
 Test Suite
@@ -126,12 +127,18 @@ et en générant la documentation avec les commandes :
 Scripts de démonstration
 ````````````````````````
 
-Consultez le répertoire ``./demo`` pour voir des exemples commentés
-d'utilisation de la bibliothèque.
-
 Le `carnet interactif <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_
 inclus dans le répertoire des démonstrations présente un cas d'utilisation
 complet de la bibliothèque.
+
+Consultez le répertoire ``./demo`` pour voir des exemples commentés
+d'utilisation de la bibliothèque. Vous pouvez les exécuter comme le montre les
+commandes suivantes :
+
+.. code-block:: bash
+
+   python3 demo/baseline.py # Sous Linux
+   py demo/baseline.py # Sous Windows
 
 
 Obtenir l'ensemble de données
