@@ -3,13 +3,18 @@
     structures with pseudo-knots.
 """
 
-import torch
-from torchsummary import summary
-import numpy as np
+#import torch
+#import numpy as np
 
 from diurnal import database, train, visualize, family, structure
-import diurnal.models
-from diurnal.models.networks import cnn
+#import diurnal.models
+#from diurnal.models.networks import cnn
+from diurnal.utils import synthetic
+
+p, s = synthetic.make_structures(10)
+print(p)
+print("".join(structure.Secondary.to_bracket(s)))
+exit()
 
 
 SIZE = 128

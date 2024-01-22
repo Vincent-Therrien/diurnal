@@ -211,7 +211,6 @@ class NN(Basic):
             self.loss_fn = loss_fn()
         # Other parameters
         self.n_epochs = n_epochs
-        print(self.n_epochs)
         self.verbosity = verbosity
         self.batch = 16
 
@@ -281,7 +280,7 @@ class NN(Basic):
             if self.verbosity:
                 prefix = f"{epoch} / {self.n_epochs} "
                 if self.validate:
-                    loss_value = f" Validation loss: {average_losses[-1]:.10f}     Min: {min(average_losses):.10f}"
+                    loss_value = f" Validation loss: {average_losses[-1]:.5f}   Min: {min(average_losses):.5f}"
                     suffix = loss_value + f" | Patience: {patience}"
                     log.progress_bar(self.n_epochs, epoch, prefix, suffix)
                     if self.verbosity > 1:

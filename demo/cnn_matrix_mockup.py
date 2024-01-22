@@ -9,7 +9,7 @@ import numpy as np
 from diurnal import train, visualize, family, structure
 import diurnal.models
 from diurnal.models.networks import cnn
-from diurnal.utils import mockup
+from diurnal.utils import synthetic
 
 
 def to_dict(t) -> dict:
@@ -22,9 +22,9 @@ def to_dict(t) -> dict:
 
 SIZE = 32
 
-test_set       = to_dict(mockup.PairingMatrix.single_pairing(SIZE, 100))
-train_set      = to_dict(mockup.PairingMatrix.single_pairing(SIZE, 800))
-validation_set = to_dict(mockup.PairingMatrix.single_pairing(SIZE, 100))
+test_set       = to_dict(synthetic.PairingMatrix.single_pairing(SIZE, 100))
+train_set      = to_dict(synthetic.PairingMatrix.single_pairing(SIZE, 800))
+validation_set = to_dict(synthetic.PairingMatrix.single_pairing(SIZE, 100))
 
 model = diurnal.models.NN(
     model=cnn.RNA_CNN,

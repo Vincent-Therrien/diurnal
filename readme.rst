@@ -30,6 +30,22 @@ install the diurnal library with the following commands:
    pip install .
 
 
+Demonstrations
+````````````
+
+The following
+`notebook <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_
+presents a full use case of the library.
+
+The directory ``demo`` contains usage examples of the library. You can execute
+them as Python scripts, as shown below:
+
+.. code-block:: bash
+
+   python3 demo/baseline.py # On Linux
+   py demo/baseline.py # On Windows
+
+
 Documentation
 ````````````
 
@@ -48,22 +64,6 @@ and building the content with the following commands:
 
    cd docs
    make html
-
-
-Demonstrations
-````````````
-
-The following
-`notebook <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_
-presents a full use case of the library.
-
-The directory ``demo`` contains usage examples of the library. You can execute
-them as Python scripts, as shown below:
-
-.. code-block:: bash
-
-   python3 demo/baseline.py # On Linux
-   py demo/baseline.py # On Windows
 
 
 Test Suite
@@ -104,6 +104,23 @@ est installée, exécutez les commandes suivantes pour installer la bibliothèqu
    pip install .
 
 
+Scripts de démonstration
+````````````````````````
+
+Le `carnet interactif <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_
+inclus dans le répertoire des démonstrations présente un cas d'utilisation
+complet de la bibliothèque.
+
+Consultez le répertoire ``./demo`` pour voir des exemples commentés
+d'utilisation de la bibliothèque. Vous pouvez les exécuter comme le montre les
+commandes suivantes :
+
+.. code-block:: bash
+
+   python3 demo/baseline.py # Sous Linux
+   py demo/baseline.py # Sous Windows
+
+
 Documentation
 ``````````````
 
@@ -122,23 +139,6 @@ et en générant la documentation avec les commandes :
 
    cd docs
    make html
-
-
-Scripts de démonstration
-````````````````````````
-
-Le `carnet interactif <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_
-inclus dans le répertoire des démonstrations présente un cas d'utilisation
-complet de la bibliothèque.
-
-Consultez le répertoire ``./demo`` pour voir des exemples commentés
-d'utilisation de la bibliothèque. Vous pouvez les exécuter comme le montre les
-commandes suivantes :
-
-.. code-block:: bash
-
-   python3 demo/baseline.py # Sous Linux
-   py demo/baseline.py # Sous Windows
 
 
 Obtenir l'ensemble de données
