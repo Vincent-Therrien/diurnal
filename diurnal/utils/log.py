@@ -44,6 +44,15 @@ def trace(message: str) -> None:
     _print_with_datetime(f"{Fore.GREEN}>    {Style.RESET_ALL} {message}")
 
 
+def warning(message: str) -> None:
+    """Print a warning message that may cause a failure.
+
+    Args:
+        message (str): Message to display.
+    """
+    _print_with_datetime(f"{Fore.YELLOW}> WARNING{Style.RESET_ALL} {message}")
+
+
 def error(message: str) -> None:
     """Print an error message.
 

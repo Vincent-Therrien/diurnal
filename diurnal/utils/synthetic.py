@@ -6,10 +6,15 @@
     a predictive model accepts the values, use them for training, and
     produce an output, but they **do not reflect the structures of real
     RNA molecules**.
+
+    - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    - Affiliation: Département d'informatique, UQÀM
+    - File creation date: January 2024
+    - License: MIT
 """
 
 
-from random import randint, choice, uniform
+from random import randint, choice
 import numpy as np
 
 from diurnal import structure

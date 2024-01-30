@@ -344,3 +344,26 @@ def clean_matrices(primary: list, true: list, pred: list) -> tuple:
         secondary,
         categorize_matrix(secondary)
     )
+
+
+def quantize_matrix(matrix: list[list[float]], dim: int = 0) -> None:
+    """Quantize a matrix.
+
+    All the rows of the matrix are formatted as follows:
+    - The maximum element is set to 1.
+    - The other elements are set to 0.
+
+    Args:
+        matrix: Input matrix
+        dim: Dimension along which to quantize the matrix.
+    """
+    for i in range(len(matrix)):
+        if dim == 0:
+            maximum = max(matrix[i,:])
+        elif dim == 1:
+            maximum = max(matrix[:,i])
+        for j in range(len(matrix[i])):
+            if matrix[i][j] == maximum:
+                matrix[i][j] = 1.0
+            else:
+                matrix[i][j] = 0.0

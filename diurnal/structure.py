@@ -128,12 +128,16 @@ class Primary:
         corresponding element will be assigned to its value in the map.
 
         Args:
-            bases (list(str)): Sequence of bases.
+            bases (list(str)): Primary structure (sequence of bases).
             size (int): Matrix dimension. `0` for no padding.
             map (dict): Assign a pairing to a matrix element.
 
         Returns (np.array): Encoded matrix.
         """
+        if type(bases[0]) != type(list(map.keys())[0]):
+            a = str(type(bases[0]))
+            b = str(type(list(map.keys())[0]))
+            log.warning(f"Primary.to_matrix type mismatch: {a} and {b}")
         N_MINIMUM_DISTANCE = 4
         if size == 0:
             size = len(bases)
