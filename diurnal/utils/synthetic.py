@@ -14,7 +14,7 @@
 """
 
 
-from random import randint, choice
+from random import uniform, choice
 import numpy as np
 
 from diurnal import structure
@@ -70,32 +70,19 @@ def make_structures(n: int) -> tuple:
     if n < LOOP_MIN_DISTANCE + 2:
         return f"{choice(BASES)}" * n, [-1 for _ in range(n)]
     else:
-        pairings = [-1] * n
-        n_paired = int(n / 3) * 2
-        TO_PAIR = -2
-        for _ in range(n_paired):
-            while True:
-                i = randint(0, n - 1)
-                if pairings[i] == -1:
-                    pairings[i] = TO_PAIR
-                    break
-        # Assign 5' tp 3' pairings.
-        for i in range(n):
-            if pairings[i] == -2:
-                for j in range(n - 1, -1, -1):
-                    if pairings[j] == -2:
-                        pairings[j] = i
-                        pairings[i] = j
-                        break
-        # Fix the inconsistencies entailed by the 5' to 3' pairings.
-        for i in range(n - 1):
-            if pairings[i] == i + 1:
-                pairings.insert(i + 1, -1)
-                while True:
-                    i = randint(0, n - 1)
-                    if pairings[i] == -1:
-                        pairings.pop(i)
-                        break
+        pairings = '.' * LOOP_MIN_DISTANCE
+        while len(pairings) < n:
+            if len(pairings) == n - 1:
+                pairings = pairings + '.'
+            else:
+                if uniform(0, 1) < 0.5:
+                    pairings = '(' + pairings + ')'
+                else:
+                    if uniform(0, 1) < 0.5:
+                        pairings = pairings + '.'
+                    else:
+                        pairings = '.' + pairings
+        pairings = structure.Secondary.to_pairings(pairings)
         return make_primary(pairings), pairings
 
 
@@ -104,7 +91,7 @@ class PairingMatrix:
     prototyping.
     """
 
-    def single_pairing(dim: int, n: int) -> tuple(list[np.array]):
+    def single_pairing(dim: int, n: int) -> tuple:
         """Create pairing matrices that each have a single, random
         pairing.
 

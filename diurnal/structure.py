@@ -33,37 +33,36 @@ class Schemes:
             and `)` of the bracket notation are considered identical).
     """
     IUPAC_TO_ONEHOT = {
-        #     A  C  G  U
-        "A": [1, 0, 0, 0],
-        "C": [0, 1, 0, 0],
-        "G": [0, 0, 1, 0],
-        "U": [0, 0, 0, 1],
-        "T": [0, 0, 0, 1],
-        ".": [0, 0, 0, 0],
-        "-": [0, 0, 0, 0],
-        "R": [1, 0, 1, 0],
-        "Y": [0, 1, 0, 1],
-        "S": [0, 1, 1, 0],
-        "W": [1, 0, 0, 1],
-        "K": [0, 0, 1, 1],
-        "M": [1, 1, 0, 0],
-        "B": [0, 1, 1, 1],
-        "D": [1, 0, 1, 1],
-        "H": [1, 1, 0, 1],
-        "V": [1, 1, 1, 0],
-        "N": [1, 1, 1, 1],
+        "A": (1, 0, 0, 0),
+        "C": (0, 1, 0, 0),
+        "G": (0, 0, 1, 0),
+        "U": (0, 0, 0, 1),
+        "T": (0, 0, 0, 1),
+        ".": (0, 0, 0, 0),
+        "-": (0, 0, 0, 0),
+        "R": (1, 0, 1, 0),
+        "Y": (0, 1, 0, 1),
+        "S": (0, 1, 1, 0),
+        "W": (1, 0, 0, 1),
+        "K": (0, 0, 1, 1),
+        "M": (1, 1, 0, 0),
+        "B": (0, 1, 1, 1),
+        "D": (1, 0, 1, 1),
+        "H": (1, 1, 0, 1),
+        "V": (1, 1, 1, 0),
+        "N": (1, 1, 1, 1),
     }
 
     IUPAC_ONEHOT_PAIRINGS_VECTOR = {
-        "AU":       [1, 0, 0, 0, 0, 0, 0, 0],
-        "UA":       [0, 1, 0, 0, 0, 0, 0, 0],
-        "CG":       [0, 0, 1, 0, 0, 0, 0, 0],
-        "GC":       [0, 0, 0, 1, 0, 0, 0, 0],
-        "GU":       [0, 0, 0, 0, 1, 0, 0, 0],
-        "UG":       [0, 0, 0, 0, 0, 1, 0, 0],
-        "unpaired": [0, 0, 0, 0, 0, 0, 1, 0],  # Unpaired base.
-        "invalid":  [0, 0, 0, 0, 0, 0, 0, 1],  # Impossible pairing (e.g. AA).
-        "-":        [0, 0, 0, 0, 0, 0, 0, 0]   # Padding element (i.e. empty).
+        "AU":       (1, 0, 0, 0, 0, 0, 0, 0),
+        "UA":       (0, 1, 0, 0, 0, 0, 0, 0),
+        "CG":       (0, 0, 1, 0, 0, 0, 0, 0),
+        "GC":       (0, 0, 0, 1, 0, 0, 0, 0),
+        "GU":       (0, 0, 0, 0, 1, 0, 0, 0),
+        "UG":       (0, 0, 0, 0, 0, 1, 0, 0),
+        "unpaired": (0, 0, 0, 0, 0, 0, 1, 0),  # Unpaired base.
+        "invalid":  (0, 0, 0, 0, 0, 0, 0, 1),  # Impossible pairing (e.g. AA).
+        "-":        (0, 0, 0, 0, 0, 0, 0, 0)   # Padding element (i.e. empty).
     }
 
     IUPAC_ONEHOT_PAIRINGS_SCALARS = {
@@ -79,10 +78,10 @@ class Schemes:
     }
 
     BRACKET_TO_ONEHOT = {
-        "(": [1, 0, 0],
-        ".": [0, 1, 0],
-        ")": [0, 0, 1],
-        "-": [0, 0, 0],
+        "(": (1, 0, 0),
+        ".": (0, 1, 0),
+        ")": (0, 0, 1),
+        "-": (0, 0, 0),
     }
 
     SHADOW_ENCODING = {
@@ -91,6 +90,19 @@ class Schemes:
         ")": 1,
         "-": 0
     }
+
+
+class Constants:
+    """Set of physical values that contraint RNA structures.
+
+    Attributes:
+        LOOP_MIN_DISTANCE (int): Minimum number of nucleotides between
+            two bases paired to each other. For instance, in the
+            sequence `ACCCU`, the bases `A` and `U` can be paired
+            because they are separated by three bases. However, in the
+            sequence `ACU`, the bases `A` and `U` cannot be paired.
+    """
+    LOOP_MIN_DISTANCE = 3
 
 
 class Primary:
@@ -117,20 +129,25 @@ class Primary:
         return np.array(vector)
 
     def to_matrix(
-            bases: list, size: int = 0,
-            map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR) -> np.array:
+            bases: list[str],
+            size: int = 0,
+            map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
+        ) -> np.array:
         """Encode a primary structure in a matrix of potential pairings.
 
         Create an `n` by `n` matrix, where `n` is the number of bases,
-        whose element each represent a potential RNA base pairing. For
-        instance, the pairing `AA` is not possible and will be assigned
-        the `invalid` value of the map. `AU` is a valid pairing and the
-        corresponding element will be assigned to its value in the map.
+        in which element each represent a potential RNA base pairing.
+        For instance, the pairing `AA` is not possible and will be
+        assigned the `invalid` value of the `map` parameter. `AU` is a
+        valid pairing and the corresponding element will be assigned to
+        its value in the `map`.
 
         Args:
             bases (list(str)): Primary structure (sequence of bases).
             size (int): Matrix dimension. `0` for no padding.
-            map (dict): Assign a pairing to a matrix element.
+            map (dict): Assign a pairing to a matrix element. The
+                elements of the map must be (1) convertible to a Numpy
+                array and (2) of the same dimension.
 
         Returns (np.array): Encoded matrix.
         """
@@ -241,8 +258,10 @@ class Secondary:
     """Transform RNA secondary structures into useful formats."""
 
     def to_onehot(
-            pairings: list, size: int = 0,
-            map: dict = Schemes.BRACKET_TO_ONEHOT) -> np.array:
+            pairings: list,
+            size: int = 0,
+            map: dict = Schemes.BRACKET_TO_ONEHOT
+        ) -> np.array:
         """Encode pairings in a one-hot encoded dot-bracket secondary
         structure.
 
@@ -270,7 +289,7 @@ class Secondary:
         return vector
 
     def to_matrix(pairings: list, size: int = 0) -> np.array:
-        """Encode a secondary structure in a matrix.
+        """Encode a secondary structure into a matrix.
 
         Transform the sequence of pairings into an `n` by `n` matrix,
         where `n` is the number of pairings, whose elements can be `0`
@@ -289,6 +308,78 @@ class Secondary:
             if pairings[i] >= 0:
                 matrix[i][pairings[i]] = 1
         return matrix
+
+    def quantize_vector(vector: np.array) -> np.array:
+        """Quantize a secondary structure vector.
+
+        Convert a vector of predicted brackets into a one-hot vector. For
+        instance, `[[0.9, 0.5, 0.1], [0.0, 0.5, 0.1]]` is converted to
+        `[[1, 0, 0], [0, 1, 0]]`.
+
+        Args:
+            prediction (list-like): Secondary structure prediction.
+
+        Returns: Reformatted secondary structure.
+        """
+        if (type(vector[0]) in (int, float, np.float16, np.float32)
+                or len(vector[0]) == 1):
+            return np.array([round(p) for p in vector])
+        indices = [n.index(max(n)) if sum(n) else -1 for n in vector]
+        sub_indices = list(range(len(vector[0])))
+        return np.array(
+            [[1 if j == i else 0 for j in sub_indices] for i in indices]
+        )
+
+    def constraint_matrix(
+            pairings: np.array,
+            possible_pairings: np.array,
+            constraints: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
+        ) -> np.array:
+        """Apply constraints to a secondary structure matrix.
+
+        Return the a copy of the input matrix in which impossible
+        pairings are set to 0. This can occur if two bases are
+        incompatible, to close to each other, or if the matrix element
+        is used for padding.
+
+        Args:
+            pairings (np.array): Secondary structure pairing matrix.
+            possible_pairings (np.array): Primary structure matrix that
+                encodes possible pairings. Produced by the function
+                `Primary.to_matrix`.
+            constraints (dict): Dictionary that assigns a type of
+                pairing to an encoding.
+
+        Returns (np.array): Constrained matrix.
+        """
+        inv_constraints = {v: k for k, v in constraints.items()}
+        output = pairings.copy()
+        for i in range(output.shape[0]):
+            for j in range(output.shape[1]):
+                possible_pairing = possible_pairings[i][j]
+                if type(possible_pairing) in (float, int):
+                    possible_pairing = int(possible_pairing)
+                else:
+                    possible_pairing = tuple(possible_pairing)
+                constraint = inv_constraints[possible_pairing]
+                if constraint in ("unpaired", "invalid", "-"):
+                    output[i][j] = 0
+        return output
+
+    def quantize_matrix(matrix: np.array, fraction: float = 0.3) -> np.array:
+        """Quantize a secondary structure matrix.
+
+        ```
+            [[_, _, _, _, z, y],
+             [_, _, _, _, _, x],
+             [_, _, _, _, _, _],
+             [_, _, _, _, _, _],
+             [x, _, _, _, _, _],
+             [y, z, _, _, _, _]]
+        ```
+
+        """
+        pass
 
     def to_bracket(pairings: list) -> list:
         """Convert a list of nucleotide pairings into a secondary
@@ -481,6 +572,11 @@ class Secondary:
         | internal loop   | `i`       |
         | multiloop       | `m`       |
         | stem / stacking | `s`       |
+
+        Args:
+            pairings: List of pairings as indices or bracket notations.
+
+        Returns (str): List of elements.
         """
         if type(pairings[0]) is not str:
             bracket = Secondary.to_bracket(pairings)

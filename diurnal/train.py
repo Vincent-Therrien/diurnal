@@ -363,7 +363,7 @@ def quantize_matrix(matrix: list[list[float]], dim: int = 0) -> None:
         elif dim == 1:
             maximum = max(matrix[:,i])
         for j in range(len(matrix[i])):
-            if matrix[i][j] == maximum:
-                matrix[i][j] = 1.0
-            else:
+            if matrix[i][j] == 0 or matrix[i][j] != maximum:
                 matrix[i][j] = 0.0
+            else:
+                matrix[i][j] = 1.0
