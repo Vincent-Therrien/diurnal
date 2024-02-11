@@ -27,7 +27,6 @@ PAIRINGS = {
     "C": "G",
     "G": "C"
 }
-LOOP_MIN_DISTANCE = 3  # Minimum number of bases between `(` and `)`.
 OPPOSED_MIN_DISTANCE = 1  # Minimum number of bases between `)` and `(`.
 
 
@@ -67,10 +66,10 @@ def make_structures(n: int) -> tuple:
     - The second element is the secondary structure as a list of
       pairing indices.
     """
-    if n < LOOP_MIN_DISTANCE + 2:
+    if n < structure.Constants.LOOP_MIN_DISTANCE + 2:
         return f"{choice(BASES)}" * n, [-1 for _ in range(n)]
     else:
-        pairings = '.' * LOOP_MIN_DISTANCE
+        pairings = '.' * structure.Constants.LOOP_MIN_DISTANCE
         while len(pairings) < n:
             if len(pairings) == n - 1:
                 pairings = pairings + '.'

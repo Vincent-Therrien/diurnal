@@ -15,7 +15,11 @@ from diurnal.utils import log
 
 
 class Schemes:
-    """RNA structural codes to transform data into other representations.
+    """RNA structure schemes
+
+    The attributes of this class are used to transform raw RNA sequence
+    data into other representations that can be used for prediction
+    problems.
 
     Attributes:
         IUPAC_TO_ONEHOT (dict): One-hot encoding dictionary for IUPAC
@@ -100,7 +104,8 @@ class Constants:
             two bases paired to each other. For instance, in the
             sequence `ACCCU`, the bases `A` and `U` can be paired
             because they are separated by three bases. However, in the
-            sequence `ACU`, the bases `A` and `U` cannot be paired.
+            sequence `ACU`, the bases `A` and `U` cannot be paired
+            because they are too close.
     """
     LOOP_MIN_DISTANCE = 3
 
@@ -173,6 +178,39 @@ class Primary:
                 else:
                     matrix[row][col] = map["invalid"]
         return np.array(matrix)
+
+    def to_mask(
+            pairings: np.array,
+            map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
+        ) -> np.array:
+        """Make a primary structure pairing mask.
+
+        Return the a copy of the input matrix in which impossible
+        pairings are set to 0 and possible pairings are set to 1.
+
+        Args:
+            pairings (np.array): Primary structure potential pairing
+                matrix.
+            map (dict): Dictionary that assigns a type of pairing to an
+                encoding.
+
+        Returns (np.array): Pairing matrix mask.
+        """
+        inv_constraints = {v: k for k, v in map.items()}
+        output = np.zeros((pairings.shape[0], pairings.shape[0]))
+        for i in range(output.shape[0]):
+            for j in range(output.shape[1]):
+                pairing = pairings[i][j]
+                if type(pairing) in (float, int):
+                    pairing = int(pairing)
+                else:
+                    pairing = tuple(pairing)
+                constraint = inv_constraints[pairing]
+                if constraint in ("unpaired", "invalid", "-"):
+                    output[i][j] = 0
+                else:
+                    output[i][j] = 1
+        return output
 
     def to_sequence(
             vector, strip: bool = True, map: dict = Schemes.IUPAC_TO_ONEHOT
@@ -330,54 +368,31 @@ class Secondary:
             [[1 if j == i else 0 for j in sub_indices] for i in indices]
         )
 
-    def constraint_matrix(
-            pairings: np.array,
-            possible_pairings: np.array,
-            constraints: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
-        ) -> np.array:
-        """Apply constraints to a secondary structure matrix.
+    def fold_matrix(matrix: np.array) -> np.array:
+        """Eliminate invalid pairings in a secondary structure matrix.
 
-        Return the a copy of the input matrix in which impossible
-        pairings are set to 0. This can occur if two bases are
-        incompatible, to close to each other, or if the matrix element
-        is used for padding.
-
-        Args:
-            pairings (np.array): Secondary structure pairing matrix.
-            possible_pairings (np.array): Primary structure matrix that
-                encodes possible pairings. Produced by the function
-                `Primary.to_matrix`.
-            constraints (dict): Dictionary that assigns a type of
-                pairing to an encoding.
-
-        Returns (np.array): Constrained matrix.
-        """
-        inv_constraints = {v: k for k, v in constraints.items()}
-        output = pairings.copy()
-        for i in range(output.shape[0]):
-            for j in range(output.shape[1]):
-                possible_pairing = possible_pairings[i][j]
-                if type(possible_pairing) in (float, int):
-                    possible_pairing = int(possible_pairing)
-                else:
-                    possible_pairing = tuple(possible_pairing)
-                constraint = inv_constraints[possible_pairing]
-                if constraint in ("unpaired", "invalid", "-"):
-                    output[i][j] = 0
-        return output
-
-    def quantize_matrix(matrix: np.array, fraction: float = 0.3) -> np.array:
-        """Quantize a secondary structure matrix.
+        Let the following represent a secondary structure matrix:
 
         ```
-            [[_, _, _, _, z, y],
-             [_, _, _, _, _, x],
+            [[_, _, _, _, c, b],
+             [_, _, _, _, _, a],
              [_, _, _, _, _, _],
              [_, _, _, _, _, _],
              [x, _, _, _, _, _],
              [y, z, _, _, _, _]]
         ```
 
+        It follows that (x, a), (y, b), and (z, c) must all be pairs
+        of identical elements because they represent either paired or
+        unpaired bases. Differing elements would indicate that a base is
+        both paired and unpaired, which is impossible. This function
+        assigns the value `0` to all impossible pairings and `1` to all
+        other values.
+
+        Args:
+            matrix (np.array): Pairing matrix.
+
+        Returns (np.array): Folded pairing matrix.
         """
         pass
 
