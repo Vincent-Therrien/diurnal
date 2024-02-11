@@ -264,3 +264,19 @@ def test_secondary_structure_to_matrix():
     encoding = structure.Secondary.to_matrix(pairings, len(pairings) + 1)
     assert (expected_matrix == encoding).all(), \
         "Secondary structure is incorrectly padded in a matrix."
+
+
+def test_secondary_structure_folding():
+    """Ensure that errors can be found in the pairing matrix."""
+    VALID_PAIRINGS = ((0, 19), (19, 0), (3, 17), (17, 3), (5, 14), (14, 5))
+    INVALID_PAIRINGS = ((1, 18), (18, 2), (4, 18), (15, 4))
+    matrix = np.zeros((20, 20))
+    for a, b in (VALID_PAIRINGS + INVALID_PAIRINGS):
+        matrix[a][b] = 1
+    fold = structure.Secondary.fold_matrix(matrix)
+    for i in range(fold.shape[0]):
+        for j in range(fold.shape[0]):
+            if (i, j) in INVALID_PAIRINGS or (j, i) in INVALID_PAIRINGS:
+                assert fold[i][j] == 0
+            else:
+                assert fold[i][j] == 1

@@ -214,7 +214,7 @@ class Primary:
 
     def to_sequence(
             vector, strip: bool = True, map: dict = Schemes.IUPAC_TO_ONEHOT
-            ) -> list:
+        ) -> list:
         """Transform a one-hot encoded vector into a sequence of bases.
 
         Args:
@@ -231,7 +231,7 @@ class Primary:
             return map(vector)
         bases = []
         for base in vector:
-            base = list(base)
+            base = tuple(base)
             for key, code in map.items():
                 if code == base:
                     bases.append(key)
@@ -394,7 +394,19 @@ class Secondary:
 
         Returns (np.array): Folded pairing matrix.
         """
-        pass
+        output = np.ones((matrix.shape[0], matrix.shape[0]))
+        N = int(output.shape[0])
+        for i in range(N):
+            for j in range(N):
+                # Inspect the lower triangle.
+                if j > i:
+                    continue
+                if abs(i - j) < Constants.LOOP_MIN_DISTANCE:
+                    continue
+                if matrix[i][j] != matrix[j][i]:
+                    output[i][j] = 0
+                    output[j][i] = 0
+        return output
 
     def to_bracket(pairings: list) -> list:
         """Convert a list of nucleotide pairings into a secondary
