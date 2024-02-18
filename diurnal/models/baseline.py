@@ -27,14 +27,14 @@ class Random(Basic):
 
     def _train(self) -> None:
         """Simulate a training of the model."""
-        for symbol in self.secondary[0]:
+        for symbol in self.output[0]:
             symbol = symbol.tolist()
             if symbol not in self.symbols and sum(symbol):
                 self.symbols.append(symbol)
 
     def _predict(self, primary) -> np.array:
         """Predict a random secondary structure."""
-        return [choice(self.symbols) for _ in range(len(primary))]
+        return [choice(self.symbols) for _ in range(len(primary[0]))]
 
     def _save(self, directory) -> None:
         """Since the model is entirely random, no data is saved."""
@@ -56,7 +56,7 @@ class Uniform(Basic):
 
     def _predict(self, primary) -> np.array:
         """Predict a random secondary structure."""
-        return [self.symbol for _ in range(len(primary))]
+        return [self.symbol for _ in range(len(primary[0]))]
 
     def _save(self, directory) -> None:
         """Save the model."""
@@ -77,7 +77,7 @@ class Majority(Basic):
     def _train(self) -> None:
         """Simulate a training of the model."""
         symbols = {}
-        for structure in self.secondary:
+        for structure in self.output:
             for element in structure:
                 if sum(element) == 0:
                     continue
@@ -94,7 +94,7 @@ class Majority(Basic):
 
     def _predict(self, primary) -> np.array:
         """Predict a random secondary structure."""
-        return [self.symbol for _ in range(len(primary))]
+        return [self.symbol for _ in range(len(primary[0]))]
 
     def _save(self, directory) -> None:
         """Save the model."""

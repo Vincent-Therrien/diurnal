@@ -16,7 +16,7 @@ from diurnal.utils import log
 
 
 def clean_dir_path(directory: str) -> str:
-    """Validate a directory.
+    """Return the correct filepath to `directory`.
 
     Args:
         directory (str): Directory name to validate.

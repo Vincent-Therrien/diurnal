@@ -67,11 +67,11 @@ loaded_model = diurnal.models.NN(
     use_half=True)
 loaded_model.load("saved_model")
 
-print(test_set["primary_structures"][0])
-visualize.potential_pairings(test_set["primary_structures"][0])
+print(test_set["input"][0])
+visualize.potential_pairings(test_set["input"][0])
 print(test_set["secondary_structures"][0])
-visualize.pairing_matrix(test_set["secondary_structures"][0])
-pred = loaded_model.predict(test_set["primary_structures"][0])
+visualize.pairing_matrix(test_set["output"][0])
+pred = loaded_model.predict(test_set["input"][0])
 print(pred.shape)
 print(pred)
 np.save("test.npy", pred)
@@ -81,6 +81,6 @@ f = loaded_model.test(test_set)
 print(f"Average F1-score of the saved model: {sum(f)/len(f):.4}")
 
 print(f"\nSample prediction from the test set (`{test_set['names'][0]}`).")
-p = test_set["primary_structures"][0]
-s = test_set["secondary_structures"][0]
+p = test_set["input"][0]
+s = test_set["output"][0]
 visualize.prediction(p, s, loaded_model.predict(p))

@@ -62,8 +62,8 @@ class Basic():
                 .. block::
 
                     {
-                        "primary_structures": <vector>,
-                        "secondary_structures": <vector>,
+                        "input": tuple(<vector>),
+                        "output": <vector>,
                         "names": List[str],
                         "families": List[str]
                     }
@@ -72,38 +72,48 @@ class Basic():
             verbose (bool): Print informative messages.
         """
         if verbose:
-            N = len(training_data["primary_structures"])
+            N = len(training_data["output"])
             log.info(f"Training the model with {N} data points.")
             if validation_data:
-                n = len(validation_data["primary_structures"])
+                n = len(validation_data["output"])
                 log.trace(f"Using {n} data points for validation.")
         self.names = training_data["names"]
-        self.primary = training_data["primary_structures"]
-        self.secondary = training_data["secondary_structures"]
+        self.input = training_data["input"]
+        self.output = training_data["output"]
+        self.N = len(self.output)
+        if type(self.input) != tuple:
+            log.error(f"The `input` must be a tuple, got {type(self.input)}")
+            raise RuntimeError
+        self.input_shape = self.input[0][0].shape
+        self.length = len(self.output[0])
+        self.output_shape = self.output[0].shape
         self.families = training_data["families"]
+        self.validate = False
+        self.validation_names = None
+        self.validation_input = None
+        self.validation_output = None
+        self.validation_N = None
+        self.validation_families = None
         if validation_data:
             self.validate = True
             self.validation_names = validation_data["names"]
-            self.validation_primary = validation_data["primary_structures"]
-            self.validation_secondary = validation_data["secondary_structures"]
+            self.validation_input = validation_data["input"]
+            self.validation_output = validation_data["output"]
+            self.validation_N = len(self.validation_output)
+            if len(self.validation_input) == self.validation_N:
+                self.validation_input = [self.validation_input]
             self.validation_families = validation_data["families"]
-        else:
-            self.validate = False
-            self.validation_names = None
-            self.validation_primary = None
-            self.validation_secondary = None
-            self.validation_families = None
         self._train()
 
-    def predict(self, primary) -> np.array:
+    def predict(self, input) -> np.array:
         """Predict a random secondary structure.
 
         Args:
-            primary: RNA primary structure.
+            input: RNA primary structure data.
 
         Returns (np.array): Predicted structure.
         """
-        return self._predict(primary)
+        return self._predict(input)
 
     def save(self, directory: str, verbose: bool = True) -> None:
         """Write a model into the filesystem.
@@ -126,7 +136,9 @@ class Basic():
                 f"Generation timestamp: {datetime.utcnow()} UTC\n",
                 "\n",
                 "Training data listed in ``training_molecule_list.txt``.\n",
-                f"{len(self.primary)} molecules were used for training.\n"])
+                f"{len(self.output)} molecules were used for training.\n\n",
+                f"Input shape: {self.input_shape}\n",
+                f"Output shape: {self.output_shape}\n"])
         self._save(directory)
 
     def load(self, directory: str, verbose: bool = True) -> None:
@@ -160,17 +172,18 @@ class Basic():
         Returns (list): The evaluation obtained for each structure.
         """
         results = []
-        n = len(data["primary_structures"])
+        n = len(data["output"])
         if verbose:
             log.info(f"Testing the model with {n} data points.")
         for i in range(n):
-            primary = data["primary_structures"][i]
-            true = data["secondary_structures"][i]
-            pred = self.predict(primary)
-            if (len(primary.shape)) == 2:
-                _, true, pred = train.clean_vectors(primary, true, pred)
-            elif (len(primary.shape)) == 3:
-                _, true, pred = train.clean_matrices(primary, true, pred)
+            n_args = len(data["input"])
+            input = tuple([data["input"][x][i] for x in range(n_args)])
+            true = data["output"][i]
+            pred = self.predict(input)
+            if (len(input[0].shape)) == 2:
+                _, true, pred = train.clean_vectors(input[0], true, pred)
+            elif (len(input[0].shape)) == 3:
+                _, true, pred = train.clean_matrices(input[0], true, pred)
             results.append(evaluation(true, pred))
         return results
 
@@ -218,27 +231,26 @@ class NN(Basic):
         """Train the neural network."""
         self.nn.train()
         if self.verbosity:
-            threshold = int(len(self.primary) * 0.05)
+            threshold = int(len(self.output) * 0.05)
             threshold = 1 if threshold < 1 else threshold
             log.trace("Beginning the training.")
         # TMP
         data = []
-        self.primary = np.array(self.primary)
-        self.secondary = np.array(self.secondary)
-        N = len(self.primary)
-        N_PRINTS = int(N / self.batch)
-        threshold = int((N / self.batch) / 10)
-        for i in range(self.primary.shape[0]):
-            d = [self.primary[i].T, self.secondary[i]]
-            data.append(d)
+        N_PRINTS = int(self.N / self.batch)
+        threshold = int((self.N / self.batch) / 10)
+        for i in range(self.N):
+            input = []
+            for j in range(len(self.input)):
+                input.append(np.array(self.input[j][i].T))
+            data.append([input, np.array(self.output[i])])
         training_set = DataLoader(data, batch_size=self.batch)
         if self.validate:
             data = []
-            self.validation_primary = np.array(self.validation_primary)
-            self.validation_secondary = np.array(self.validation_secondary)
-            for i in range(self.validation_primary.shape[0]):
-                d = [self.validation_primary[i].T, self.validation_secondary[i]]
-                data.append(d)
+            for i in range(self.validation_N):
+                input = []
+                for j in range(len(self.validation_input)):
+                    input.append(np.array(self.validation_input[j][i].T))
+                data.append([input, self.validation_output[i]])
             validation_set = DataLoader(data, batch_size=self.batch)
         # TMP
         patience = 5
@@ -247,13 +259,13 @@ class NN(Basic):
             losses = []
             for batch, (x, y) in enumerate(training_set):
                 if self.use_half:
-                    x = x.to(self.device).half()
+                    x = [x.to(self.device).half() for x in x]
                     y = y.to(self.device).half()
                 else:
-                    x = x.to(self.device)
+                    x = [x.to(self.device) for x in x]
                     y = y.to(self.device)
                 self.optimizer.zero_grad()
-                pred = self.nn(x)
+                pred = self.nn(*x)
                 loss = self.loss_fn(pred, y)
                 loss.backward()
                 self.optimizer.step()
@@ -263,12 +275,12 @@ class NN(Basic):
                 losses = []
                 for batch, (x, y) in enumerate(validation_set):
                     if self.use_half:
-                        x = x.to(self.device).half()
+                        x = [x.to(self.device).half() for x in x]
                         y = y.to(self.device).half()
                     else:
-                        x = x.to(self.device)
+                        x = [x.to(self.device) for x in x]
                         y = y.to(self.device)
-                    pred = self.nn(x)
+                    pred = self.nn(*x)
                     losses.append(self.loss_fn(pred, y).item())
                 average_loss = sum(losses) / len(losses)
                 average_losses.append(average_loss)
@@ -290,14 +302,21 @@ class NN(Basic):
         if self.verbosity:
             print()
 
-    def _predict(self, primary: np.ndarray) -> np.ndarray:
+    def _predict(self, input: any) -> np.ndarray:
         self.nn.eval()
-        primary = from_numpy(np.array([primary.T]))
         if self.use_half:
-            primary = primary.to(self.device).half()
+            input_values = []
+            for i in input:
+                value = from_numpy(np.array(i.T))
+                input_values.append(value.to(self.device).half())
         else:
-            primary = primary.to(self.device)
-        pred = self.nn(primary)[0]
+            input_values = []
+            for i in input:
+                value = from_numpy(np.array(i.T))
+                input_values.append(value.to(self.device))
+        if len(input) == 1:
+            input_values[0] = input_values[0][None, :, :]
+        pred = self.nn(*input_values)[0]
         if self.device == "cuda":
             return pred.detach().cpu().numpy()
         return pred

@@ -36,25 +36,25 @@ def test_split_dict():
     """Ensure that a dictionary of training data can be correctly split
     into non-overlapping subsets."""
     data = {
-        "primary_structures":   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        "secondary_structures": [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+        "input": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "output": [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
         "names": ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
     }
     expected = [
         {
-            'primary_structures': [0, 1, 2, 3, 4, 5, 6, 7],
-            'secondary_structures': [10, 11, 12, 13, 14, 15, 16, 17],
-            'names': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+            "input": ([0, 1, 2, 3, 4, 5, 6, 7], ),
+            "output": [10, 11, 12, 13, 14, 15, 16, 17],
+            "names": ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
         },
         {
-            'primary_structures': [8],
-            'secondary_structures': [18],
-            'names': ['I']
+            "input": ([8], ),
+            "output": [18],
+            "names": ['I']
         },
         {
-            'primary_structures': [9],
-            'secondary_structures': [19],
-            'names': ['J']
+            "input": ([9], ),
+            "output": [19],
+            "names": ['J']
         }
     ]
     subdicts = train.split_data(data, [0.8, 0.1, 0.1])

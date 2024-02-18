@@ -19,6 +19,7 @@ import diurnal.structure
 
 # Input data transformation
 def _split_arrays(data, fractions: list, offset: int = 0) -> list:
+    """Split an array of data."""
     subarrays = []
     index = int(offset)
     n = len(data)
@@ -38,15 +39,26 @@ def _split_arrays(data, fractions: list, offset: int = 0) -> list:
     return subarrays
 
 
+def _check_homogeneity(data) -> None:
+    """Ensure that the data are of the same length."""
+    try:
+        lengths = [len(d) for d in data]
+    except:
+        return
+    if len(set(lengths)) != 1:
+        log.error(f"Inhomogeneous data: {lengths}")
+        raise RuntimeError
+
+
 def split_data(data, fractions: list, offset: int = 0) -> list:
     """Split data in subsets according to the specified fractions.
 
     Args:
         data: Array-like object containing the data to split.
-        fractions: Proportion of each subset. For instance, to use 80% of the
-            data for training and 20% for testing, use [0.8, 0.2].
-        offset: Number of indices to offset to assemble the subsets. Used for
-            K-fold data splits.
+        fractions: Proportion of each subset. For instance, to use 80%
+            of the data for training and 20% for testing, use [0.8, 0.2].
+        offset: Number of indices to offset to assemble the subsets.
+            Used for K-fold data splits.
 
     Returns:
         A list containing the split data object.
@@ -57,10 +69,14 @@ def split_data(data, fractions: list, offset: int = 0) -> list:
     if type(data) == dict:
         keys = list(data.keys())
         values = []
-        for i in range(len(data[keys[0]])):
+        length = max([len(data[k]) for k in keys])
+        for i in range(length):
             element = []
             for k in keys:
-                element.append(data[k][i])
+                if len(data[k]) == 1:
+                    element.append(data[k][0][i])
+                else:
+                    element.append(data[k][i])
             values.append(element)
         split_values = _split_arrays(values, fractions, offset)
         new_data = []
@@ -68,9 +84,12 @@ def split_data(data, fractions: list, offset: int = 0) -> list:
             d = {}
             for i, k in enumerate(keys):
                 d[k] = [element[i] for element in split]
+                if k == "input":
+                    d[k] = (d[k], )
             new_data.append(d)
         return new_data
     else:
+        _check_homogeneity(data)
         return _split_arrays(data, fractions, offset)
 
 
@@ -208,10 +227,10 @@ def _convert_data_to_dict(data: list) -> dict:
     Return (dict): Input data represented in a labelled dictionary.
     """
     return {
-        "primary_structures": data[0],
-        "secondary_structures": data[1],
-        "names": data[2],
-        "families": data[3] if len(data) > 3 else None
+        "input": tuple(data[:-3]),
+        "output": data[-3],
+        "names": data[-2],
+        "families": data[-1]
     }
 
 

@@ -52,11 +52,11 @@ def test_pipeline_dryrun(tmp_rna_structure_files, model, f_range):
     train_set, test_set, validate_set = train.split_data(data, [1/3, 1/3, 1/3])
     # Simulated training
     model.train(train_set)
-    prediction = model.predict(test_set["primary_structures"][0])
+    prediction = model.predict(test_set["input"][0])
     # Clean up
     bases, true, pred = train.clean_vectors(
-        test_set["primary_structures"][0],
-        test_set["secondary_structures"][0],
+        test_set["input"][0][0],
+        test_set["output"][0],
         prediction
     )
     true = structure.Secondary.to_bracket(true)

@@ -220,7 +220,7 @@ def format(
         primary_structure_map: any = diurnal.structure.Primary.to_onehot,
         secondary_structure_map: any = diurnal.structure.Secondary.to_onehot,
         verbosity: int = 1) -> None:
-    """ Transform the original datasets into the representation provided
+    """Transform the original datasets into the representation provided
     by the arguments.
 
     This function reads the RNA dataset files comprised in the directory

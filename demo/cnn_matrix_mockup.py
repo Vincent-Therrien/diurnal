@@ -16,8 +16,8 @@ def to_dict(t) -> dict:
     return {
         "names": None,
         "families": None,
-        "primary_structures": t[0],
-        "secondary_structures": t[1]
+        "input": t[0],
+        "output": t[1]
     }
 
 SIZE = 32
@@ -38,11 +38,11 @@ model = diurnal.models.NN(
     use_half=True)
 model.train(train_set, validation_set)
 
-print(test_set["primary_structures"][0])
-visualize.primary_structure(test_set["primary_structures"][0])
-visualize.potential_pairings(test_set["primary_structures"][0])
-visualize.pairing_matrix(test_set["secondary_structures"][0])
-pred = model.predict(test_set["primary_structures"][0])
+print(test_set["input"][0])
+visualize.primary_structure(test_set["input"][0])
+visualize.potential_pairings(test_set["input"][0])
+visualize.pairing_matrix(test_set["output"][0])
+pred = model.predict(test_set["input"][0])
 visualize.pairing_matrix(pred[0])
 
 f = model.test(test_set)
@@ -52,6 +52,6 @@ f = model.test(test_set)
 print(f"Average F1-score of the saved model: {sum(f)/len(f):.4}")
 
 print(f"\nSample prediction from the test set (`{test_set['primary_structures'][0]}`).")
-p = test_set["primary_structures"][0]
-s = test_set["secondary_structures"][0]
+p = test_set["input"][0]
+s = test_set["output"][0]
 visualize.prediction(p, s, model.predict(p))
