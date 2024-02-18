@@ -82,7 +82,7 @@ def test_primary_structure_bases_to_matrix():
     potential pairings."""
     bases = list("AAACCUUUU")
     i = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["invalid"]
-    u = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["unpaired"]
+    u = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["invalid"]
     z = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["-"]
     a = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["UA"]
     b = structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR["AU"]

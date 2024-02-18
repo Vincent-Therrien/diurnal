@@ -64,9 +64,8 @@ class Schemes:
         "GC":       (0, 0, 0, 1, 0, 0, 0, 0),
         "GU":       (0, 0, 0, 0, 1, 0, 0, 0),
         "UG":       (0, 0, 0, 0, 0, 1, 0, 0),
-        "unpaired": (0, 0, 0, 0, 0, 0, 1, 0),  # Unpaired base.
-        "invalid":  (0, 0, 0, 0, 0, 0, 0, 1),  # Impossible pairing (e.g. AA).
-        "-":        (0, 0, 0, 0, 0, 0, 0, 0)   # Padding element (i.e. empty).
+        "invalid":  (0, 0, 0, 0, 0, 0, 1, 0),  # Impossible pairing (e.g. AA).
+        "-":        (0, 0, 0, 0, 0, 0, 0, 0),  # Padding element (i.e. empty).
     }
 
     IUPAC_ONEHOT_PAIRINGS_SCALARS = {
@@ -76,9 +75,8 @@ class Schemes:
         "GC":       3,
         "GU":       1,
         "UG":       1,
-        "unpaired": 0,  # Unpaired base.
-        "invalid":  -1,  # Impossible pairing (e.g. AA).
-        "-":        -1   # Padding element (i.e. empty).
+        "invalid":  0,  # Impossible pairing (e.g. AA).
+        "-":        -1  # Padding element (i.e. empty).
     }
 
     BRACKET_TO_ONEHOT = {
@@ -168,9 +166,7 @@ class Primary:
         for row in range(len(bases)):
             for col in range(len(bases)):
                 pairing = bases[row] + bases[col]
-                if row == col:
-                    matrix[row][col] = map["unpaired"]
-                elif (abs(row - col) < N_MINIMUM_DISTANCE
+                if (abs(row - col) < N_MINIMUM_DISTANCE
                       or len(set(pairing)) == 1):
                     matrix[row][col] = map["invalid"]
                 elif pairing in map:
@@ -206,7 +202,7 @@ class Primary:
                 else:
                     pairing = tuple(pairing)
                 constraint = inv_constraints[pairing]
-                if constraint in ("unpaired", "invalid", "-"):
+                if constraint in ("invalid", "-"):
                     output[i][j] = 0
                 else:
                     output[i][j] = 1

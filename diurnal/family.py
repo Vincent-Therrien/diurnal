@@ -13,7 +13,7 @@
 from diurnal.utils import log
 
 
-NAMES = [
+_NAMES = [
     ["5s"],   # 5s ribosomal RNA (rRNA)
     ["16s"],  # 16s ribosomal RNA (rRNA)
     ["23s"],  # 23s ribosomal RNA (rRNA)
@@ -26,14 +26,16 @@ NAMES = [
     ["tRNA"]
 ]
 
+NAMES = [name[0] for name in _NAMES]
+
 _NAME_SET = []
-for name in NAMES:
+for name in _NAMES:
     for alias in name:
         _NAME_SET.append(alias)
 
 ONEHOT = dict()
-for i, name in enumerate(NAMES):
-    ONEHOT[name[0]] = [1 if x == i else 0 for x in range(len(NAMES))]
+for i, name in enumerate(_NAMES):
+    ONEHOT[name[0]] = [1 if x == i else 0 for x in range(len(_NAMES))]
 
 
 def is_known(family: str) -> bool:
@@ -59,12 +61,12 @@ def all_but(families: list[str]) -> bool:
         families = [families]
     excluded_families = []
     for family in families:
-        for name in NAMES:
+        for name in _NAMES:
             if family in name:
                 excluded_families.append(name[0])
     excluded_families = set(excluded_families)
     selected_families = []
-    for name in NAMES:
+    for name in _NAMES:
         if name[0] not in excluded_families:
             selected_families.append(name[0])
     return selected_families
@@ -79,7 +81,7 @@ def to_onehot(family: str, map: dict = ONEHOT) -> list:
 
     Returns (list(int)): One-hot encoded family.
     """
-    for name in NAMES:
+    for name in _NAMES:
         if family in name:
             return map[name[0]]
     return None
@@ -112,7 +114,7 @@ def get_name(filename: str) -> str:
     Returns (str): RNA family if found, empty string otherwise.
     """
     candidates = []
-    for family in NAMES:
+    for family in _NAMES:
         for alias in family:
             if alias.upper() in filename.upper():
                 candidates.append(family[0])

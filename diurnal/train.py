@@ -226,6 +226,13 @@ def _convert_data_to_dict(data: list) -> dict:
 
     Return (dict): Input data represented in a labelled dictionary.
     """
+    if len(data) < 4 or len(data[0]) < 1:
+        return {
+            "input": tuple(),
+            "output": [],
+            "names": [],
+            "families": []
+        }
     return {
         "input": tuple(data[:-3]),
         "output": data[-3],
@@ -267,8 +274,8 @@ def load_families(
 
     Returns (dict): Loaded data represented as
         `{
-            "primary_structure": list,
-            "secondary_structure": list,
+            "input": tuple[list],
+            "secondary": list,
             "names": list(str),
             "family": list
         }`

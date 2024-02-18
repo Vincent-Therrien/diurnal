@@ -123,7 +123,7 @@ class PairingMatrix:
                     elif x == j and y == i:
                         primary[x][y] = codes["AU"]
                     else:
-                        primary[x][y] = codes["unpaired"]
+                        primary[x][y] = codes["invalid"]
             P.append(primary)
             S.append(secondary)
         return P, S

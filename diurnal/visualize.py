@@ -25,9 +25,9 @@ PAIRING_COLORS = {
     "GC":       (0.0, 0.7, 0.0),
     "GU":       (0.0, 0.0, 0.4),
     "UG":       (0.0, 0.0, 0.7),
-    "unpaired": (0.5, 0.5, 0.5),     # Unpaired base.
-    "invalid":  (0.85, 0.85, 0.85),  # Impossible pairing (e.g. AA).
-    "padding":  (0.95, 0.95, 0.95)   # Padding elements.
+    "invalid":  (0.5, 0.5, 0.5),  # Impossible pairing (e.g. AA).
+    "padding":  (0.85, 0.85, 0.85),  # Padding elements.
+    "paired":   (1.0, 1.0, 1.0)  # Paired bases, used for sec. struct.
 }
 PAIRING_CMAP = [(i, v) for i, v in enumerate(PAIRING_COLORS.values())]
 
@@ -67,28 +67,55 @@ def structure_length_per_family(path: str) -> None:
 
 def potential_pairings(
         matrix: list,
+        primary: str = None,
+        secondary: list = None,
         title: str = "RNA Molecule Potential Pairings",
         map: dict = diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
-        ) -> None:
-    """Display a heatmap of potential pairings."""
+    ) -> None:
+    """Display a heatmap of potential pairings.
+
+    Args:
+        matrix: Matrix of potential pairings.
+        primary (str): List of bases.
+        secondary (list): Matrix of the secondary structure.
+        title (str): Name of the graph.
+        map: Potential pairing to string map.
+    """
     # Obtain data.
     matrix = diurnal.structure.Primary.unpad_matrix(matrix)
     C = []
-    for row in list(range(len(matrix))):
+    for row in tuple(range(len(matrix))):
         line = []
-        for col in list(range(len(matrix[0]))):
-            element = list(matrix[row][col])
-            color = PAIRING_CMAP[list(map.values()).index(element)][1]
+        for col in tuple(range(len(matrix[0]))):
+            element = tuple(matrix[row][col])
+            color = PAIRING_CMAP[tuple(map.values()).index(element)][1]
             line.append(color)
         C.append(line)
-    # Plot the structure.
+    # Plot the potential pairings.
     plt.imshow(C, interpolation='none')
     patches = [
         mpl.patches.Patch(color=v, label=k) for k, v in PAIRING_COLORS.items()]
     plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2)
-    plt.xticks(np.arange(-.5, len(C), 1), np.arange(1, len(C) + 2, 1))
-    plt.yticks(np.arange(-.5, len(C), 1), np.arange(1, len(C) + 2, 1))
-    plt.grid()
+    # Plot the primary structure.
+    if primary:
+        index_base = [f"{i}: {b}" for i, b in enumerate(primary)]
+        plt.xticks(np.arange(0, len(C), 1), index_base)
+        plt.yticks(np.arange(0, len(C), 1), index_base)
+    # Plot the secondary structure.
+    if not secondary is None:
+        x = []
+        y = []
+        for i, row in enumerate(secondary):
+            for j, col in enumerate(row):
+                if col:
+                    x.append(j)
+                    y.append(i)
+        plt.scatter(x, y, color=PAIRING_COLORS["paired"], s=40)
+    minor_locator_x = AutoMinorLocator(2)
+    plt.gca().xaxis.set_minor_locator(minor_locator_x)
+    minor_locator_y = AutoMinorLocator(2)
+    plt.gca().yaxis.set_minor_locator(minor_locator_y)
+    plt.grid(which='minor')
     plt.title(title)
     plt.show()
 
@@ -106,9 +133,11 @@ def _add_pairing_element(value) -> int:
 
 
 
-def pairing_matrix(
-        matrix, primary: list = None, title: str = "RNA Molecule Pairings"
-        ) -> None:
+def secondary_structure(
+        matrix,
+        primary: list = None,
+        title: str = "RNA Molecule Pairings"
+    ) -> None:
     """Display a heatmap of the secondary structure.
 
     Args:
@@ -124,8 +153,8 @@ def pairing_matrix(
         C.append(line)
     plt.imshow(C, interpolation='none')
     if primary:
-        plt.xticks(np.arange(0, len(C), 1), primary)
         index_base = [f"{i}: {b}" for i, b in enumerate(primary)]
+        plt.xticks(np.arange(0, len(C), 1), index_base)
         plt.yticks(np.arange(0, len(C), 1), index_base)
     minor_locator_x = AutoMinorLocator(2)
     plt.gca().xaxis.set_minor_locator(minor_locator_x)
@@ -133,6 +162,34 @@ def pairing_matrix(
     plt.gca().yaxis.set_minor_locator(minor_locator_y)
     plt.grid(which='minor')
     plt.title(title)
+    plt.show()
+
+
+def secondary_structures_heatmap(
+        matrices,
+        title: str = "Aggregated secondary structures"
+    ) -> None:
+    """Visualize a collection of secondary structures with a heatmap.
+
+    Args:
+        matrices: Set of secondary structures as 2D matrices.
+        title (str): Graph title.
+    """
+    N = len(matrices)
+    L = matrices[0].shape[0]
+    total = np.sum(matrices, axis=0)
+    total /= np.max(total)
+    plt.imshow(total, cmap='viridis', interpolation='none')
+    plt.colorbar()
+    index_base = [f"{i}" for i in range(L)]
+    plt.xticks(np.arange(0, L, 1), index_base)
+    plt.yticks(np.arange(0, L, 1), index_base)
+    minor_locator_x = AutoMinorLocator(2)
+    plt.gca().xaxis.set_minor_locator(minor_locator_x)
+    minor_locator_y = AutoMinorLocator(2)
+    plt.gca().yaxis.set_minor_locator(minor_locator_y)
+    plt.grid(which='minor')
+    plt.title(title + f" (n = {N})")
     plt.show()
 
 
@@ -196,19 +253,3 @@ def shadow(primary, true, pred) -> None:
     ratio = str(correct) + "/" + str(len(primary))
     prefix = " " * (7 - len(ratio))
     print(f"{prefix}Matches ({ratio}): {differences}")
-
-
-def secondary_structure(pairings) -> None:
-    """Plot the secondary structure."""
-    G = nx.Graph()
-    for i in range(len(pairings) - 1):
-        G.add_edge(i, i + 1)
-    for i, p in enumerate(pairings):
-        if p >= 0:
-            G.add_edge(i, p)
-    pos = nx.spiral_layout(G)
-    nx.draw_networkx_nodes(G, pos)
-    nx.draw_networkx_labels(G, pos)
-    nx.draw_networkx_edges(G, pos, edge_color='r', arrows=True)
-    nx.draw_networkx_edges(G, pos, arrows=False)
-    plt.show()

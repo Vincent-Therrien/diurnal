@@ -371,11 +371,11 @@ def summarize(
         content += f"File: `{path + 'primary_structures.npy'}`\n\n"
         content += f"Shape: {X.shape}\n\n"
         example = "ACGU-"
-        content += f"Encoding of the structure `{example}`:\n"
+        content += f"Encoding of the structure `{example}`::\n\n"
         code = primary_structure_map(example)
         for i in range(len(example)):
-            content += f"    {example[i]} -> {code[i]}\n"
-        content += "\nExample:\n"
+            content += f"   {example[i]} -> {code[i]}\n"
+        content += "\n\nExample:\n"
         content += str(X[0])
         content += "\n\n\n"
     Y = np.load(path + "secondary_structures.npy", mmap_mode='r')
@@ -385,11 +385,11 @@ def summarize(
         content += f"File: `{path + 'secondary_structures.npy'}`\n\n"
         content += f"Shape: {Y.shape}\n\n"
         example = [2, -1, 0]  # Corresponds to `(.)` in bracket notation.
-        content += f"Encoding of the structure `{example}`:\n"
+        content += f"Encoding of the structure `{example}`::\n\n"
         code = secondary_structure_map(example)
         for i in range(len(example)):
-            content += f"    {example[i]} -> {code[i]}\n"
-        content += "\nExample:\n"
+            content += f"   {example[i]} -> {code[i]}\n"
+        content += "\n\nExample:\n"
         content += str(Y[0])
         content += "\n\n"
     return content

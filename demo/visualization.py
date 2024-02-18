@@ -6,24 +6,36 @@
     script `demo/preprocessing.py`.
 """
 
-import numpy as np
 
-from diurnal import visualize, structure
+from diurnal import database, family, structure, train, visualize
 import diurnal.utils.rna_data as rna_data
 
 
-#visualize.structure_length_per_family("data/formatted")
-#matrices = np.load(
-#    "data/formatted_matrix/primary_structures.npy", mmap_mode='r')
-#example = structure.Primary.unpad_matrix(matrices[0])
-
-
 _, b, p = rna_data.read_ct_file("data/archiveII/5s_Acanthamoeba-castellanii-1.ct")
-
-b = list("AAAGGGUUU")
-p = [8, 7, 6, -1, -1, -1, 2, 1, 0]
-
+potential_pairings = structure.Primary.to_matrix(b)
 secondary = structure.Secondary.to_matrix(p)
-print(secondary)
-visualize.pairing_matrix(b, secondary)
-#visualize.potential_pairings(example)
+print("Visualize the secondary structure of an RNA molecule.")
+visualize.secondary_structure(secondary, b)
+print("Visualize the full structure of an RNA molecule.")
+visualize.potential_pairings(potential_pairings, b, secondary)
+
+print("Visualize the secondary structures of RNA families.")
+SIZE = 256
+database.download("./data/", "archiveII")
+database.format(
+    "./data/archiveII",  # Directory of the raw data to format.
+    f"./data/formatted_matrix_{SIZE}",  # Formatted data output directory.
+    SIZE,  # Normalized size.
+    structure.Primary.to_matrix,
+    structure.Secondary.to_matrix,
+    verbosity=2
+)
+
+for name in family.NAMES:
+    set = train.load_families(f"./data/formatted_matrix_{SIZE}", name)
+    if not set["output"]:
+        continue
+    visualize.secondary_structures_heatmap(
+        set["output"],
+        f"Aggregated secondary structures of family {name}"
+    )
