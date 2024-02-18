@@ -1,6 +1,11 @@
 """
     Demonstration for a simple CNN that predicts RNA secondary
     structures.
+
+    - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
+    - Affiliation: Département d'informatique, UQÀM
+    - File creation date: September 2023
+    - License: MIT
 """
 
 import torch
