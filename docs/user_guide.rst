@@ -142,7 +142,7 @@ following code snippet shows how to do that:
 
    from diurnal import database, structure
 
-   database.format(
+   database.format_basic(
        "./data/archiveII",  # Directory of the raw data to format.
        "./data/formatted",  # Formatted data output directory.
        512,  # Normalized size. Short molecules are padded at the 3' end.

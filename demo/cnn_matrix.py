@@ -26,7 +26,7 @@ SIZE = 128
 PATH = f"./data/formatted_matrix_{SIZE}"
 
 database.download("./data/", "archiveII")
-database.format(
+database.format_basic(
     "./data/archiveII",  # Directory of the raw data to format.
     PATH,  # Formatted data output directory.
     SIZE,  # Normalized size.

@@ -47,7 +47,7 @@ def test_pipeline_dryrun(tmp_rna_structure_files, model, f_range):
         f_range (List[float]): Range of acceptable f1-score for a model.
     """
     # Preprocessing
-    database.format(STRUCTURE_PATH, TMP_PATH, DIM)
+    database.format_basic(STRUCTURE_PATH, TMP_PATH, DIM)
     data = train.load_data(TMP_PATH, False)
     train_set, test_set, validate_set = train.split_data(data, [1/3, 1/3, 1/3])
     # Simulated training

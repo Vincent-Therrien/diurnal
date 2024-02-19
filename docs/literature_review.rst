@@ -86,6 +86,13 @@ Prediction Models Based on Neural Networks
 This section summarizes a few recent RNA secondary structure prediction models.
 
 
+REDfold (2023)
+''''''''''''''
+
+REDfold :cite:`redfold` uses a contact matrix as the input and an
+encoder-decoder for the processing. It supports pseudoknots.
+
+
 CNNFold (2022)
 ''''''''''''''
 

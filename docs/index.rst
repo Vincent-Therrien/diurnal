@@ -130,7 +130,7 @@ executing it as a Python script.
    # Download the `archiveII` dataset in the `data/` directory.
    database.download("./data/", "archiveII")
    # Format the raw data from the `archiveII` dataset into Numpy vectors.
-   database.format(
+   database.format_basic(
        "./data/archiveII",  # Directory of the raw data to format.
        "./data/formatted",  # Formatted data output directory.
        SIZE  # Normalized size.

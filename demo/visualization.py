@@ -27,7 +27,7 @@ visualize.potential_pairings(potential_pairings, b, secondary)
 print("Visualize the secondary structures of RNA families.")
 SIZE = 256
 database.download("./data/", "archiveII")
-database.format(
+database.format_basic(
     "./data/archiveII",  # Directory of the raw data to format.
     f"./data/formatted_matrix_{SIZE}",  # Formatted data output directory.
     SIZE,  # Normalized size.

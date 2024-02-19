@@ -11,7 +11,7 @@
 
        import diurnal.database as db
        db.download("./data/", "archiveII")
-       db.format("./data/archiveII", "./data/formatted", 512)
+       db.format_basic("./data/archiveII", "./data/formatted", 512)
 
     - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
     - Affiliation: Département d'informatique, UQÀM
@@ -23,6 +23,9 @@ import os
 import pathlib
 import numpy as np
 from datetime import datetime
+from typing import Callable
+from random import shuffle
+import json
 
 from diurnal.utils import file_io, log
 import diurnal.utils.rna_data as rna_data
@@ -150,7 +153,7 @@ def _get_structure_shape(
     return primary.shape, secondary.shape
 
 
-def _is_already_encoded(
+def _is_already_encoded_basic(
         src: str, dst: str, size: int, primary_structure_map,
         secondary_structure_map) -> bool:
     """Check if a directory already contains already encoded data.
@@ -213,7 +216,241 @@ def _is_already_encoded(
     return True
 
 
-def format(
+def _mkdir(filename: str) -> None:
+    """Safe-create a directory."""
+    dir = "".join([i + "/" for i in filename.split("/")[:-1]])
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+
+def _format_metadata(filename: str, properties: dict) -> None:
+    """Edit the file `info.rst`."""
+    name = filename.split("/")[-1]
+    dir = "".join([i + "/" for i in filename.split("/")[:-1]])
+    metadata_filename = dir + "metadata.json"
+    metadata = {}
+    if os.path.isfile(metadata_filename):
+        with open(metadata_filename) as f:
+            metadata = json.load(f)
+    metadata["info"] = {}
+    metadata["info"]["description"] = ("This file describes the format of " +
+        "RNA structures formatted by the diurnal library.")
+    metadata["info"]["Update time"] = str(datetime.utcnow())
+    metadata[name] = properties
+    with open(metadata_filename, 'w') as fp:
+        json.dump(metadata, fp, indent=4)
+
+
+def format_filenames(
+        src: str,
+        dst: str = None,
+        size: int = 0,
+        families: list[str] = [],
+        randomize: bool = True,
+        verbosity: int = 1
+    ) -> list[str]:
+    """Obtain all file names that satisfy the arguments.
+
+    Args:
+        src (str): Directory of the sequence files.
+        dst (str): Output file name. Set to `None` for no output.
+        size (int): Maximum length of a sequence. Provide `0` for no
+            maximum length.
+        families (list[str]): Set of RNA families to include. Provide
+            `[]` to include all families.
+        randomize (bool): If True, shuffle the filenames.
+        verbosity (int): Verbosity level. `0` to disable the output.
+
+    Returns (list[str]): List of file names.
+    """
+    _mkdir(dst)
+    if verbosity:
+        log.info(f"Extract the filenames from the directory `{src}`.")
+    data = []
+    total = 0
+    paths = pathlib.Path(src).rglob('*.ct')
+    for i in paths:
+        total += 1
+    paths = pathlib.Path(src).rglob('*.ct')
+    for i, path in enumerate(paths):
+        family = diurnal.family.get_name(str(path))
+        if families and not family in families:
+            pass
+        elif rna_data.read_ct_file_length(path) > size:
+            pass
+        else:
+            data.append(str(path))
+        if verbosity:
+            prefix = f"Reading {total} files"
+            suffix = f" {path.name}"
+            log.progress_bar(total, i, prefix, suffix)
+    if verbosity:
+        print()
+        log.trace(f"Detected {total} files. Kept {len(data)} files.")
+    if dst and os.path.exists(dst):
+        with open(dst, "r") as file:
+            lines = [line.rstrip() for line in file]
+        if set(lines) == set(data):
+            if verbosity:
+                log.trace(f"The file `{dst}` already contains the names.")
+            return data
+    if randomize:
+        if verbosity:
+            log.trace(f"Shuffling data.")
+        shuffle(data)
+    if dst:
+        if verbosity:
+            log.trace(f"Writing data in the file {dst}")
+        with open(dst, "w") as file:
+            file.write("\n".join(data))
+        _format_metadata(dst,
+            {
+                "Input directory": src,
+                "Generation time": str(datetime.utcnow()),
+                "Number of files": len(data),
+                "Randomized": randomize,
+                "families": families
+            }
+        )
+    return data
+
+
+def _is_already_encoded(
+        structure_type: str,
+        names: list[str],
+        dst: str,
+        size: int,
+        map: Callable
+    ) -> bool:
+    """Check if the `dst` file is already formatted."""
+    # File existence.
+    if not os.path.exists(dst):
+        return False
+    # Number of data points.
+    N = len(names)
+    array = np.load(dst, mmap_mode='r')
+    if N != array.shape[0]:
+        return False
+    # Expected encoding.
+    for name in names:
+        _, bases, _ = rna_data.read_ct_file(name)
+        break
+    _, bases, pairings = rna_data.read_ct_file(name)
+    if structure_type == "primary":
+        input = bases
+    elif structure_type == "secondary":
+        input = pairings
+    test_array = map(input, size)
+    if (test_array.tolist() != array[0].tolist()):
+        return False
+    return True
+
+
+def _format_structure(
+        structure_type: str,
+        names: list[str],
+        dst: str,
+        size: int,
+        map: Callable,
+        verbosity: int = 1
+    ) -> None:
+    """Convert structures into a Numpy file.
+
+    Args:
+        names (list[str]): List of sequence file names.
+        dst (str): Output file name.
+        size (int): Maximum length of a sequence.
+        map (Callable): Function that transforms the sequence of bases
+            into a formatted primary structure.
+        verbosity (int): Verbosity level. `0` to disable the output.
+    """
+    # Preparation: Check the existence and validity of the file.
+    _mkdir(dst)
+    if verbosity:
+        log.info(f"Formatting {structure_type} structures into `{dst}`.")
+    if _is_already_encoded(structure_type, names, dst, size, map):
+        log.trace(f"The directory `{dst}` already contains the formatted data.")
+        return
+    # Determine the shape of the data.
+    _, bases, pairings = rna_data.read_ct_file(names[0])
+    if structure_type == "primary":
+        input = bases
+    elif structure_type == "secondary":
+        input = pairings
+    else:
+        log.error(f"Invalid structure type: {structure_type}")
+        raise RuntimeError
+    shape = (len(names), ) + map(input, size).shape
+    # Open a memory mapped file and store the data.
+    file = np.lib.format.open_memmap(
+        dst, dtype='float32', mode='w+', shape=shape
+    )
+    for i, name in enumerate(names):
+        _, bases, pairings = rna_data.read_ct_file(name)
+        if structure_type == "primary":
+            input = bases
+        elif structure_type == "secondary":
+            input = pairings
+        file[i] = map(input, size)
+        file.flush()
+        if verbosity:
+            prefix = f"Encoding {len(names)} files: "
+            suffix = f" {name.split('/')[-1]}"
+            log.progress_bar(len(names), i, prefix, suffix)
+    if verbosity:
+        print()  # Change the line after the progress bar.
+        log.trace(f"Encoded {len(names)} files.")
+    _format_metadata(dst,
+        {
+            "Generation time": str(datetime.utcnow()),
+            "Array shape": shape,
+            "Data type": "float32",
+            "Structure type": structure_type
+        }
+    )
+
+
+def format_primary_structure(
+        names: str,
+        dst: str,
+        size: int,
+        map: Callable,
+        verbosity: int = 1
+    ) -> str:
+    """Convert primary structures into a Numpy file.
+
+    Args:
+        names (list[str]): List of sequence file names.
+        dst (str): Output file name.
+        size (int): Maximum length of a sequence.
+        map (Callable): Function that transforms the sequence of bases
+            into a formatted primary structure.
+        verbosity (int): Verbosity level. `0` to disable the output.
+    """
+    _format_structure("primary", names, dst, size, map, verbosity)
+
+
+def format_secondary_structure(
+        names: str,
+        dst: str,
+        size: int,
+        map: Callable,
+        verbosity: int = 1
+    ) -> str:
+    """Convert secondary structures into a Numpy file.
+
+    Args:
+        names (list[str]): List of sequence file names.
+        dst (str): Output file name.
+        size (int): Maximum length of a sequence.
+        map (Callable): Function that transforms the sequence of bases
+            into a formatted primary structure.
+        verbosity (int): Verbosity level. `0` to disable the output.
+    """
+    _format_structure("secondary", names, dst, size, map, verbosity)
+
+
+def format_basic(
         src: str,
         dst: str,
         max_size: int,
@@ -260,7 +497,7 @@ def format(
     if dst[-1] != '/':
         dst += '/'
     # If the data is already encoded in the directory, exit.
-    if _is_already_encoded(
+    if _is_already_encoded_basic(
             src, dst, max_size, primary_structure_map,
             secondary_structure_map):
         log.trace(f"The directory {dst} already contains the formatted data.")
@@ -375,9 +612,6 @@ def summarize(
         code = primary_structure_map(example)
         for i in range(len(example)):
             content += f"   {example[i]} -> {code[i]}\n"
-        content += "\n\nExample:\n"
-        content += str(X[0])
-        content += "\n\n\n"
     Y = np.load(path + "secondary_structures.npy", mmap_mode='r')
     if Y.any():
         content += "Secondary Structure Encoding\n"
@@ -389,7 +623,4 @@ def summarize(
         code = secondary_structure_map(example)
         for i in range(len(example)):
             content += f"   {example[i]} -> {code[i]}\n"
-        content += "\n\nExample:\n"
-        content += str(Y[0])
-        content += "\n\n"
     return content

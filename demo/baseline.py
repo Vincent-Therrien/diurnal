@@ -27,7 +27,7 @@ log.info(
     "This model downloads and formats data and then makes random predictions."
 )
 database.download("./data/", "archiveII")
-database.format(
+database.format_basic(
     "./data/archiveII",  # Directory of the raw data to format.
     "./data/formatted",  # Formatted data output directory.
     512,  # Normalized size.
