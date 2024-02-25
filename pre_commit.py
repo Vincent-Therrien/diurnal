@@ -27,7 +27,7 @@ path = os.path.join('docs', 'make')
 r = subprocess.run([path, "clean"], capture_output=True, shell=True)
 r = subprocess.run(
     ["sphinx-apidoc", "-o", "./docs/source", "./diurnal"],
-    capture_output=True, text=True)
+    capture_output=True, shell=True, text=True)
 if r.returncode:
     log.error("Cannot generate documentation from the source code.")
     doc_failed = True
@@ -47,7 +47,8 @@ for directory in directories:
     n_lines[directory] = 0
     for path in pathlib.Path(directory).rglob('*.py'):
         r = subprocess.run(
-            ["pycodestyle", str(path)], capture_output=True, text=True)
+            ["pycodestyle", str(path)],
+            capture_output=True, shell=True, text=True)
         n = len(r.stdout.split('\n')) - 1
         if n:
             print(r.stdout[:-1])
@@ -63,7 +64,8 @@ else:
 
 log.trace("Test execution.")
 r = subprocess.run(
-    ["pytest", "test", "--tb=short"], capture_output=True, text=True)
+    ["pytest", "test", "--tb=short"],
+    capture_output=True, text=True)
 print(r.stdout)
 tests_failed = True if r.returncode != 0 else False
 if tests_failed:

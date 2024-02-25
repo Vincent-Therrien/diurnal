@@ -9,11 +9,13 @@
 """
 
 __all__ = [
+    "align",
     "database",
     "evaluate",
     "family",
     "models",
     "structure",
     "train",
+    "utils",
     "visualize"
 ]

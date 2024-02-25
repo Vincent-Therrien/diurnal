@@ -337,7 +337,7 @@ class Secondary:
         """
         if size == 0:
             size = len(pairings)
-        matrix = np.array([[0 for _ in range(size)] for _ in range(size)])
+        matrix = np.zeros((size, size))
         for i in range(len(pairings)):
             if pairings[i] >= 0:
                 matrix[i][pairings[i]] = 1

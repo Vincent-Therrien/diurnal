@@ -175,10 +175,14 @@ def secondary_structures_heatmap(
         matrices: Set of secondary structures as 2D matrices.
         title (str): Graph title.
     """
-    N = len(matrices)
-    L = matrices[0].shape[0]
-    total = np.sum(matrices, axis=0)
-    total /= np.max(total)
+    if type(matrices) != np.array:
+        total = matrices
+        N = 1
+    else:
+        N = len(matrices)
+        total = np.sum(matrices, axis=0)
+        total /= np.max(total)
+    L = total.shape[0]
     plt.imshow(total, cmap='viridis', interpolation='none')
     plt.colorbar()
     index_base = [f"{i}" for i in range(L)]
