@@ -9,12 +9,13 @@
 """
 
 import numpy as np
+from torch import nn, optim
+import torch.nn.functional as F
+from torchsummary import summary
 
 from diurnal import train, structure
 import diurnal.models
-from torch import nn, optim, tensor
-import torch.nn.functional as F
-from diurnal.utils import synthetic
+from diurnal.utils import synthetic, log
 
 
 # Dataset
@@ -24,6 +25,11 @@ secondary = []
 N = 2000  # Number of different structures
 n = 10  # Structure length
 EPOCHS = 1000
+
+log.title("Synthetic pipeline script.")
+log.info("Create a synthetic dataset.")
+log.trace(f"Number of samples: {N}")
+log.trace(f"Sequence length: {n}")
 
 for _ in range(N):
     p, s = synthetic.make_structures(n)
@@ -84,7 +90,6 @@ class RNA_CNN_raw(nn.Module):
         x = self.fc1(x)
         x = self.output(x)
         return x
-
 
 class RNA_CNN_masked(nn.Module):
     def __init__(self, n):

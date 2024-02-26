@@ -35,6 +35,18 @@ def info(message: str) -> None:
     _print_with_datetime(f"{Fore.GREEN}> INFO{Style.RESET_ALL} {message}")
 
 
+def title(message: str) -> None:
+    """Print a highlighted message. Used at the beginning of scripts.
+
+    Args:
+        message (str): Message to display.
+    """
+    _print_with_datetime("")
+    print(f"{Fore.MAGENTA}  ∧    ------------------+{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}< O >        DIURNAL     |{Style.RESET_ALL} {message}")
+    print(f"{Fore.MAGENTA}  V    ------------------+{Style.RESET_ALL}")
+
+
 def trace(message: str) -> None:
     """Print a trace (i.e. pedantic) message.
 
