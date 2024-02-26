@@ -12,8 +12,65 @@
 """
 
 
-from diurnal import database, family, structure, train, visualize
+import numpy as np
+from diurnal import align, database, family, structure, train, visualize
 import diurnal.utils.rna_data as rna_data
+
+
+SIZE = 256
+DATABASE = "archiveII"
+
+SRC = f"./data/{DATABASE}"
+DST = f"./data/families_{SIZE}/"
+
+
+# Preprocessing
+database.download("./data/", DATABASE)
+names = database.format_filenames(SRC, DST + "names.txt", SIZE)
+
+for f in family.NAMES:
+    dst = f"{DST}{f}/"
+    names = database.format_filenames(SRC, f"{dst}names.txt", SIZE, [f])
+    if not names:
+        continue
+    database.format_primary_structure(
+        names, f"{dst}optimal_fold_alignments.npy",
+        SIZE, align.optimal_fold_contact_matrix
+    )
+    database.format_primary_structure(
+        names, f"{dst}fold_alignments_3.npy",
+        SIZE, align.fold_contact_matrix
+    )
+    alignment_4 = lambda x, y : align.fold_contact_matrix(x, y, 4)
+    database.format_primary_structure(
+        names, f"{dst}fold_alignments_4.npy",
+        SIZE, alignment_4
+    )
+    database.format_primary_structure(
+        names, f"{dst}potential_pairings.npy",
+        SIZE, structure.Primary.to_matrix
+    )
+    database.format_primary_structure(
+        names, f"{dst}masks.npy",
+        SIZE, structure.Primary.to_mask
+    )
+    database.format_primary_structure(
+        names, f"{dst}onehot.npy",
+        SIZE, structure.Primary.to_onehot
+    )
+    database.format_secondary_structure(
+        names, f"{dst}contact.npy", SIZE, structure.Secondary.to_matrix
+    )
+    database.format_secondary_structure(
+        names, f"{dst}bracket.npy", SIZE, structure.Secondary.to_onehot
+    )
+
+alignments = np.load(f"{DST}/SRP/fold_alignments_4.npy")
+masks = np.load(f"{DST}/SRP/masks.npy")
+for i in range(len(alignments)):
+    alignments[i] *= masks[i]
+visualize.heatmap(alignments, f"Alignment of family SRP")
+exit()
 
 
 _, b, p = rna_data.read_ct_file("data/archiveII/5s_Acanthamoeba-castellanii-1.ct")

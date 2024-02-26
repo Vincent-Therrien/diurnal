@@ -25,7 +25,8 @@ PAIRS = {
 
 
 def needleman_wunsch(x: str, y: str) -> list[tuple[int]]:
-    """Run the Needleman-Wunsch algorithm on two sequences.
+    """Run the Needleman-Wunsch algorithm on two sequences to find
+    their optimal alignment.
 
     From https://johnlekberg.com/blog/2020-10-25-seq-align.html
 
@@ -33,7 +34,7 @@ def needleman_wunsch(x: str, y: str) -> list[tuple[int]]:
         x (str): First sequence
         y (str): Second sequence
 
-    Returns (list[tuple[int]]): List of alignments.
+    Returns (list[tuple[int]]): List of alignments as index pairs.
     """
     N, M = len(x), len(y)
     s = lambda a, b: int(a == b)
@@ -86,34 +87,46 @@ def needleman_wunsch(x: str, y: str) -> list[tuple[int]]:
     return list(alignment)
 
 
-def complementary(x: str) -> str:
-    """Return a reversed and complementary sequence.
+def inverse(x: str) -> str:
+    """Return a reversed complementary sequence.
 
     Example:
-        >>> reverse("AACGT")
-        ACGTT
+        >>> inverse("AACGU")
+        ACGUU
 
     Args:
         x (str): RNA sequence.
 
-    Returns (str): Reverse complementary sequence.
+    Returns (str): Inverse sequence.
     """
     reverse = [i for i in x[::-1]]
     return "".join([PAIRS[i] for i in reverse])
 
 
-def optimal_fold(x: str) -> list[int]:
-    """Align a sequence with its complementary sequence with the
+def optimal_fold(x: str) -> list[tuple[int]]:
+    """Align a sequence with its inverse sequence with the
     Needleman-Wunsch algorithm.
 
     Args:
         x: RNA sequence.
 
+    Returns (list[tuple[int]]): List of alignments as index pairs.
+    """
+    alignment = needleman_wunsch(x, inverse(x))
+    alignment = [a for a in alignment if a[0] != None]
+    return alignment
+
+
+def to_pairings(alignment: list[tuple[int]], x: str) -> list[int]:
+    """Convert an alignment represented as index pairs to a list of
+    pairings, as represented in CT files.
+
+    Args:
+        alignment (list[tuple[int]]): Alignment as index pairs.
+        x (str): RNA sequence.
+
     Returns (list[int]): List of pairings.
     """
-    inverse = complementary(x)
-    alignment = needleman_wunsch(x, inverse)
-    alignment = [a for a in alignment if a[0] != None]
     pairings = []
     for i in alignment:
         if i[1] != None and i[1] > -1:
@@ -126,16 +139,17 @@ def optimal_fold(x: str) -> list[int]:
     return pairings
 
 
-def optimal_contact_matrix(x: str, size: int) -> np.array:
-    """Return the contact matrix of the optimal alignment of a folded
-    sequence.
+def to_matrix(alignments: list[tuple[int]], size: int) -> np.array:
+    """Return the contact matrix corresponding to a list of alignments.
 
     Args:
-        x (str): RNA sequence.
-        size (int): Contact matrix dimension. `0` for no padding.
+        alignment (list[tuple[int]]): Alignment list.
+        size (int): Contact matrix dimension.
     """
-    pairings = optimal_fold(x)
-    return structure.Secondary.to_matrix(pairings, size)
+    matrix = np.zeros((size, size))
+    for pair in alignments:
+        matrix[pair[1], pair[0]] = 1
+    return matrix
 
 
 def continuous(x: str, y: str) -> list[tuple[int]]:
@@ -145,7 +159,7 @@ def continuous(x: str, y: str) -> list[tuple[int]]:
         x (str): RNA sequence.
         y (str): RNA sequence.
 
-    Returns (list[tuple[int]]): Alignment.
+    Returns (list[tuple[int]]): List of alignments as index pairs.
     """
     assert len(x) == len(y)
     alignment = []
@@ -157,13 +171,13 @@ def continuous(x: str, y: str) -> list[tuple[int]]:
     return alignment
 
 
-def display(x: str, y: str, alignment: list[str]) -> None:
+def display(x: str, y: str, alignment: list[tuple[int]]) -> None:
     """Display an alignment of two sequences.
 
     Args:
         x (str): RNA sequence.
         y (str): RNA sequence.
-        alignment (list[tuple[int]]): Alignment.
+        alignment (list[tuple[int]]): List of alignments as index pairs.
     """
     print("".join(
         "-" if i is None else x[i] for i, _ in alignment
@@ -182,126 +196,78 @@ def longest(x: str, y: str, minimum: int = 0) -> list[tuple[int]]:
         minimum (int): Sequence minimum length. Shorter sequences are
             not included in the returned list. `0` for not minimum.
 
-    Returns (list[tuple[int]]): List aligned indices.
+    Returns (list[tuple[int]]): List pairing indices.
     """
     assert len(x) == len(y)
-    alignments = [[]]
-    for i in range(len(x)):
-        if x[i] == y[i]:
-            alignments[-1].append(i)
-        elif alignments[-1]:
-            if minimum and len(alignments[-1]) < minimum:
-                alignments[-1] = []
-            else:
-                alignments.append([])
-    alignments.sort(key=lambda b: len(b), reverse=True)
-    return [a for a in alignments if len(a) >= minimum]
-
-
-def display_longest(x: str, y: str, alignments: list[tuple[int]]) -> None:
-    """Display the continuous alignments beginning by the longest.
-
-    Args:
-        x (str): RNA sequence.
-        y (str): RNA sequence.
-        alignment (list[tuple[int]]): Alignment list.
-    """
-    prefix_len = 4
-    print(f"{' ' * prefix_len}{x}")
-    print(f"{' ' * prefix_len}{y}")
-    for alignment in alignments:
-        prefix = str(len(alignment))
-        sequence = ["." for _ in range(len(x))]
-        for a in alignment:
-            sequence[a] = "|"
-        print(f"{prefix}{' ' * (prefix_len - len(prefix))}{''.join(sequence)}")
-
-
-def longest_fold(x: str, minimum: int = 0) -> list[tuple[int]]:
-    """Find the longest alignment of an RNA sequence with its
-    complementary sequence.
-
-    Args:
-        x (str): RNA sequence.
-        minimum (int): Minimum length of an alignment.
-
-    Returns (list[tuple[int]]): Alignment list.
-    """
-    y = complementary(x)
     N = len(x)
     alignments = [[]]
     for i in range(N):
         if x[i] == y[i]:
-            alignments[-1].append(i)
+            alignments[-1].append((i, i))
         elif alignments[-1]:
             if minimum and len(alignments[-1]) < minimum:
                 alignments[-1] = []
             else:
                 alignments.append([])
-    alignments.sort(key=lambda b: len(b), reverse=True)
-    return [a for a in alignments if len(a) >= minimum]
+    alignments = [a for a in alignments if len(a) >= minimum]
+    return sum(alignments, [])
 
 
-def longest_sliding_fold(x: str, minimum: int = 0) -> list[tuple[int]]:
-    """Find the longest alignment of an RNA sequence with its
-    complementary sequence slid at all positions.
+def fold(x: str, minimum: int = 0) -> list[tuple[int]]:
+    """Find the all alignments of an RNA sequence with its
+    inverse sequence.
 
     Args:
         x (str): RNA sequence.
         minimum (int): Minimum length of an alignment.
 
-    Returns (list[tuple[int]]): Pairing list.
+    Returns (list[tuple[int]]): List of alignment index pairs.
     """
     N = len(x)
     pairings = []
     for i in range(-len(x) + minimum, len(x) - minimum):
         padding = ["-"] * N
-        y = padding + list(complementary(x)) + padding
+        y = padding + list(inverse(x)) + padding
         y = y[N - i:2 * N - i]
-        alignment = sum(longest(x, y, minimum), [])
-        window_pairings = []
+        alignment = longest(x, y, minimum)
         for a in alignment:
-            corresponding = N - 1 + i - a
-            if corresponding in alignment:
-                window_pairings.append((a, corresponding))
-        if window_pairings:
-            pairings.append(tuple(window_pairings))
+            pairings.append((a[0], N - 1 + i - a[0]))
     return pairings
 
 
-def display_longest_fold(x: str, alignments: list[tuple[int]]) -> None:
-    """Display the continuous alignments beginning by the longest.
+def optimal_fold_contact_matrix(x: str, size: int = 0) -> np.array:
+    """Return the contact matrix of the best folded alignment.
 
     Args:
         x (str): RNA sequence.
-        alignment (list[tuple[int]]): Alignment list.
+        size (int): Matrix dimension. Use `0` for no padding.
+
+    Returns (np.array): Optimal contact matrix.
     """
-    prefix_len = 4
-    print(f"{' ' * prefix_len}{x}")
-    print(f"{' ' * prefix_len}{complementary(x)}")
-    for alignment in alignments:
-        prefix = str(len(alignment))
-        sequence = ["." for _ in range(len(x))]
-        for a in alignment:
-            sequence[a[0]] = "^"
-            sequence[a[1]] = "v"
-        print(f"{prefix}{' ' * (prefix_len - len(prefix))}{''.join(sequence)}")
+    if not size:
+        size = len(x)
+    matrix = np.zeros((size, size))
+    pairings = optimal_fold(x)
+    for pair in pairings:
+        matrix[pair[1], pair[0]] = 1
+    return matrix
 
 
-def sliding_contact_matrix(x: str, size: int, minimum: int = 0) -> np.array:
+def fold_contact_matrix(x: str, size: int = 0, minimum: int = 3) -> np.array:
     """Return the contact matrix of all possible alignments of a folded
     sequence.
 
     Args:
         x (str): RNA sequence.
-        size (int): Contact matrix dimension. `0` for no padding.
+        size (int): Matrix dimension. Use `0` for no padding.
+        minimum (int): Minimum alignment length.
 
+    Returns (np.array): Contact matrix.
     """
-    pairings = longest_sliding_fold(x, minimum)
-    if size == 0:
+    if not size:
         size = len(x)
     matrix = np.zeros((size, size))
-    for pairs in pairings:
-        for p in pairs:
-            matrix[p[1], p[0]] = 1
+    pairings = fold(x, minimum)
+    for pair in pairings:
+        matrix[pair[1], pair[0]] = 1
     return matrix

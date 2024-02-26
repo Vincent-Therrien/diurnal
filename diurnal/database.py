@@ -307,7 +307,7 @@ def format_filenames(
             {
                 "Input directory": src,
                 "Generation time": str(datetime.utcnow()),
-                "Number of files": len(data),
+                "Number of file paths": len(data),
                 "Randomized": randomize,
                 "families": families
             }
@@ -369,7 +369,7 @@ def _format_structure(
     if verbosity:
         log.info(f"Formatting {structure_type} structures into `{dst}`.")
     if _is_already_encoded(structure_type, names, dst, size, map):
-        log.trace(f"The directory `{dst}` already contains the formatted data.")
+        log.trace(f"The file `{dst}` already contains the formatted data.")
         return
     # Determine the shape of the data.
     _, bases, pairings = rna_data.read_ct_file(names[0])
@@ -394,7 +394,7 @@ def _format_structure(
         file[i] = map(input, size)
         file.flush()
         if verbosity:
-            prefix = f"Encoding {len(names)} files: "
+            prefix = f"    Encoding file {i} / {len(names)}: "
             suffix = f" {name.split('/')[-1]}"
             log.progress_bar(len(names), i, prefix, suffix)
     if verbosity:
@@ -402,7 +402,7 @@ def _format_structure(
         log.trace(f"Encoded {len(names)} files.")
     _format_metadata(dst,
         {
-            "Generation time": str(datetime.utcnow()),
+            "Generation time": str(datetime.utcnow()) + " UTC",
             "Array shape": shape,
             "Data type": "float32",
             "Structure type": structure_type

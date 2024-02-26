@@ -165,17 +165,19 @@ def secondary_structure(
     plt.show()
 
 
-def secondary_structures_heatmap(
-        matrices,
-        title: str = "Aggregated secondary structures"
-    ) -> None:
-    """Visualize a collection of secondary structures with a heatmap.
+def heatmap(matrices: np.array, title: str = "Aggregated heatmaps") -> None:
+    """Visualize heatmaps.
+
+    The function opens a plot that visualizes the `matrices` argument.
+    If the `matrices` is a 3D array, the heatmap is the sum of all
+    arrays along the 0 axis. If `matrices` is a 2D array, it is used as
+    the heatmap.
 
     Args:
-        matrices: Set of secondary structures as 2D matrices.
+        matrices: Set 2D matrices or one 2D matrix.
         title (str): Graph title.
     """
-    if type(matrices) != np.array:
+    if len(matrices.shape) == 2:
         total = matrices
         N = 1
     else:

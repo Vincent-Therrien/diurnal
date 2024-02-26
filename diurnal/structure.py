@@ -177,6 +177,7 @@ class Primary:
 
     def to_mask(
             pairings: np.array,
+            size: int = 0,
             map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
         ) -> np.array:
         """Make a primary structure pairing mask.
@@ -187,13 +188,20 @@ class Primary:
         Args:
             pairings (np.array): Primary structure potential pairing
                 matrix.
+            size (int): Matrix dimension. `0` for no padding.
             map (dict): Dictionary that assigns a type of pairing to an
                 encoding.
 
         Returns (np.array): Pairing matrix mask.
         """
+        # Convert the input into an array, if required.
+        if type(pairings) == str:
+            pairings = Primary.to_matrix(pairings, size)
+        if type(pairings) == list and type(pairings[0]) == str:
+            pairings = Primary.to_matrix(pairings, size)
+        # Create the mask.
         inv_constraints = {v: k for k, v in map.items()}
-        output = np.zeros((pairings.shape[0], pairings.shape[0]))
+        output = np.zeros((len(pairings), len(pairings)))
         for i in range(output.shape[0]):
             for j in range(output.shape[1]):
                 pairing = pairings[i][j]
