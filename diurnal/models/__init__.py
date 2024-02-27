@@ -290,15 +290,14 @@ class NN(Basic):
                     if patience <= 0:
                         break
             if self.verbosity:
-                prefix = f"{epoch} / {self.n_epochs} "
                 if self.validate:
-                    loss_value = f" Validation loss: {average_losses[-1]:.5f}   Min: {min(average_losses):.5f}"
-                    suffix = loss_value + f" | Patience: {patience}"
-                    log.progress_bar(self.n_epochs, epoch, prefix, suffix)
+                    loss_value = f" Loss: {average_losses[-1]:.4f}"
+                    suffix = f"{loss_value}  Patience: {patience}"
+                    log.progress_bar(self.n_epochs, epoch, suffix)
                     if self.verbosity > 1:
                         print()
                 else:
-                    log.progress_bar(self.n_epochs, epoch, prefix)
+                    log.progress_bar(self.n_epochs, epoch)
         if self.verbosity:
             print()
 

@@ -233,9 +233,9 @@ def _format_metadata(filename: str, properties: dict) -> None:
         with open(metadata_filename) as f:
             metadata = json.load(f)
     metadata["info"] = {}
-    metadata["info"]["description"] = ("This file describes the format of " +
-        "RNA structures formatted by the diurnal library.")
-    metadata["info"]["Update time"] = str(datetime.utcnow())
+    metadata["info"]["description"] = ("This file describes the format of "
+        + "RNA structures formatted by the diurnal library.")
+    metadata["info"]["Update time"] = str(datetime.now().isoformat())
     metadata[name] = properties
     with open(metadata_filename, 'w') as fp:
         json.dump(metadata, fp, indent=4)
@@ -281,9 +281,8 @@ def format_filenames(
         else:
             data.append(str(path))
         if verbosity:
-            prefix = f"Reading {total} files"
             suffix = f" {path.name}"
-            log.progress_bar(total, i, prefix, suffix)
+            log.progress_bar(total, i, suffix)
     if verbosity:
         print()
         log.trace(f"Detected {total} files. Kept {len(data)} files.")
@@ -394,15 +393,14 @@ def _format_structure(
         file[i] = map(input, size)
         file.flush()
         if verbosity:
-            prefix = f"    Encoding file {i} / {len(names)}: "
             suffix = f" {name.split('/')[-1]}"
-            log.progress_bar(len(names), i, prefix, suffix)
+            log.progress_bar(len(names), i, suffix)
     if verbosity:
         print()  # Change the line after the progress bar.
         log.trace(f"Encoded {len(names)} files.")
     _format_metadata(dst,
         {
-            "Generation time": str(datetime.utcnow()) + " UTC",
+            "Generation time": str(datetime.now().isoformat()) + " UTC",
             "Array shape": shape,
             "Data type": "float32",
             "Structure type": structure_type
@@ -543,9 +541,8 @@ def format_basic(
         Y_file.flush()
         offset += 1
         if verbosity:
-            prefix = f"Encoding {n_samples} files: "
             suffix = f" {path.name}"
-            log.progress_bar(n_samples, offset, prefix, suffix)
+            log.progress_bar(n_samples, offset, suffix)
     if verbosity:
         print()  # Change the line after the progress bar.
         i = len(names)

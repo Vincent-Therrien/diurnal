@@ -57,8 +57,8 @@ def download(url: str, dst: str, verbosity: int, name: str = "") -> None:
                 dl += len(data)
                 f.write(data)
                 if verbosity:
-                    prefix = f"Downloading   {name} "
-                    log.progress_bar(total_length, dl, prefix)
+                    suffix = f"Downloading   {name} "
+                    log.progress_bar(total_length, dl, suffix)
     if verbosity:
         print()
 
