@@ -18,7 +18,7 @@ import diurnal.structure
 
 
 # Input data transformation
-def _split_arrays(data, fractions: list, offset: int = 0) -> list:
+def split(data, fractions: list, offset: int = 0) -> list:
     """Split an array of data."""
     subarrays = []
     index = int(offset)
@@ -78,19 +78,19 @@ def split_data(data, fractions: list, offset: int = 0) -> list:
                 else:
                     element.append(data[k][i])
             values.append(element)
-        split_values = _split_arrays(values, fractions, offset)
+        split_values = split(values, fractions, offset)
         new_data = []
-        for split in split_values:
+        for split_value in split_values:
             d = {}
             for i, k in enumerate(keys):
-                d[k] = [element[i] for element in split]
+                d[k] = [element[i] for element in split_value]
                 if k == "input":
                     d[k] = (d[k], )
             new_data.append(d)
         return new_data
     else:
         _check_homogeneity(data)
-        return _split_arrays(data, fractions, offset)
+        return split(data, fractions, offset)
 
 
 def split_indices(fractions: list, n: int) -> list:

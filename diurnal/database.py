@@ -224,7 +224,7 @@ def _mkdir(filename: str) -> None:
 
 
 def _format_metadata(filename: str, properties: dict) -> None:
-    """Edit the file `info.rst`."""
+    """Edit the file `metadata.json`."""
     name = filename.split("/")[-1]
     dir = "".join([i + "/" for i in filename.split("/")[:-1]])
     metadata_filename = dir + "metadata.json"
@@ -365,6 +365,23 @@ def _format_structure(
     """
     # Preparation: Check the existence and validity of the file.
     _mkdir(dst)
+    # Add file names if not present.
+    dir = "".join([i + "/" for i in dst.split("/")[:-1]])
+    files = os.listdir(dir)
+    if f"names.txt" in files:
+        with open(f"{dir}/names.txt", "r") as file:
+            lines = [line.rstrip() for line in file]
+    else:
+        lines = []
+    if set(lines) != set(names):
+        with open(f"{dir}/names.txt", "w") as file:
+            file.write("\n".join(names))
+        _format_metadata(f"{dir}/names.txt",
+            {
+                "Generation time": str(datetime.utcnow()),
+                "Number of file paths": len(names)
+            }
+        )
     if verbosity:
         log.info(f"Formatting {structure_type} structures into `{dst}`.")
     if _is_already_encoded(structure_type, names, dst, size, map):

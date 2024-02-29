@@ -289,8 +289,8 @@ class Primary:
 
         Returns (list): Unpadded matrix.
         """
-        for i, row in enumerate(matrix):
-            element = list(row[0])
+        for i in range(len(matrix)):
+            element = tuple(matrix[i, 0])
             if element == map["-"]:
                 return matrix[:i, :i]
         return matrix
@@ -372,7 +372,9 @@ class Secondary:
             [[1 if j == i else 0 for j in sub_indices] for i in indices]
         )
 
-    def fold_matrix(matrix: np.array) -> np.array:
+    def quantize(
+            matrix: np.array, mask: np.array, threshold: float = None
+        ) -> np.array:
         """Eliminate invalid pairings in a secondary structure matrix.
 
         Let the following represent a secondary structure matrix:
@@ -393,24 +395,36 @@ class Secondary:
         assigns the value `0` to all impossible pairings and `1` to all
         other values.
 
+        Steps:
+        - Symmetrize the matrix by multiplying it by its transpose.
+        - Determine a threshold value from the average of non-paired
+          elements.
+        - Assign `0` to all the elements below the threshold.
+        - Quantize the matrix along both axes and multiply the result
+          with each other.
+
         Args:
-            matrix (np.array): Pairing matrix.
+            matrix (np.array): Contact matrix.
+            mask (np.array): Valid pairing mask.
+            threshold (float): Value below which elements are discarded.
+                Determined at runtime if not provided.
 
         Returns (np.array): Folded pairing matrix.
         """
-        output = np.ones((matrix.shape[0], matrix.shape[0]))
-        N = int(output.shape[0])
-        for i in range(N):
-            for j in range(N):
-                # Inspect the lower triangle.
-                if j > i:
-                    continue
-                if abs(i - j) < Constants.LOOP_MIN_DISTANCE:
-                    continue
-                if matrix[i][j] != matrix[j][i]:
-                    output[i][j] = 0
-                    output[j][i] = 0
-        return output
+        folded = matrix * matrix.T
+        if not threshold:
+            inverse_mask = np.ones_like(folded) - mask
+            threshold = np.sum(folded * inverse_mask) / np.sum(inverse_mask)
+        print("Threshold: ", threshold)
+        print("Average: ", np.sum(folded) / np.sum(mask + inverse_mask))
+        print("High average: ", np.sum(folded * mask) / np.sum(mask))
+        print("Low average: ", np.sum(folded * inverse_mask) / np.sum(inverse_mask))
+        folded[folded < threshold] = 0
+        rows = np.zeros_like(folded)
+        rows[np.arange(folded.shape[0]), np.argmax(folded, axis=0)] = 1
+        columns = np.zeros_like(folded)
+        columns[np.argmax(folded, axis=0), np.arange(folded.shape[1])] = 1
+        return rows * columns
 
     def to_bracket(pairings: list) -> list:
         """Convert a list of nucleotide pairings into a secondary

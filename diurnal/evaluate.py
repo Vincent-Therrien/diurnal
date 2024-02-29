@@ -70,9 +70,61 @@ def get_confusion_matrix(true, pred) -> tuple:
     return confusion_matrix(t, p), symbols
 
 
-class Matrix:
+class ContactMatrix:
     """Evaluate predictions made with matrices."""
-    pass
+    def TP(true, pred) -> int:
+        return np.sum(true * pred)
+
+    def FP(true, pred) -> int:
+        return np.sum((np.ones_like(true) - true) * pred)
+
+    def TN(true, pred) -> int:
+        return np.sum((np.ones_like(true) - true) * (np.ones_like(pred) - pred))
+
+    def FN(true, pred) -> int:
+        return np.sum(true * (np.ones_like(pred) - pred))
+
+    def precision(true, pred) -> float:
+        """Compute the precision obtained by comparing two secondary
+        structures. Precision is defined as:
+
+        .. math::
+
+            TP / (TP + FP).
+        """
+        tp = ContactMatrix.TP(true, pred)
+        fp = ContactMatrix.FP(true, pred)
+        if tp + fp:
+            return tp / (tp + fp)
+        else:
+            return 0.0
+
+    def recall(true, pred) -> float:
+        """Compute the recall obtained by comparing two secondary
+        structures. Precision is defined as:
+
+        .. math::
+
+            TP / (TP + FN).
+        """
+        tp = ContactMatrix.TP(true, pred)
+        fn = ContactMatrix.FN(true, pred)
+        if tp + fn:
+            return tp / (tp + fn)
+        else:
+            return 0.0
+
+    def f1(true, pred) -> float:
+        """Compute the F1 score, a harmonic mean of precision and
+        recall.
+        """
+        r = ContactMatrix.recall(true, pred)
+        p = ContactMatrix.precision(true, pred)
+        if r + p:
+            f1 = 2 * ((r * p) / (r + p))
+            return f1
+        else:
+            return 0.0
 
 
 def get_TP(

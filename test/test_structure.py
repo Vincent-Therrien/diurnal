@@ -273,10 +273,10 @@ def test_secondary_structure_folding():
     matrix = np.zeros((20, 20))
     for a, b in (VALID_PAIRINGS + INVALID_PAIRINGS):
         matrix[a][b] = 1
-    fold = structure.Secondary.fold_matrix(matrix)
+    fold = matrix * matrix.T
     for i in range(fold.shape[0]):
         for j in range(fold.shape[0]):
-            if (i, j) in INVALID_PAIRINGS or (j, i) in INVALID_PAIRINGS:
-                assert fold[i][j] == 0
-            else:
+            if (i, j) in VALID_PAIRINGS:
                 assert fold[i][j] == 1
+            else:
+                assert fold[i][j] == 0

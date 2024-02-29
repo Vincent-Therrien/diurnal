@@ -19,7 +19,7 @@ def test_split_data():
     data = list(range(N))
     fractions = [0.8, 0.1, 0.1]
     offset = 5
-    subarrays = train.split_data(data, fractions, offset)
+    subarrays = train.split(data, fractions, offset)
     beginning = offset
     for s, f in zip(subarrays, fractions):
         expected_array = []

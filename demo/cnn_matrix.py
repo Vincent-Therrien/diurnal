@@ -8,60 +8,152 @@
     - License: MIT
 """
 
-#import torch
-#import numpy as np
+import numpy as np
+from torch import nn, optim
+import torch.nn.functional as F
+import torch
 
-from diurnal import database, train, visualize, family, structure
-#import diurnal.models
-#from diurnal.models.networks import cnn
-from diurnal.utils import synthetic
+from diurnal import align, database, evaluate, models, train, visualize, structure
+import diurnal.utils.rna_data as rna_data
+from diurnal.utils import log
 
-p, s = synthetic.make_structures(10)
-print(p)
-print("".join(structure.Secondary.to_bracket(s)))
-exit()
 
+log.title("RNA secondary structure prediction with a CNN")
 
 SIZE = 128
-PATH = f"./data/formatted_matrix_{SIZE}"
+DATABASE = "archiveII"
 
-database.download("./data/", "archiveII")
-database.format_basic(
-    "./data/archiveII",  # Directory of the raw data to format.
-    PATH,  # Formatted data output directory.
-    SIZE,  # Normalized size.
-    structure.Primary.to_matrix,
-    structure.Secondary.to_matrix
-)
+SRC = f"./data/{DATABASE}"
+DST = f"./data/cnn_matrix_data/"
 
-test_family = "5s"
-train_families = family.all_but(test_family)
+# Preprocessing
 
-test_set = train.load_families(PATH, test_family, randomize=False)
-train_set = train.load_families(PATH, train_families, randomize=False)
-train_set, validation_set = train.split_data(train_set, (0.9, 0.1))
+database.download("./data/", DATABASE)
+names = database.format_filenames(SRC, DST + "names.txt", SIZE)
+train_names, validation_names, test_names = train.split(
+    names, (0.8, 0.1, 0.1))
 
-model = diurnal.models.NN(
-    model=cnn.RNA_CNN,
+def format(dst: str, names):
+    database.format_primary_structure(
+        names, f"{dst}optimal_fold_alignments.npy",
+        SIZE, align.optimal_fold_contact_matrix
+    )
+    database.format_primary_structure(
+        names, f"{dst}fold_alignments_3.npy",
+        SIZE, align.fold_contact_matrix
+    )
+    alignment_4 = lambda x, y : align.fold_contact_matrix(x, y, 4)
+    database.format_primary_structure(
+        names, f"{dst}fold_alignments_4.npy",
+        SIZE, alignment_4
+    )
+    database.format_primary_structure(
+        names, f"{dst}potential_pairings.npy",
+        SIZE, structure.Primary.to_matrix
+    )
+    database.format_primary_structure(
+        names, f"{dst}masks.npy",
+        SIZE, structure.Primary.to_mask
+    )
+    database.format_primary_structure(
+        names, f"{dst}onehot.npy",
+        SIZE, structure.Primary.to_onehot
+    )
+    database.format_secondary_structure(
+        names, f"{dst}contact.npy", SIZE, structure.Secondary.to_matrix
+    )
+    database.format_secondary_structure(
+        names, f"{dst}bracket.npy", SIZE, structure.Secondary.to_onehot
+    )
+
+format(f"{DST}train/", train_names)
+format(f"{DST}validation/", validation_names)
+format(f"{DST}test/", test_names)
+
+class CNN(nn.Module):
+    def __init__(self, n):
+        super().__init__()
+        kernel = 3
+        one_hot_dim = 8
+        self.conv1 = nn.Conv2d(one_hot_dim, 1, kernel, padding="same")
+        self.fc1 = nn.Linear(n, n)
+        self.output = nn.Sigmoid()
+
+    def forward(self, input, mask):
+        input = self.conv1(input)
+        input = input.squeeze(1)
+        input = F.relu(input)
+        input = self.fc1(input)
+        input = self.output(input)
+        input = input * mask
+        #for i in range(len(input)):
+        #    input[i] = input[i] * input[i].T
+        return input
+
+# Training
+model = models.NN(
+    model=CNN,
     N=SIZE,
-    n_epochs=10,
+    n_epochs=500,
     optimizer=torch.optim.Adam,
     loss_fn=torch.nn.MSELoss,
     optimizer_args={"eps": 1e-4},
     loss_fn_args=None,
     verbosity=2,
     use_half=True)
+
+train_set = {
+    "input": (
+        np.load(f"{DST}train/potential_pairings.npy"),
+        np.load(f"{DST}train/masks.npy")),
+    "output": np.load(f"{DST}train/contact.npy"),
+    "names": [],
+    "families": []
+}
+validation_set = {
+    "input": (
+        np.load(f"{DST}validation/potential_pairings.npy"),
+        np.load(f"{DST}validation/masks.npy")),
+    "output": np.load(f"{DST}validation/contact.npy"),
+    "names": [],
+    "families": []
+}
+test_set = {
+    "input": (
+        np.load(f"{DST}test/potential_pairings.npy"),
+        np.load(f"{DST}test/masks.npy")),
+    "output": np.load(f"{DST}test/contact.npy"),
+    "names": [],
+    "families": []
+}
 model.train(train_set, validation_set)
 
-f = model.test(test_set)
+i = 100
+n = len(structure.Primary.unpad_matrix(test_set["input"][0][i]))
+p = model.predict((test_set["input"][0][i], test_set["input"][1][i]))
+p = p[:n, :n]
+mask = test_set["input"][1][i][:n, :n]
+visualize.heatmap(p * mask)
+p = structure.Secondary.quantize(p, mask)
+onehot = np.load("./data/cnn_matrix_data/test/onehot.npy")[i]
+sequence = structure.Primary.to_sequence(onehot)
+contact = np.load("./data/cnn_matrix_data/test/contact.npy")[i]
+potential = test_set["input"][0][i][:n, :n]
+t = test_set["output"][0]
+t = t[:n, :n]
+visualize.potential_pairings(potential, sequence, (p, t))
+print(evaluate.ContactMatrix.f1(t, p))
+exit()
+
+f = model.test(test_set, evaluation=evaluate.ContactMatrix.f1)
 print(f"Average F1-score: {sum(f)/len(f):.4}")
 
 model.save("saved_model")
 
 del model
 
-loaded_model = diurnal.models.NN(
-    model=cnn.RNA_CNN,
+loaded_model = models.NN(
+    model=CNN,
     N=SIZE,
     n_epochs=10,
     optimizer=torch.optim.Adam,

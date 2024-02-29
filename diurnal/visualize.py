@@ -67,7 +67,7 @@ def structure_length_per_family(path: str) -> None:
 
 def potential_pairings(
         matrix: list,
-        primary: str = None,
+        primary: str,
         secondary: list = None,
         title: str = "RNA Molecule Potential Pairings",
         map: dict = diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
@@ -82,13 +82,15 @@ def potential_pairings(
         map: Potential pairing to string map.
     """
     # Obtain data.
-    matrix = diurnal.structure.Primary.unpad_matrix(matrix)
     C = []
     for row in tuple(range(len(matrix))):
         line = []
         for col in tuple(range(len(matrix[0]))):
             element = tuple(matrix[row][col])
-            color = PAIRING_CMAP[tuple(map.values()).index(element)][1]
+            if sum(element) == 0:
+                color = PAIRING_COLORS["padding"]
+            else:
+                color = PAIRING_CMAP[tuple(map.values()).index(element)][1]
             line.append(color)
         C.append(line)
     # Plot the potential pairings.
@@ -97,20 +99,29 @@ def potential_pairings(
         mpl.patches.Patch(color=v, label=k) for k, v in PAIRING_COLORS.items()]
     plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2)
     # Plot the primary structure.
-    if primary:
-        index_base = [f"{i}: {b}" for i, b in enumerate(primary)]
-        plt.xticks(np.arange(0, len(C), 1), index_base)
-        plt.yticks(np.arange(0, len(C), 1), index_base)
+    if len(primary) < len(matrix):
+        primary = "".join(primary) + (len(matrix) - len(primary)) * "-"
+    elif len(primary) > len(matrix):
+        primary = primary[:len(matrix)]
+    index_base = [f"{i}: {b}" for i, b in enumerate(primary)]
+    plt.xticks(np.arange(0, len(C), 1), index_base)
+    plt.yticks(np.arange(0, len(C), 1), index_base)
     # Plot the secondary structure.
     if not secondary is None:
-        x = []
-        y = []
-        for i, row in enumerate(secondary):
-            for j, col in enumerate(row):
-                if col:
-                    x.append(j)
-                    y.append(i)
-        plt.scatter(x, y, color=PAIRING_COLORS["paired"], s=40)
+        if type(secondary) != tuple:
+            secondary = tuple(secondary)
+        markers = ["." , "+" , "o" , "v" , "^" , "<", ">"]
+        color = PAIRING_COLORS["paired"]
+        for sec, marker in zip(secondary, markers):
+            x = []
+            y = []
+            for i, row in enumerate(sec):
+                for j, col in enumerate(row):
+                    if col:
+                        x.append(j)
+                        y.append(i)
+            plt.scatter(x, y, color=color, marker=marker, s=40)
+            color = tuple([c - 0.1 for c in color])
     minor_locator_x = AutoMinorLocator(2)
     plt.gca().xaxis.set_minor_locator(minor_locator_x)
     minor_locator_y = AutoMinorLocator(2)
@@ -131,6 +142,13 @@ def _add_pairing_element(value) -> int:
         return (v, v, v)
     return (0, 0, 0)
 
+
+def print_contact_matrix(matrix: np.array):
+    """Print a contact matrix in the terminal."""
+    for i in range(len(matrix)):
+        for j in range(len(matrix[i])):
+            print(f"{int(matrix[i][j])}", end="")
+        print()
 
 
 def secondary_structure(
