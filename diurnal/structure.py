@@ -331,7 +331,7 @@ class Secondary:
         return vector
 
     def to_matrix(pairings: list, size: int = 0) -> np.array:
-        """Encode a secondary structure into a matrix.
+        """Encode a secondary structure into a contact matrix.
 
         Transform the sequence of pairings into an `n` by `n` matrix,
         where `n` is the number of pairings, whose elements can be `0`
@@ -350,6 +350,68 @@ class Secondary:
             if pairings[i] >= 0:
                 matrix[i][pairings[i]] = 1
         return matrix
+
+    def to_distance_matrix(pairings: list, size: int = 0) -> np.array:
+        """Encode a secondary structure into a score contact matrix.
+
+        Transform the sequence of pairings into an `n` by `n` matrix,
+        where `n` is the number of pairings, whose elements can be `1`
+        for a paired base and `x` for unpaired bases, where `x` is
+        given by: `x = 1 - (d / n)`, in which `d` is the Manhattan
+        distance with the closest paired base.
+
+        Args:
+            pairings (list(int): List of base pairings.
+            size (int): Dimension of the matrix. `0` for no padding.
+
+        Returns (np.array): Encoded matrix of the secondary structure.
+        """
+        n = len(pairings)
+        contact = Secondary.to_matrix(pairings, size)
+        contact -= 1
+        contact *= -1
+        contact *= n
+        directions = (
+            (1, 0), (1, -1), (0, -1), (-1, -1),
+            (-1, 0), (-1, 1), (0, 1), (1, 1)
+        )
+        for distance in range(n):
+            for i in range(n):
+                for j in range(n):
+                    if contact[i, j] == distance:
+                        for d in directions:
+                            I = i + d[0]
+                            J = j + d[1]
+                            if I < 0 or I >= n or J < 0 or J >= n:
+                                continue
+                            value = contact[I, J]
+                            if value > distance + 1:
+                                contact[I, J] = distance + 1
+        contact /= n
+        contact *= -1
+        contact += 1
+        return contact
+
+    def normalize_distance_matrix(distance_matrix) -> np.array:
+        """Normalize the distance matrix.
+
+        This function returns a new distance matrix whose elements are
+        normalized within the range 0.0 (farthest from a paired base)
+        to 1.0 (paired base).
+
+        Args:
+            distance_matrix (np.array): Result of the function
+                `to_distance_matrix`.
+
+        Returns (np.array): Normalized distance matrix.
+        """
+        normalized = distance_matrix.copy()
+        normalized -= 1
+        normalized *= -1
+        normalized /= np.amax(normalized)
+        normalized -= 1
+        normalized *= -1
+        return normalized
 
     def quantize_vector(vector: np.array) -> np.array:
         """Quantize a secondary structure vector.

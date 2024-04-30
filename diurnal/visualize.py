@@ -183,7 +183,11 @@ def secondary_structure(
     plt.show()
 
 
-def heatmap(matrices: np.array, title: str = "Aggregated heatmaps") -> None:
+def heatmap(
+        matrices: np.array,
+        title: str = "Aggregated heatmaps",
+        label: bool = False
+    ) -> None:
     """Visualize heatmaps.
 
     The function opens a plot that visualizes the `matrices` argument.
@@ -194,6 +198,7 @@ def heatmap(matrices: np.array, title: str = "Aggregated heatmaps") -> None:
     Args:
         matrices: Set 2D matrices or one 2D matrix.
         title (str): Graph title.
+        label (bool): If True, label each axis.
     """
     if len(matrices.shape) == 2:
         total = matrices
@@ -205,15 +210,19 @@ def heatmap(matrices: np.array, title: str = "Aggregated heatmaps") -> None:
     L = total.shape[0]
     plt.imshow(total, cmap='viridis', interpolation='none')
     plt.colorbar()
-    index_base = [f"{i}" for i in range(L)]
-    plt.xticks(np.arange(0, L, 1), index_base)
-    plt.yticks(np.arange(0, L, 1), index_base)
-    minor_locator_x = AutoMinorLocator(2)
-    plt.gca().xaxis.set_minor_locator(minor_locator_x)
-    minor_locator_y = AutoMinorLocator(2)
-    plt.gca().yaxis.set_minor_locator(minor_locator_y)
-    plt.grid(which='minor')
-    plt.title(title + f" (n = {N})")
+    if label:
+        index_base = [f"{i}" for i in range(L)]
+        plt.xticks(np.arange(0, L, 1), index_base)
+        plt.yticks(np.arange(0, L, 1), index_base)
+        minor_locator_x = AutoMinorLocator(2)
+        plt.gca().xaxis.set_minor_locator(minor_locator_x)
+        minor_locator_y = AutoMinorLocator(2)
+        plt.gca().yaxis.set_minor_locator(minor_locator_y)
+        plt.grid(which='minor')
+    if N > 1:
+        plt.title(title + f" (n = {N})")
+    else:
+        plt.title(title)
     plt.show()
 
 
