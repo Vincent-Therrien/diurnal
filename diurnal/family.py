@@ -19,10 +19,10 @@ _NAMES = [
     ["23s"],  # 23s ribosomal RNA (rRNA)
     ["grp1", "group_I_introns"],
     ["grp2", "group_II_introns"],
-    ["RNaseP"],
-    ["SRP"],
+    ["RNaseP"],  # Ribonuclease P
+    ["SRP"],  # Signal Recognition Particle RNA
     ["telomerase"],
-    ["tmRNA"],
+    ["tmRNA"],  # Transfer-messenger RNA
     ["tRNA"]
 ]
 
@@ -129,3 +129,17 @@ def get_name(filename: str) -> str:
         for candidate in candidates:
             c[filename.upper().find(candidate.upper())] = candidate
         return c[max(c.keys())]
+
+
+def select(names: list[str], families: str | list[str]) -> list[str]:
+    """Return a list of molecule names that belong to a provided family.
+
+    Args:
+        names (list[str]): List of names to filter.
+        families (str | list[str]): Family or families to preserve.
+
+    Returns (list[str]) List of names.
+    """
+    if type(families) == str:
+        families = [families]
+    return [n for n in names if get_name(n) in families]

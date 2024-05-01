@@ -89,11 +89,9 @@ def progress_bar(N: int, n: int, suffix: str = "") -> None:
     else:
         done = int(50 * n / N)
     bar = f"[{'=' * done}{' ' * (50-done)}]"
-    back = '\033[K\r'
     timestamp = f"{datetime.now().isoformat()} "
     dash = f'{Fore.GREEN}>{Style.RESET_ALL} '
     prefix_len = len(str(N)) * 2 + 3
     prefix = f"{n} / {N}"
     prefix = (" " * (prefix_len - len(prefix))) + prefix + " "
-    sys.stdout.write(back + timestamp + dash + prefix + bar + suffix)
-    sys.stdout.flush()
+    print(timestamp + dash + prefix + bar + suffix, end="\r")

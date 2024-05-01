@@ -17,9 +17,24 @@ import diurnal.family
 import diurnal.structure
 
 
-# Input data transformation
-def split(data, fractions: list, offset: int = 0) -> list:
-    """Split an array of data."""
+def split(data, fractions: tuple[float], offset: int = 0) -> list:
+    """Split an array of data.
+
+    Args:
+        data (any): Array-like data to split.
+        fractions (tuple[float]): Fraction of data in each resulting
+            set. Elements must sum to 1.
+        offset (int): Index offset.
+
+    Returns (list[any]): List of split sets.
+
+    Example:
+
+    >>> data = [0, 1, 2, 3, 4, 5, 6, 8, 9]
+    >>> split(data, (0.2, 0.8), 1)
+    [[1, 2], [3, 4, 5, 6, 7, 8, 9, 0]]
+    """
+    assert abs(sum(fractions) - 1) < 0.01, f"`{fractions}` does not sum to 1."
     subarrays = []
     index = int(offset)
     n = len(data)
