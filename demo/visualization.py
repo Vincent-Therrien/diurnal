@@ -25,7 +25,7 @@ visualize.lengths(stripped)
 data = np.load("./data/RNASTRalign_formatted_128/train/potential_pairings_scalar.npy")
 visualize.heatmap(data)
 
-data = np.load("./data/RNASTRalign_formatted_128/train/contact.npy")
+data = np.load("./data/RNASTRalign_formatted_128/train/distance.npy")
 visualize.heatmap(data)
 
 exit()

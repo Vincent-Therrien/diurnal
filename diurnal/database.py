@@ -263,7 +263,8 @@ def format_filenames(
 
     Returns (list[str]): List of file names.
     """
-    _mkdir(dst)
+    if dst:
+        _mkdir(dst)
     if verbosity:
         log.info(f"Extract the filenames from the directory `{src}`.")
     data = []
@@ -276,6 +277,8 @@ def format_filenames(
         family = diurnal.family.get_name(str(path))
         if families and not family in families:
             pass
+        elif not size:
+            data.append(str(path))
         elif rna_data.read_ct_file_length(path) > size:
             pass
         else:

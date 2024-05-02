@@ -16,6 +16,8 @@ from matplotlib.ticker import AutoMinorLocator
 import diurnal.family
 import diurnal.structure
 import diurnal.train
+import diurnal.database
+from diurnal.utils import rna_data
 
 
 PAIRING_COLORS = {
@@ -32,28 +34,24 @@ PAIRING_COLORS = {
 PAIRING_CMAP = [(i, v) for i, v in enumerate(PAIRING_COLORS.values())]
 
 
-def structure_length_per_family(path: str) -> None:
+def structure_length_per_family(path: str, max_size: int = None) -> None:
     """Display a histogram of RNA lengths.
 
-    TODO: Update
-
     Args:
-        path (str): Directory name of the folder that contains the data
-            files.
+        path (str): Database file path.
+        max_size (int): If provided, reject larger molecules.
     """
     # Read data.
-    if path[-1] != '/':
-        path += '/'
-    P = np.load(path + "primary_structures.npy", mmap_mode='r')
-    F = np.load(path + "families.npy", mmap_mode='r')
+    names = diurnal.database.format_filenames(
+        path, size=max_size, randomize=False
+    )
     # Obtain lengths.
     families = {}
-    for p, f in zip(P, F):
-        family = diurnal.family.to_name(f)
+    for name in names:
+        family = diurnal.family.get_name(name)
         if family not in families:
             families[family] = []
-        bases = diurnal.structure.Primary.to_sequence(p)
-        families[family].append(len(bases))
+        families[family].append(rna_data.read_ct_file_length(name))
     # Plot data
     n_bins = 50
     for family, lengths in families.items():
