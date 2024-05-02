@@ -7,6 +7,8 @@
     - License: MIT
 """
 
+from diurnal.utils import log
+
 
 def read_ct_file(path: str) -> tuple:
     """
@@ -34,7 +36,8 @@ def read_ct_file(path: str) -> tuple:
         title = " ".join(header.split()[1:])
         f.seek(0)
 
-        for i, line in enumerate(f):
+        i = 0
+        for _, line in enumerate(f):
             # deal w/ header for nth structure
             if i == 0:
                 if header[0] == ">":
@@ -43,20 +46,24 @@ def read_ct_file(path: str) -> tuple:
                     length = int(header.split()[0])
 
                 title = " ".join(line.split()[1:])
+                i += 1
                 continue
 
             bn, b, _, _, p, _ = line.split()
 
             if int(bn) != i:
-                raise NotImplementedError(
-                    "Skipping indices in CT files is not supported."
-                )
-
-            bases.append(b)
-            pairings.append(int(p) - 1)
+                #  log.info(f"Skipping CT index {i} in the file `{path}`.")
+                bases.append("N")
+                pairings.append(-1)
+                i += 1
+            else:
+                bases.append(b)
+                pairings.append(int(p) - 1)
 
             if i == length:
                 break
+
+            i += 1
 
     return title, bases, pairings
 

@@ -35,6 +35,8 @@ PAIRING_CMAP = [(i, v) for i, v in enumerate(PAIRING_COLORS.values())]
 def structure_length_per_family(path: str) -> None:
     """Display a histogram of RNA lengths.
 
+    TODO: Update
+
     Args:
         path (str): Directory name of the folder that contains the data
             files.
@@ -56,10 +58,24 @@ def structure_length_per_family(path: str) -> None:
     n_bins = 50
     for family, lengths in families.items():
         plt.hist(
-            lengths, n_bins, density=True, histtype='bar',
+            lengths, n_bins, histtype='bar',
             label=f"{family}, N = {len(lengths)}")
     plt.legend()
     plt.title("Number of Bases in RNA Molecules")
+    plt.xlabel('Number of bases')
+    plt.ylabel('Count')
+    plt.show()
+
+
+def lengths(data) -> None:
+    """Display a histogram of the length of the data."""
+    lengths = [len(x) for x in data]
+    plt.hist(
+        lengths,
+        100,
+        histtype='bar',
+    )
+    plt.title(f"Length of RNA Molecules (n = {len(data)})")
     plt.xlabel('Number of bases')
     plt.ylabel('Count')
     plt.show()

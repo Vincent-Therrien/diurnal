@@ -292,7 +292,7 @@ def format_filenames(
         if set(lines) == set(data):
             if verbosity:
                 log.trace(f"The file `{dst}` already contains the names.")
-            return data
+            return lines
     if randomize:
         if verbosity:
             log.trace(f"Shuffling data.")

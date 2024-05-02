@@ -17,6 +17,20 @@ from diurnal import align, database, family, structure, train, visualize
 import diurnal.utils.rna_data as rna_data
 
 
+data = np.load("./data/RNASTRalign_formatted_128/train/bracket.npy")
+brackets = ["".join(structure.Secondary.to_bracket(l)) for l in data]
+stripped = [b.replace("-", "") for b in brackets]
+visualize.lengths(stripped)
+
+data = np.load("./data/RNASTRalign_formatted_128/train/potential_pairings_scalar.npy")
+visualize.heatmap(data)
+
+data = np.load("./data/RNASTRalign_formatted_128/train/contact.npy")
+visualize.heatmap(data)
+
+exit()
+
+
 SIZE = 256
 DATABASE = "archiveII"
 

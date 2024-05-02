@@ -17,8 +17,8 @@ _NAMES = [
     ["5s"],   # 5s ribosomal RNA (rRNA)
     ["16s"],  # 16s ribosomal RNA (rRNA)
     ["23s"],  # 23s ribosomal RNA (rRNA)
-    ["grp1", "group_I_introns"],
-    ["grp2", "group_II_introns"],
+    ["grp1", "group_I_introns", "group_I_intron"],
+    ["grp2", "group_II_introns", "group_II_intron"],
     ["RNaseP"],  # Ribonuclease P
     ["SRP"],  # Signal Recognition Particle RNA
     ["telomerase"],
