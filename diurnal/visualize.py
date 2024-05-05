@@ -80,22 +80,23 @@ def lengths(data) -> None:
 
 
 def potential_pairings(
-        matrix: list,
         primary: str,
-        secondary: list = None,
+        secondary: list | tuple[list] = None,
         title: str = "RNA Molecule Potential Pairings",
         map: dict = diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
     ) -> None:
     """Display a heatmap of potential pairings.
 
     Args:
-        matrix: Matrix of potential pairings.
         primary (str): List of bases.
-        secondary (list): Matrix of the secondary structure.
+        secondary (list): Secondary structure or tuple of secondary
+            structures represented as contact matrices or lists of
+            pairings.
         title (str): Name of the graph.
         map: Potential pairing to string map.
     """
     # Obtain data.
+    matrix = diurnal.structure.Primary.to_matrix(primary)
     C = []
     for row in tuple(range(len(matrix))):
         line = []
@@ -113,20 +114,19 @@ def potential_pairings(
         mpl.patches.Patch(color=v, label=k) for k, v in PAIRING_COLORS.items()]
     plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2)
     # Plot the primary structure.
-    if len(primary) < len(matrix):
-        primary = "".join(primary) + (len(matrix) - len(primary)) * "-"
-    elif len(primary) > len(matrix):
-        primary = primary[:len(matrix)]
-    index_base = [f"{i}: {b}" for i, b in enumerate(primary)]
-    plt.xticks(np.arange(0, len(C), 1), index_base)
-    plt.yticks(np.arange(0, len(C), 1), index_base)
+    index_base_vertical = [f"{i}: {b}" for i, b in enumerate(primary)]
+    plt.yticks(np.arange(0, len(C), 1), index_base_vertical)
+    index_base_horizontal = [f"{i}\n{b}" for i, b in enumerate(primary)]
+    plt.xticks(np.arange(0, len(C), 1), index_base_horizontal)
     # Plot the secondary structure.
     if not secondary is None:
         if type(secondary) != tuple:
-            secondary = tuple(secondary)
+            secondary = (secondary, )
         markers = ["." , "+" , "o" , "v" , "^" , "<", ">"]
         color = PAIRING_COLORS["paired"]
         for sec, marker in zip(secondary, markers):
+            if type(sec) == list and type(sec[0]) == int:
+                sec = diurnal.structure.Secondary.to_matrix(sec)
             x = []
             y = []
             for i, row in enumerate(sec):

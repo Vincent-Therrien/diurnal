@@ -64,8 +64,7 @@ class Basic():
                     {
                         "input": tuple(<vector>),
                         "output": <vector>,
-                        "names": List[str],
-                        "families": List[str]
+                        "names": List[str]
                     }
 
             validation_data (dict)
@@ -87,13 +86,11 @@ class Basic():
         self.input_shape = self.input[0][0].shape
         self.length = len(self.output[0])
         self.output_shape = self.output[0].shape
-        self.families = training_data["families"]
         self.validate = False
         self.validation_names = None
         self.validation_input = None
         self.validation_output = None
         self.validation_N = None
-        self.validation_families = None
         if validation_data:
             self.validate = True
             self.validation_names = validation_data["names"]
@@ -102,7 +99,6 @@ class Basic():
             self.validation_N = len(self.validation_output)
             if len(self.validation_input) == self.validation_N:
                 self.validation_input = [self.validation_input]
-            self.validation_families = validation_data["families"]
         self._train()
 
     def predict(self, input) -> np.array:
@@ -191,15 +187,17 @@ class Basic():
 class NN(Basic):
     """A model that relies on a neural network to make predictions."""
     def __init__(
-            self, model: nn,
-            N: int,
-            n_epochs: int,
-            optimizer: optim,
-            loss_fn: nn.functional,
-            optimizer_args: dict = None,
-            loss_fn_args: dict = None,
-            use_half: bool = True,
-            verbosity: int = 0) -> None:
+        self,
+        model: nn,
+        N: int,
+        n_epochs: int,
+        optimizer: optim,
+        loss_fn: nn.functional,
+        optimizer_args: dict = None,
+        loss_fn_args: dict = None,
+        use_half: bool = True,
+        verbosity: int = 0
+    ) -> None:
         self.device = "cuda" if cuda.is_available() else "cpu"
         self.use_half = use_half and self.device == "cuda"
         if self.use_half:
@@ -315,9 +313,10 @@ class NN(Basic):
                 input_values.append(value.to(self.device))
         if len(input) == 1:
             input_values[0] = input_values[0][None, :, :]
-        pred = self.nn(*input_values)[0]
+        pred = self.nn(*input_values)
         if self.device == "cuda":
             return pred.detach().cpu().numpy()
+        print(pred.shape)
         return pred
 
     def _save(self, path: str) -> None:

@@ -352,7 +352,10 @@ class Secondary:
         return matrix
 
     def to_distance_matrix(
-            pairings: list, size: int = 0, normalize: bool = True
+            pairings: list,
+            size: int = 0,
+            normalize: bool = True,
+            power: float = 1
         ) -> np.array:
         """Encode a secondary structure into a score contact matrix.
 
@@ -367,6 +370,7 @@ class Secondary:
             size (int): Dimension of the matrix. `0` for no padding.
             normalize (bool): If True, scale distances so that
                 paired elements are 1 and the farthest elements are 0.
+            power (float): Power to apply to normalized distances.
 
         Returns (np.array): Encoded matrix of the secondary structure.
         """
@@ -395,7 +399,8 @@ class Secondary:
         contact *= -1
         contact += 1
         if normalize:
-            return Secondary.normalize_distance_matrix(contact)
+            contact = Secondary.normalize_distance_matrix(contact)
+            return contact ** power
         else:
             return contact
 

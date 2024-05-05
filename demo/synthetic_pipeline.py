@@ -11,7 +11,6 @@
 import numpy as np
 from torch import nn, optim
 import torch.nn.functional as F
-from torchsummary import summary
 
 from diurnal import train, structure
 import diurnal.models

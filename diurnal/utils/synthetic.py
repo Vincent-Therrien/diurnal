@@ -20,10 +20,10 @@ import numpy as np
 from diurnal import structure
 
 
-BASES = ["A", "T", "C", "G"]
+BASES = ["A", "U", "C", "G"]
 PAIRINGS = {
-    "A": "T",
-    "T": "A",
+    "A": "U",
+    "U": "A",
     "C": "G",
     "G": "C"
 }
