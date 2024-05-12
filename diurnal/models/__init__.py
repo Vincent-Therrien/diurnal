@@ -20,7 +20,7 @@
     Subclasses must implement the following methods:
 
     - `_train(data) -> None` (train the model)
-    - `_predict(primary) -> np.array` (make a prediction)
+    - `_predict(primary) -> np.ndarray` (make a prediction)
     - `_save(directory) -> None` (save the model)
     - `_load(directory) -> None` (load a model from files)
 
@@ -101,13 +101,13 @@ class Basic():
                 self.validation_input = [self.validation_input]
         self._train()
 
-    def predict(self, input) -> np.array:
+    def predict(self, input) -> np.ndarray:
         """Predict a random secondary structure.
 
         Args:
             input: RNA primary structure data.
 
-        Returns (np.array): Predicted structure.
+        Returns (np.ndarray): Predicted structure.
         """
         return self._predict(input)
 
@@ -196,6 +196,7 @@ class NN(Basic):
         optimizer_args: dict = None,
         loss_fn_args: dict = None,
         use_half: bool = True,
+        patience: int = 5,
         verbosity: int = 0
     ) -> None:
         self.device = "cuda" if cuda.is_available() else "cpu"
@@ -224,6 +225,7 @@ class NN(Basic):
         self.n_epochs = n_epochs
         self.verbosity = verbosity
         self.batch = 16
+        self.PATIENCE = patience
 
     def _train(self) -> tuple:
         """Train the neural network."""
@@ -251,7 +253,7 @@ class NN(Basic):
                 data.append([input, self.validation_output[i]])
             validation_set = DataLoader(data, batch_size=self.batch)
         # TMP
-        patience = 5
+        patience = self.PATIENCE
         average_losses = []
         for epoch in range(self.n_epochs):
             losses = []

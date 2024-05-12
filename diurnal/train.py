@@ -340,7 +340,7 @@ def categorize_vector(prediction: list) -> list:
     return [[1 if j == i else 0 for j in range(element_size)] for i in indices]
 
 
-def categorize_matrix(prediction: np.array) -> np.array:
+def categorize_matrix(prediction: np.ndarray) -> np.ndarray:
     pred = np.array(prediction)
     for i in range(len(prediction)):
         for j in range(len(prediction[i])):
@@ -401,10 +401,14 @@ def quantize_matrix(matrix: list[list[float]], dim: int = 0) -> None:
     for i in range(len(matrix)):
         if dim == 0:
             maximum = max(matrix[i,:])
+            total = sum(matrix[i,:])
         elif dim == 1:
             maximum = max(matrix[:,i])
+            total = sum(matrix[:,i])
         for j in range(len(matrix[i])):
-            if matrix[i][j] == 0 or matrix[i][j] != maximum:
+            if total <= 0:
+                matrix[i][j] = 0.0
+            elif matrix[i][j] == 0 or matrix[i][j] != maximum:
                 matrix[i][j] = 0.0
             else:
                 matrix[i][j] = 1.0

@@ -31,7 +31,7 @@ install the diurnal library with the following commands:
 
 
 Demonstrations
-````````````
+``````````````
 
 The following
 `notebook <https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb>`_
@@ -47,7 +47,7 @@ them as Python scripts, as shown below:
 
 
 Documentation
-````````````
+`````````````
 
 The documentation is available `here <https://vincent-therrien.github.io/>`_.
 
@@ -168,3 +168,27 @@ Le dépôt contient un cadre de tests automatisés développé avec la biblioth�
 .. code-block:: bash
 
    pytest test
+
+
+Objectifs
+`````````
+
+- Pseudonoeuds
+- Longues séquences (CNN successif)
+- Plusieurs variants
+
+- Traiter des séquences longues / limiter l'utilisation de la mémoire / avec
+  pseudonoeuds.
+- Gérer les matrices longues:
+  - Faire un nombre prédéterminé de convolutions pour rapetisser la matrice
+  - RNN
+- Tests inter-famille
+- Créer la matrice de contact pendant l'entraînement pour élaborer le masque
+  dynamiquement (Triton)
+- Entrées possibles:
+  - Séquence (one-hot, entière)
+  - Matrice de contact (one-hot, entière)
+  - Masque
+  - Plus longue séquence
+
+- https://www.ncbi.nlm.nih.gov/pmc/articles/PMC409911/ (Modèles thermodynamiques)

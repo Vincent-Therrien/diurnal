@@ -80,7 +80,7 @@ def lengths(data) -> None:
 
 
 def potential_pairings(
-        primary: str,
+        primary: str | list[str] | np.ndarray,
         secondary: list | tuple[list] = None,
         title: str = "RNA Molecule Potential Pairings",
         map: dict = diurnal.structure.Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
@@ -88,7 +88,7 @@ def potential_pairings(
     """Display a heatmap of potential pairings.
 
     Args:
-        primary (str): List of bases.
+        primary (str): List of bases or potential pairing matrix.
         secondary (list): Secondary structure or tuple of secondary
             structures represented as contact matrices or lists of
             pairings.
@@ -96,7 +96,12 @@ def potential_pairings(
         map: Potential pairing to string map.
     """
     # Obtain data.
-    matrix = diurnal.structure.Primary.to_matrix(primary)
+    if type(primary) == list or type(primary) == str:
+        matrix = diurnal.structure.Primary.to_matrix(primary)
+        sequence_is_available = True
+    else:
+        matrix = primary
+        sequence_is_available = False
     C = []
     for row in tuple(range(len(matrix))):
         line = []
@@ -114,10 +119,11 @@ def potential_pairings(
         mpl.patches.Patch(color=v, label=k) for k, v in PAIRING_COLORS.items()]
     plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2)
     # Plot the primary structure.
-    index_base_vertical = [f"{i}: {b}" for i, b in enumerate(primary)]
-    plt.yticks(np.arange(0, len(C), 1), index_base_vertical)
-    index_base_horizontal = [f"{i}\n{b}" for i, b in enumerate(primary)]
-    plt.xticks(np.arange(0, len(C), 1), index_base_horizontal)
+    if sequence_is_available:
+        index_base_vertical = [f"{i}: {b}" for i, b in enumerate(primary)]
+        plt.yticks(np.arange(0, len(C), 1), index_base_vertical)
+        index_base_horizontal = [f"{i}\n{b}" for i, b in enumerate(primary)]
+        plt.xticks(np.arange(0, len(C), 1), index_base_horizontal)
     # Plot the secondary structure.
     if not secondary is None:
         if type(secondary) != tuple:
@@ -157,7 +163,7 @@ def _add_pairing_element(value) -> int:
     return (0, 0, 0)
 
 
-def print_contact_matrix(matrix: np.array):
+def print_contact_matrix(matrix: np.ndarray):
     """Print a contact matrix in the terminal."""
     for i in range(len(matrix)):
         for j in range(len(matrix[i])):
@@ -198,7 +204,7 @@ def secondary_structure(
 
 
 def heatmap(
-        matrices: np.array,
+        matrices: np.ndarray,
         title: str = "Aggregated heatmaps",
         label: bool = False
     ) -> None:

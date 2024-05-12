@@ -140,7 +140,7 @@ def to_pairings(alignment: list[tuple[int]], x: str) -> list[int]:
     return pairings
 
 
-def to_matrix(alignments: list[tuple[int]], size: int) -> np.array:
+def to_matrix(alignments: list[tuple[int]], size: int) -> np.ndarray:
     """Return the contact matrix corresponding to a list of alignments.
 
     Args:
@@ -236,14 +236,14 @@ def fold(x: str, minimum: int = 0) -> list[tuple[int]]:
     return pairings
 
 
-def optimal_fold_contact_matrix(x: str, size: int = 0) -> np.array:
+def optimal_fold_contact_matrix(x: str, size: int = 0) -> np.ndarray:
     """Return the contact matrix of the best folded alignment.
 
     Args:
         x (str): RNA sequence.
         size (int): Matrix dimension. Use `0` for no padding.
 
-    Returns (np.array): Optimal contact matrix.
+    Returns (np.ndarray): Optimal contact matrix.
     """
     if not size:
         size = len(x)
@@ -254,7 +254,7 @@ def optimal_fold_contact_matrix(x: str, size: int = 0) -> np.array:
     return matrix
 
 
-def fold_contact_matrix(x: str, size: int = 0, minimum: int = 3) -> np.array:
+def fold_contact_matrix(x: str, size: int = 0, minimum: int = 3) -> np.ndarray:
     """Return the contact matrix of all possible alignments of a folded
     sequence.
 
@@ -263,7 +263,7 @@ def fold_contact_matrix(x: str, size: int = 0, minimum: int = 3) -> np.array:
         size (int): Matrix dimension. Use `0` for no padding.
         minimum (int): Minimum alignment length.
 
-    Returns (np.array): Contact matrix.
+    Returns (np.ndarray): Contact matrix.
     """
     if not size:
         size = len(x)

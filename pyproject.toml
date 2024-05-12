@@ -17,6 +17,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dynamic = ["dependencies"]
+keywords = [
+    "RNA", "secondary structure", "machine learning", "deep learning",
+    "reinforcement learning"
+]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}

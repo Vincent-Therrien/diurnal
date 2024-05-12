@@ -32,7 +32,7 @@ class Random(Basic):
             if symbol not in self.symbols and sum(symbol):
                 self.symbols.append(symbol)
 
-    def _predict(self, primary) -> np.array:
+    def _predict(self, primary) -> np.ndarray:
         """Predict a random secondary structure."""
         return [choice(self.symbols) for _ in range(len(primary[0]))]
 
@@ -54,7 +54,7 @@ class Uniform(Basic):
         """Simulate a training of the model."""
         pass
 
-    def _predict(self, primary) -> np.array:
+    def _predict(self, primary) -> np.ndarray:
         """Predict a random secondary structure."""
         return [self.symbol for _ in range(len(primary[0]))]
 
@@ -92,13 +92,13 @@ class Majority(Basic):
         v = list(symbols.values())
         exec(f"self.symbol = {k[v.index(max(v))]}")
 
-    def _predict(self, primary) -> np.array:
+    def _predict(self, primary) -> np.ndarray:
         """Predict a random secondary structure."""
         return [self.symbol for _ in range(len(primary[0]))]
 
     def _save(self, directory) -> None:
         """Save the model."""
-        np.save(directory + "model.npy", np.array(self.symbol))
+        np.save(directory + "model.npy", np.ndarray(self.symbol))
 
     def _load(self, directory) -> None:
         """Write the model."""

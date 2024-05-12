@@ -113,7 +113,7 @@ class Primary:
 
     def to_onehot(
             bases: list, size: int = 0,
-            map: dict = Schemes.IUPAC_TO_ONEHOT) -> np.array:
+            map: dict = Schemes.IUPAC_TO_ONEHOT) -> np.ndarray:
         """Transform a sequence of bases into a one-hot encoded vector.
 
         Args:
@@ -122,7 +122,7 @@ class Primary:
             size (int): Size of a normalized vector. `0` for no padding.
             map (dict): Assign an input to a vector.
 
-        Returns (np.array): One-hot encoded primary structure.
+        Returns (np.ndarray): One-hot encoded primary structure.
             E.g.: ``[[1, 0, 0, 0], [0, 1, 0, 0]]``
         """
         vector = [map[base] for base in bases]
@@ -135,7 +135,7 @@ class Primary:
             bases: list[str],
             size: int = 0,
             map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
-        ) -> np.array:
+        ) -> np.ndarray:
         """Encode a primary structure in a matrix of potential pairings.
 
         Create an `n` by `n` matrix, where `n` is the number of bases,
@@ -152,7 +152,7 @@ class Primary:
                 elements of the map must be (1) convertible to a Numpy
                 array and (2) of the same dimension.
 
-        Returns (np.array): Encoded matrix.
+        Returns (np.ndarray): Encoded matrix.
         """
         if type(bases[0]) != type(list(map.keys())[0]):
             a = str(type(bases[0]))
@@ -176,23 +176,23 @@ class Primary:
         return np.array(matrix)
 
     def to_mask(
-            pairings: np.array,
+            pairings: np.ndarray,
             size: int = 0,
             map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
-        ) -> np.array:
+        ) -> np.ndarray:
         """Make a primary structure pairing mask.
 
         Return the a copy of the input matrix in which impossible
         pairings are set to 0 and possible pairings are set to 1.
 
         Args:
-            pairings (np.array): Primary structure potential pairing
+            pairings (np.ndarray): Primary structure potential pairing
                 matrix.
             size (int): Matrix dimension. `0` for no padding.
             map (dict): Dictionary that assigns a type of pairing to an
                 encoding.
 
-        Returns (np.array): Pairing matrix mask.
+        Returns (np.ndarray): Pairing matrix mask.
         """
         # Convert the input into an array, if required.
         if type(pairings) == str:
@@ -242,7 +242,7 @@ class Primary:
                     break
         return bases
 
-    def _pad_vector(vector: np.array, size: int, element: list) -> np.array:
+    def _pad_vector(vector: np.ndarray, size: int, element: list) -> np.ndarray:
         """Append elements at the right extremity of a vector.
 
         Args:
@@ -250,22 +250,22 @@ class Primary:
             size (int): The final size of the vector.
             element (list): The element to add to the vector.
 
-        Returns (np.array): The padded list of size "size".
+        Returns (np.ndarray): The padded list of size "size".
         """
         difference = size - len(vector)
         if difference > 0:
             return np.concatenate((vector, difference * [element]))
         return np.array(vector)
 
-    def _unpad_vector(vector: np.array, element: list) -> np.array:
+    def _unpad_vector(vector: np.ndarray, element: list) -> np.ndarray:
         """Remove the empty elements appended to the right side of a
         vector.
 
         Args:
-            vector (np.array): Vector-encoded primary structure.
+            vector (np.ndarray): Vector-encoded primary structure.
             element (list): Empty element of the set (e.g. `[0, 0, 0, 0]`).
 
-        Returns (np.array): Unpadded vector.
+        Returns (np.ndarray): Unpadded vector.
         """
         i = len(vector) - 1
         while i > 0:
@@ -279,8 +279,8 @@ class Primary:
         return vector
 
     def unpad_matrix(
-            matrix: np.array, map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
-            ) -> np.array:
+            matrix: np.ndarray, map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
+            ) -> np.ndarray:
         """Strip a matrix of its padding elements.
 
         Args:
@@ -303,7 +303,7 @@ class Secondary:
             pairings: list,
             size: int = 0,
             map: dict = Schemes.BRACKET_TO_ONEHOT
-        ) -> np.array:
+        ) -> np.ndarray:
         """Encode pairings in a one-hot encoded dot-bracket secondary
         structure.
 
@@ -315,7 +315,7 @@ class Secondary:
             size (int): Size of the output. `0` for no padding.
             map (dict): Assign an input to a vector.
 
-        Returns (np.array): One-hot encoded secondary structure.
+        Returns (np.ndarray): One-hot encoded secondary structure.
         """
         if type(pairings[0]) is int:
             bracket = Secondary.to_bracket(pairings)
@@ -330,7 +330,7 @@ class Secondary:
             vector = Secondary._pad(vector, size, element)
         return vector
 
-    def to_matrix(pairings: list, size: int = 0) -> np.array:
+    def to_matrix(pairings: list, size: int = 0) -> np.ndarray:
         """Encode a secondary structure into a contact matrix.
 
         Transform the sequence of pairings into an `n` by `n` matrix,
@@ -341,7 +341,7 @@ class Secondary:
             pairings (list(int): List of base pairings.
             size (int): Dimension of the matrix. `0` for no padding.
 
-        Returns (np.array): Encoded matrix of the secondary structure.
+        Returns (np.ndarray): Encoded matrix of the secondary structure.
         """
         if size == 0:
             size = len(pairings)
@@ -356,7 +356,7 @@ class Secondary:
             size: int = 0,
             normalize: bool = True,
             power: float = 1
-        ) -> np.array:
+        ) -> np.ndarray:
         """Encode a secondary structure into a score contact matrix.
 
         Transform the sequence of pairings into an `n` by `n` matrix,
@@ -372,7 +372,7 @@ class Secondary:
                 paired elements are 1 and the farthest elements are 0.
             power (float): Power to apply to normalized distances.
 
-        Returns (np.array): Encoded matrix of the secondary structure.
+        Returns (np.ndarray): Encoded matrix of the secondary structure.
         """
         n = len(pairings)
         contact = Secondary.to_matrix(pairings, size)
@@ -404,7 +404,7 @@ class Secondary:
         else:
             return contact
 
-    def normalize_distance_matrix(distance_matrix) -> np.array:
+    def normalize_distance_matrix(distance_matrix) -> np.ndarray:
         """Normalize the distance matrix.
 
         This function returns a new distance matrix whose elements are
@@ -412,10 +412,10 @@ class Secondary:
         to 1.0 (paired base).
 
         Args:
-            distance_matrix (np.array): Result of the function
+            distance_matrix (np.ndarray): Result of the function
                 `to_distance_matrix`.
 
-        Returns (np.array): Normalized distance matrix.
+        Returns (np.ndarray): Normalized distance matrix.
         """
         normalized = distance_matrix.copy()
         normalized -= 1
@@ -425,7 +425,20 @@ class Secondary:
         normalized *= -1
         return normalized
 
-    def quantize_vector(vector: np.array) -> np.array:
+    def quantize_distance_matrix(distance_matrix: np.ndarray) -> np.ndarray:
+        """Create a contact matrix from a distance matrix.
+
+        Args:
+            distance_matrix (np.ndarray): Result of the function
+                `to_distance_matrix`.
+
+        Returns (np.ndarray): Contact matrix.
+        """
+        contact = distance_matrix.copy()
+        contact[contact != 1] = 0
+        return contact
+
+    def quantize_vector(vector: np.ndarray) -> np.ndarray:
         """Quantize a secondary structure vector.
 
         Convert a vector of predicted brackets into a one-hot vector. For
@@ -439,16 +452,16 @@ class Secondary:
         """
         if (type(vector[0]) in (int, float, np.float16, np.float32)
                 or len(vector[0]) == 1):
-            return np.array([round(p) for p in vector])
+            return np.ndarray([round(p) for p in vector])
         indices = [n.index(max(n)) if sum(n) else -1 for n in vector]
         sub_indices = list(range(len(vector[0])))
-        return np.array(
+        return np.ndarray(
             [[1 if j == i else 0 for j in sub_indices] for i in indices]
         )
 
     def quantize(
-            matrix: np.array, mask: np.array, threshold: float = None
-        ) -> np.array:
+            matrix: np.ndarray, mask: np.ndarray, threshold: float = None
+        ) -> np.ndarray:
         """Eliminate invalid pairings in a secondary structure matrix.
 
         Let the following represent a secondary structure matrix:
@@ -478,12 +491,12 @@ class Secondary:
           with each other.
 
         Args:
-            matrix (np.array): Contact matrix.
-            mask (np.array): Valid pairing mask.
+            matrix (np.ndarray): Contact matrix.
+            mask (np.ndarray): Valid pairing mask.
             threshold (float): Value below which elements are discarded.
                 Determined at runtime if not provided.
 
-        Returns (np.array): Folded pairing matrix.
+        Returns (np.ndarray): Folded pairing matrix.
         """
         folded = matrix * matrix.T
         if not threshold:
@@ -581,15 +594,15 @@ class Secondary:
                             break
         return pairings
 
-    def _pad(vector: np.array, size: int, element: list) -> np.array:
+    def _pad(vector: np.ndarray, size: int, element: list) -> np.ndarray:
         """Append elements at the right extremity of a vector.
 
         Args:
-            vector (np.array): A vector of elements.
+            vector (np.ndarray): A vector of elements.
             size (int): The final size of the vector.
             element (list): The element to add to the vector.
 
-        Returns (np.array): The padded list of size "size:.
+        Returns (np.ndarray): The padded list of size "size:.
         """
         difference = size - len(vector)
         if difference > 0:
@@ -721,3 +734,21 @@ class Secondary:
             if elements[i] == "-":
                 elements[i] = 'm'
         return "".join(elements)
+
+
+def to_half_matrix(
+        matrix: np.ndarray, empty_element: any = 0
+    ) -> None:
+    """Convert a matrix to a lower triangular matrix by replacing all
+    elements in the upper triangle by `empty_element`.
+
+    Args:
+        pairings (list(int): List of base pairings.
+        size (int): Dimension of the matrix. `0` for no padding.
+
+    Returns (np.ndarray): Encoded matrix of the secondary structure.
+    """
+    for i in range(matrix.shape[0]):
+        for j in range(i, matrix.shape[0]):
+            matrix[i, j] = empty_element
+    return matrix
