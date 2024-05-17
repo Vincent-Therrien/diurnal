@@ -153,7 +153,7 @@ class Basic():
 
     def test(
             self, data: list,
-            evaluation: Callable = evaluate.micro_f1,
+            evaluation: Callable = evaluate.Bracket.micro_f1,
             verbose: bool = True) -> list:
         """Evaluate the performance of the model.
 

@@ -33,7 +33,9 @@ def test_two_class_metrics(true, pred, R, P, F):
         P: Expected precision.
         F: Expected F-score.
     """
-    r, p, f = evaluate.recall_precision_f1(true, pred)
+    true = evaluate.to_shadow(true)
+    pred = evaluate.to_shadow(pred)
+    r, p, f = evaluate.Shadow.recall_precision_f1(true, pred)
     assert r == R, "Incorrect sensitivity."
     assert p == P, "Incorrect positive predictive value."
     assert f == F, "Incorrect F1-score."
@@ -57,7 +59,7 @@ def test_micro_f1(pred, true, F):
         pred: Predicted secondary structure.
         F: Expected F-score.
     """
-    f = evaluate.micro_f1(true, pred)
+    f = evaluate.Bracket.micro_f1(true, pred)
     assert f == F, "Incorrect F1-score."
 
 
@@ -79,7 +81,7 @@ def test_confusion_matrix(pred, true, is_diagonal):
         is_diagonal (bool): True if the expected confusion matrix is
             diagonal, False otherwise.
     """
-    cm, _ = evaluate.get_confusion_matrix(true, pred)
+    cm, _ = evaluate.Bracket.confusion_matrix(true, pred)
     cm_is_diagonal = np.count_nonzero(cm - np.diag(np.diagonal(cm))) == 0
     assert cm_is_diagonal == is_diagonal, \
         "Confusion matrix does not match the expected result."

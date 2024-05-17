@@ -15,76 +15,198 @@ import numpy as np
 from sklearn.metrics import f1_score, confusion_matrix
 
 from diurnal.utils import log
-from diurnal.structure import Schemes
 from diurnal import train
 
 
-def _convert_to_scalars(true, pred) -> tuple:
-    """Convert a vector of vectors into a vector of scalars.
-    For instance, `[[0, 1], [0, 1], [1, 0]]` and `['.', '.', '(']`
-    are converted to `[0, 0, 1]`.
+def to_shadow(bracket: list[str] | str) -> list[int]:
+    """Convert a bracket notation to a secondary structure shadow.
 
     Args:
-        true (list-like): Vector of the true structure.
-        pred (list-like): Vector of the predicted structure.
+        bracket: Secondary structure represented in bracket notation
+            with the characters `(`, `.`, and `)`.
 
-    Returns (list): Tuple containing the scalar vectors.
+    Returns: Secondary structure shadow in which `0` stands for `(` or
+        `)` and `1` stands for `.`.
     """
-    if type(true[0]) == str:
-        symbols = set(pred + true)
-        digits = {}
-        for i, s in enumerate(symbols):
-            digits[s] = i
-        pred = [digits[e] for e in pred]
-        true = [digits[e] for e in true]
-        return true, pred, symbols
-    return train.categorize_vector(true), train.categorize_vector(pred), None
+    return [0 if c == '.' else 1 for c in bracket]
 
 
-def micro_f1(true, pred) -> float:
-    """ Compute the micro F1-score by considering the secondary
-    structure symbols '(', '.', and ')' as three different classes.
-
-    Args:
-        true (list-like): Vector of the true structure.
-        pred (list-like): Vector of the predicted structure.
-
-    Returns (float): F1-score of the prediction, i.e. a value
-        between 0 and 1.
+class Shadow:
+    """Evaluate predictions made with secondary structure shadows,
+    i.e. a sequence of paired / unpaired bases.
     """
-    scalar_true, scalar_pred, _ = _convert_to_scalars(true, pred)
-    return f1_score(scalar_pred, scalar_true, average='micro')
+
+    def TP(true: list[int], pred: list[int]) -> float:
+        """Compute the true positive value (predicted paired bases that
+        are actually paired).
+        """
+        tp = 0
+        for i in range(len(true)):
+            if pred[i] and true[i]:
+                tp += 1
+        return tp
+
+    def TN(true: list[int], pred: list[int]) -> float:
+        """Compute the true negative value (predicted unpaired bases
+        that are actually unpaired).
+        """
+        tn = 0
+        for i in range(len(true)):
+            if pred[i] == 0 and true[i] == 0:
+                tn += 1
+        return tn
+
+    def FP(true: list[int], pred: list[int]) -> float:
+        """Compute the false positive value (predicted paired bases that
+        are actually unpaired).
+        """
+        fp = 0
+        for i in range(len(true)):
+            if pred[i] and true[i] == 0:
+                fp += 1
+        return fp
+
+    def FN(true: list[int], pred: list[int]) -> float:
+        """Compute the false negative value (predicted unpaired bases
+        that are actually unpaired).
+        """
+        fn = 0
+        for i in range(len(true)):
+            if pred[i] == 0 and true[i]:
+                fn += 1
+        return fn
+
+    def recall(true, pred) -> float:
+        """Compute the recall value obtained by comparing two
+        secondary structures. Recall is defined as:
+
+        .. math::
+
+            TP / (TP + FN).
+        """
+        tp = Shadow.TP(true, pred)
+        fn = Shadow.FN(true, pred)
+        if tp + fn:
+            return tp / (tp + fn)
+        else:
+            return 0.0
+
+    def precision(true, pred) -> float:
+        """Compute the precision obtained by comparing two
+        secondary structures. Precision is defined as:
+
+        .. math::
+
+            TP / (TP + FP).
+        """
+        tp = Shadow.TP(true, pred)
+        fp = Shadow.FP(true, pred)
+        if tp + fp:
+            return tp / (tp + fp)
+        else:
+            return 0.0
+
+    def recall_precision_f1(true, pred):
+        """Compute the F1-score obtained by comparing two secondary
+        structures. The f1-score is defined as:
+
+        .. math::
+
+            F1 = 2 \times \frac{recall \times precision}{recall + precision}
+        """
+        r = Shadow.recall(true, pred)
+        p = Shadow.precision(true, pred)
+        if r + p:
+            f1 = 2 * ((r * p) / (r + p))
+            return r, p, f1
+        else:
+            return r, p, 0.0
 
 
-def get_confusion_matrix(true, pred) -> tuple:
-    """Get the confusion matrix of the prediction.
+class Bracket:
+    """Evaluate predictions made with the bracket notation."""
 
-    Args:
-        true (list-like): Vector of the true structure.
-        pred (list-like): Vector of the predicted structure.
+    def convert_to_scalars(
+            true: list[str], pred: list[str], symbols: tuple[str]
+        ) -> tuple:
+        """Convert a vector of vectors into a vector of scalars.
+        For instance, `[[0, 1], [0, 1], [1, 0]]` and `['.', '.', '(']`
+        are converted to `[0, 0, 1]`.
 
-    Returns (tuple): A tuple containing the confusion matrix and a
-        list of symbols that correspond to each row of the matrix.
-    """
-    t, p, symbols = _convert_to_scalars(true, pred)
-    return confusion_matrix(t, p), symbols
+        Args:
+            true (list-like): Vector of the true structure.
+            pred (list-like): Vector of the predicted structure.
+            symbols: Set of possible elements.
+
+        Returns (list): Tuple containing the scalar vectors.
+        """
+        if type(true[0]) == str:
+            digits = {}
+            for i, s in enumerate(symbols):
+                digits[s] = i
+            pred = [digits[e] for e in pred]
+            true = [digits[e] for e in true]
+            return true, pred, symbols
+        return train.categorize_vector(true), train.categorize_vector(pred), None
+
+    def micro_f1(
+            true: list[str], pred: list[str], symbols: str = "(.)"
+        ) -> float:
+        """ Compute the micro F1-score by considering the secondary
+        structure symbols '(', '.', and ')' as three different classes.
+
+        Args:
+            true (list-like): Vector of the true structure.
+            pred (list-like): Vector of the predicted structure.
+            symbols: Set of possible elements.
+
+        Returns (float): F1-score of the prediction, i.e. a value
+            between 0 and 1.
+        """
+        scalar_true, scalar_pred, _ = Bracket.convert_to_scalars(
+            true, pred, symbols
+        )
+        return f1_score(scalar_pred, scalar_true, average='micro')
+
+    def confusion_matrix(
+            true: list[str], pred: list[str], symbols: str = "(.)"
+        ) -> float:
+        """Get the confusion matrix of the prediction.
+
+        Args:
+            true (list-like): Vector of the true structure.
+            pred (list-like): Vector of the predicted structure.
+            symbols: Set of possible elements.
+
+        Returns (tuple): A tuple containing the confusion matrix and a
+            list of symbols that correspond to each row of the matrix.
+        """
+        scalar_true, scalar_pred, _ = Bracket.convert_to_scalars(
+            true, pred, symbols
+        )
+        return confusion_matrix(scalar_true, scalar_pred), symbols
 
 
 class ContactMatrix:
-    """Evaluate predictions made with matrices."""
-    def TP(true, pred) -> int:
+    """Evaluate predictions made with contact matrices."""
+
+    def TP(true: np.ndarray, pred: np.ndarray) -> int:
+        """Get the number of true positives."""
         return np.sum(true * pred)
 
-    def FP(true, pred) -> int:
+    def FP(true: np.ndarray, pred: np.ndarray) -> int:
+        """Get the number of false positives."""
         return np.sum((np.ones_like(true) - true) * pred)
 
-    def TN(true, pred) -> int:
+    def TN(true: np.ndarray, pred: np.ndarray) -> int:
+        """Get the number of true negatives."""
         return np.sum((np.ones_like(true) - true) * (np.ones_like(pred) - pred))
 
-    def FN(true, pred) -> int:
+    def FN(true: np.ndarray, pred: np.ndarray) -> int:
+        """Get the number of false negatives."""
         return np.sum(true * (np.ones_like(pred) - pred))
 
-    def precision(true, pred) -> float:
+    def precision(true: np.ndarray, pred: np.ndarray) -> float:
         """Compute the precision obtained by comparing two secondary
         structures. Precision is defined as:
 
@@ -99,7 +221,7 @@ class ContactMatrix:
         else:
             return 0.0
 
-    def recall(true, pred) -> float:
+    def recall(true: np.ndarray, pred: np.ndarray) -> float:
         """Compute the recall obtained by comparing two secondary
         structures. Precision is defined as:
 
@@ -125,105 +247,6 @@ class ContactMatrix:
             return f1
         else:
             return 0.0
-
-
-def get_TP(
-        true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
-        ) -> float:
-    """Compute the true positive value (predicted paired bases that
-    are actually paired).
-    """
-    tp = 0
-    for i in range(len(true)):
-        if pred[i] != unpaired_symbol and true[i] != unpaired_symbol:
-            tp += 1
-    return tp
-
-def get_TN(
-        true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
-        ) -> float:
-    """Compute the true negative value (predicted unpaired bases
-    that are actually unpaired).
-    """
-    tn = 0
-    for i in range(len(true)):
-        if pred[i] == unpaired_symbol and true[i] == unpaired_symbol:
-            tn += 1
-    return tn
-
-def get_FP(
-        true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
-        ) -> float:
-    """Compute the false positive value (predicted paired bases that
-    are actually unpaired).
-    """
-    fp = 0
-    for i in range(len(true)):
-        if pred[i] != unpaired_symbol and true[i] == unpaired_symbol:
-            fp += 1
-    return fp
-
-def get_FN(
-        true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
-        ) -> float:
-    """Compute the false negative value (predicted unpaired bases
-    that are actually unpaired).
-    """
-    fn = 0
-    for i in range(len(true)):
-        if pred[i] == unpaired_symbol and pred[i] != true[i]:
-            fn += 1
-    return fn
-
-def recall(
-        true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
-        ) -> float:
-    """Compute the recall value obtained by comparing two
-    secondary structures. Recall is defined as:
-
-    .. math::
-
-        TP / (TP + FN).
-    """
-    tp = get_TP(true, pred, unpaired_symbol)
-    fn = get_FN(true, pred, unpaired_symbol)
-    if tp + fn:
-        return tp / (tp + fn)
-    else:
-        return 0.0
-
-def precision(
-        true, pred, unpaired_symbol: any = Schemes.BRACKET_TO_ONEHOT['.']
-        ) -> float:
-    """Compute the precision obtained by comparing two
-    secondary structures. Precision is defined as:
-
-    .. math::
-
-        TP / (TP + FP).
-    """
-    tp = get_TP(true, pred, unpaired_symbol)
-    fp = get_FP(true, pred, unpaired_symbol)
-    if tp + fp:
-        return tp / (tp + fp)
-    else:
-        return 0.0
-
-def recall_precision_f1(true, pred, unpaired_symbol="."):
-    """Compute the F1-score obtained by comparing two secondary
-    structures. The f1-score is defined as:
-
-    .. math::
-
-        F1 = 2 \times \frac{recall \times precision}{recall + precision}
-    """
-    r = recall(true, pred, unpaired_symbol)
-    p = precision(true, pred, unpaired_symbol)
-    if r + p:
-        f1 = 2 * ((r * p) / (r + p))
-        return r, p, f1
-    else:
-        return r, p, 0.0
 
 
 # Result presentation
