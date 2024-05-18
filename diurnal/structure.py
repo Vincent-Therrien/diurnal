@@ -290,8 +290,8 @@ class Primary:
         Returns (list): Unpadded matrix.
         """
         for i in range(len(matrix)):
-            element = tuple(matrix[i, 0])
-            if element == map["-"]:
+            element = tuple(matrix[i])
+            if element[0] == map["-"]:
                 return matrix[:i, :i]
         return matrix
 

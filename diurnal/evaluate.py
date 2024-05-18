@@ -122,6 +122,17 @@ class Shadow:
         else:
             return r, p, 0.0
 
+    def crop(shadow: list[int], length: int) -> list[int]:
+        """Return a cropped shadow to exclude padding.
+
+        Args:
+            shadow: Shadow of the secondary structure.
+            length: Number of bases in the primary structure.
+
+        Returns: The `shadow` argument from element `0` to `length`.
+        """
+        return shadow[:length]
+
 
 class Bracket:
     """Evaluate predictions made with the bracket notation."""
@@ -186,6 +197,17 @@ class Bracket:
         )
         return confusion_matrix(scalar_true, scalar_pred), symbols
 
+    def crop(bracket: list[str | int], length: int) -> list[str | int]:
+        """Return a cropped secondary structure to exclude padding.
+
+        Args:
+            bracket: Bracket notation of the secondary structure.
+            length: Number of bases in the primary structure.
+
+        Returns: The `bracket` argument from element `0` to `length`.
+        """
+        return bracket[:length]
+
 
 class ContactMatrix:
     """Evaluate predictions made with contact matrices."""
@@ -247,6 +269,18 @@ class ContactMatrix:
             return f1
         else:
             return 0.0
+
+    def crop(contact: np.ndarray, length: int) -> list[int]:
+        """Return a cropped contact matrix to exclude padding.
+
+        Args:
+            contact: Contact matrix of the secondary structure.
+            length: Number of bases in the primary structure.
+
+        Returns: The `length` by `length` upper left square of the
+            contact matrix.
+        """
+        return contact[:length, :length]
 
 
 # Result presentation

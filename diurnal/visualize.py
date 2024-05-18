@@ -32,6 +32,12 @@ PAIRING_COLORS = {
     "paired":   (1.0, 1.0, 1.0)  # Paired bases, used for sec. struct.
 }
 PAIRING_CMAP = [(i, v) for i, v in enumerate(PAIRING_COLORS.values())]
+COMPARISON_COLORS = {
+    "Unpaired":   (1.0, 1.0, 1.0),
+    "True":       (1.0, 0.0, 0.0),
+    "Prediction": (0.0, 1.0, 0.0),
+    "Both":       (0.0, 0.0, 0.0),
+}
 
 
 def structure_length_per_family(path: str, max_size: int = None) -> None:
@@ -106,8 +112,11 @@ def potential_pairings(
     for row in tuple(range(len(matrix))):
         line = []
         for col in tuple(range(len(matrix[0]))):
-            element = tuple(matrix[row][col])
-            if sum(element) == 0:
+            try:
+                element = tuple(matrix[row][col])
+            except:
+                element = matrix[row][col]
+            if np.sum(element) == 0:
                 color = PAIRING_COLORS["padding"]
             else:
                 color = PAIRING_CMAP[tuple(map.values()).index(element)][1]
@@ -130,6 +139,7 @@ def potential_pairings(
             secondary = (secondary, )
         markers = ["." , "+" , "o" , "v" , "^" , "<", ">"]
         color = PAIRING_COLORS["paired"]
+        i = 1
         for sec, marker in zip(secondary, markers):
             if type(sec) == list and type(sec[0]) == int:
                 sec = diurnal.structure.Secondary.to_matrix(sec)
@@ -140,8 +150,57 @@ def potential_pairings(
                     if col:
                         x.append(j)
                         y.append(i)
-            plt.scatter(x, y, color=color, marker=marker, s=40)
+            plt.scatter(x, y, color=color, marker=marker, s=40, label=str(i))
             color = tuple([c - 0.1 for c in color])
+            i += 1
+    minor_locator_x = AutoMinorLocator(2)
+    plt.gca().xaxis.set_minor_locator(minor_locator_x)
+    minor_locator_y = AutoMinorLocator(2)
+    plt.gca().yaxis.set_minor_locator(minor_locator_y)
+    plt.grid(which='minor')
+    plt.title(title)
+    plt.show()
+
+
+def compare_pairings(
+        true: np.ndarray,
+        prediction: np.ndarray,
+        title: str = "Comparison of Secondary Structures"
+    ) -> None:
+    """Compare secondary structures.
+
+    Args:
+        matrices: Contact matrices. Must contain two (2) matrices.
+        labels: Name of each contact matrix.
+        title: Graph title.
+    """
+    C = []
+    for row in tuple(range(len(true))):
+        line = []
+        for col in tuple(range(len(true[0]))):
+            a = true[row][col]
+            b = prediction[row][col]
+            if a == b:
+                if a:
+                    line.append(COMPARISON_COLORS["Both"])
+                else:
+                    line.append(COMPARISON_COLORS["Unpaired"])
+            else:
+                if a:
+                    line.append(COMPARISON_COLORS["True"])
+                else:
+                    line.append(COMPARISON_COLORS["Prediction"])
+        C.append(line)
+    # Plot the potential pairings.
+    plt.imshow(C, interpolation='none')
+    patches = [
+        mpl.patches.Patch(color=v, label=k) for k, v in COMPARISON_COLORS.items()
+    ]
+    index_base_vertical = [f"{i}" for i in range(len(true))]
+    plt.yticks(np.arange(0, len(C), 1), index_base_vertical)
+    index_base_horizontal = [f"{i}\n" for i in range(len(true))]
+    plt.xticks(np.arange(0, len(C), 1), index_base_horizontal)
+    plt.legend(handles=patches, bbox_to_anchor=(1.05, 1), loc=2)
     minor_locator_x = AutoMinorLocator(2)
     plt.gca().xaxis.set_minor_locator(minor_locator_x)
     minor_locator_y = AutoMinorLocator(2)
