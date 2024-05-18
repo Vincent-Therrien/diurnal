@@ -22,6 +22,14 @@ keywords = [
     "reinforcement learning"
 ]
 
+[tool.setuptools]
+packages = [
+    "diurnal",
+    "diurnal.utils",
+    "diurnal.models",
+    "diurnal.models.networks"
+]
+
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 

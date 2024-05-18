@@ -68,7 +68,7 @@ class Schemes:
         "-":        (0, 0, 0, 0, 0, 0, 0, 0),  # Padding element (i.e. empty).
     }
 
-    IUPAC_ONEHOT_PAIRINGS_SCALARS = {
+    IUPAC_PAIRINGS_SCALARS = {
         "AU":       2,
         "UA":       2,
         "CG":       3,
@@ -737,18 +737,24 @@ class Secondary:
 
 
 def to_half_matrix(
-        matrix: np.ndarray, empty_element: any = 0
+        matrix: np.ndarray,
+        empty_element: any = 0,
+        padding_element: any = -1
     ) -> None:
     """Convert a matrix to a lower triangular matrix by replacing all
     elements in the upper triangle by `empty_element`.
 
     Args:
-        pairings (list(int): List of base pairings.
-        size (int): Dimension of the matrix. `0` for no padding.
+        matrix: Matrix to halve.
+        empty_element: Element that represents an unpaired base.
+        padding_element: Element that represents an out-of-bound base.
 
     Returns (np.ndarray): Encoded matrix of the secondary structure.
     """
     for i in range(matrix.shape[0]):
         for j in range(i, matrix.shape[0]):
-            matrix[i, j] = empty_element
+            if matrix[i, j] == padding_element:
+                pass
+            else:
+                matrix[i, j] = empty_element
     return matrix

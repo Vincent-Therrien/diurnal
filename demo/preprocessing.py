@@ -46,7 +46,7 @@ def format(dst: str, names: list[str]):
     #     SIZE, structure.Primary.to_matrix
     # )
     pp_scalar = lambda x, y: structure.Primary.to_matrix(
-        x, y, structure.Schemes.IUPAC_ONEHOT_PAIRINGS_SCALARS
+        x, y, structure.Schemes.IUPAC_PAIRINGS_SCALARS
     )
     database.format_primary_structure(
         names, f"{dst}potential_pairings_scalar.npy", SIZE, pp_scalar
