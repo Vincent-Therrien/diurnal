@@ -27,10 +27,12 @@ def test_free_pairings():
     FREE_ROWS = np.array([1, 0, 0, 1, 1, 1])
     FREE_COLUMNS = np.array([0, 1, 0, 0, 1, 1])
     assert np.array_equal(
-        FREE_ROWS, reinforcement.ContactMatrix.get_free_rows(CONTACT)
+        FREE_ROWS,
+        reinforcement.BasicContactMatrixOperations.get_free_rows(CONTACT)
     )
     assert np.array_equal(
-        FREE_COLUMNS, reinforcement.ContactMatrix.get_free_columns(CONTACT)
+        FREE_COLUMNS,
+        reinforcement.BasicContactMatrixOperations.get_free_columns(CONTACT)
     )
 
 
@@ -43,7 +45,7 @@ def test_insert():
     ])
     ROWS = np.array([0.0, 0.1, 0.8])
     COLUMNS = np.array([0.9, 0.1, 0.8])
-    reinforcement.ContactMatrix.insert(CONTACT, ROWS, COLUMNS)
+    reinforcement.BasicContactMatrixOperations.insert(CONTACT, ROWS, COLUMNS)
     assert np.array_equal(
         CONTACT,
         np.array([
@@ -63,7 +65,7 @@ def test_clear():
     ])
     # Clear a row.
     ROWS = np.array([0.0, 0.1, 0.8])
-    reinforcement.ContactMatrix.clear_row(CONTACT, ROWS)
+    reinforcement.BasicContactMatrixOperations.clear_row(CONTACT, ROWS)
     assert np.array_equal(
         CONTACT,
         np.array([
@@ -74,7 +76,7 @@ def test_clear():
     )
     # Clear a column.
     COLUMNS = np.array([0.9, 0.99, 0.8])
-    reinforcement.ContactMatrix.clear_column(CONTACT, COLUMNS)
+    reinforcement.BasicContactMatrixOperations.clear_column(CONTACT, COLUMNS)
     assert np.array_equal(
         CONTACT,
         np.array([
@@ -84,7 +86,7 @@ def test_clear():
         ])
     )
     COLUMNS = np.array([0.9, 0.5, 0.8])
-    reinforcement.ContactMatrix.clear_column(CONTACT, COLUMNS)
+    reinforcement.BasicContactMatrixOperations.clear_column(CONTACT, COLUMNS)
     assert np.array_equal(
         CONTACT,
         np.array([
@@ -92,4 +94,47 @@ def test_clear():
             [0, 0, 0],
             [0, 0, 0]
         ])
+    )
+
+def test_DQL1():
+    """Test DQL1 operations."""
+    model = reinforcement.DQL1(None, 3, None, None, None, None)
+    TENTATIVE = np.array([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+    ])
+    POTENTIAL = np.array([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0]
+    ])
+    CURSOR = np.array([
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+    ])
+    model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([1, 0, 0, 0, 0, 0]))
+    assert np.array_equal(
+        CURSOR,
+        np.array([[0, 0, 0], [0, 0, 0], [0, 1, 0]])
+    )
+    model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([1, 0, 0, 0, 0, 0]))
+    assert np.array_equal(
+        CURSOR,
+        np.array([[0, 0, 0], [0, 0, 0], [0, 1, 0]])
+    )
+    model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([0.5, 0, 1, 0, 0, 0]))
+    assert np.array_equal(
+        CURSOR,
+        np.array([[0, 0, 0], [0, 0, 0], [1, 0, 0]])
+    )
+    model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([0, 0, 0, 0, 1, 0]))
+    assert np.array_equal(
+        CURSOR,
+        np.array([[0, 0, 0], [0, 0, 0], [1, 0, 0]])
+    )
+    assert np.array_equal(
+        TENTATIVE,
+        np.array([[0, 0, 0], [0, 0, 0], [1, 0, 0]])
     )

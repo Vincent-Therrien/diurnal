@@ -1,6 +1,11 @@
 """
     Reinforcement learning (RL) module.
 
+    Note: The methods of this file are **unsafe** in the sense that
+    they never validate the input data. This design decision accelerate
+    execution, but also makes it less safe. The arguments have to be
+    provided as described by the doscstrings to ensure proper behavior.
+
     File information:
 
     - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
@@ -9,18 +14,15 @@
     - License: MIT
 """
 
+from torch import nn, optim, Tensor
 import numpy as np
 
 
-class ContactMatrix:
+class BasicContactMatrixOperations:
     """Operations to interact with a RL environment based on contact
     matrices.
-
-    Note: The methods of this class are **unsafe** in the sense that
-    they never validate the input data. The arguments have to be
-    provided as described by the doscstrings to ensure proper behavior.
     """
-    def get_free_rows(matrix: np.ndarray)-> np.ndarray:
+    def get_free_rows(matrix: np.ndarray | Tensor)-> np.ndarray:
         """Find the rows that contain no pairing.
 
         Args:
@@ -56,7 +58,9 @@ class ContactMatrix:
         return np.ones_like(indices) - indices
 
     def insert(
-            matrix: np.ndarray, rows: np.ndarray, columns: np.ndarray
+            matrix: np.ndarray | Tensor,
+            rows: np.ndarray | Tensor,
+            columns: np.ndarray | Tensor
         ) -> None:
         """Insert a 1 at the specified index.
 
@@ -80,7 +84,9 @@ class ContactMatrix:
         """
         matrix[rows.argmax(), columns.argmax()] = 1
 
-    def clear_row(matrix: np.ndarray, rows: np.ndarray) -> None:
+    def clear_row(
+            matrix: np.ndarray | Tensor, rows: np.ndarray | Tensor
+        ) -> None:
         """Remove all pairings in a row.
 
         Args:
@@ -99,7 +105,9 @@ class ContactMatrix:
         """
         matrix[rows.argmax(), :] = 0
 
-    def clear_column(matrix: np.ndarray, columns: np.ndarray) -> None:
+    def clear_column(
+            matrix: np.ndarray | Tensor, columns: np.ndarray | Tensor
+        ) -> None:
         """Remove all pairings in a column.
 
         Args:
@@ -117,3 +125,130 @@ class ContactMatrix:
                [1, 0]])
         """
         matrix[:, columns.argmax()] = 0
+
+
+class DQL1:
+    """Deep Q-learning model number 1 to predict RNA secondary
+    structures in a contact matrix.
+
+    Environment:
+
+    - Scalar matrix of potential pairings.
+    - Tentative contact matrix.
+
+    Reward:
+
+    - Loss between the tentative contact matrix and the real contact
+      matrix.
+
+    States:
+
+    - A **cursor**, that is, a two-component index that points at a
+      potential pairing in the contact matrix.
+    - A Q table represented with a neural network.
+
+    Actions:
+
+    - Move the cursor down.
+    - Move the cursor up.
+    - Move the cursor left.
+    - Move the cursor right.
+    - Assign 1 to the cursor.
+    - Assign 0 to the cursor.
+    """
+    def __init__(
+            self,
+            q_table: nn,
+            N: int,
+            n_max_epochs: int,
+            n_max_episodes: int,
+            optimizer: optim,
+            loss_fn: nn.functional,
+            optimizer_args: dict = None,
+            loss_fn_args: dict = None,
+            use_half: bool = True,
+            patience: int = 5,
+            verbosity: int = 0
+        ) -> None:
+        self.q_table = q_table
+        self.N = N
+        self.n_max_epochs = n_max_epochs
+        self.n_max_episodes = n_max_episodes
+        self.optimizer = optimizer
+        self.loss_fn = loss_fn
+        self.optimizer_args = optimizer_args
+        self.loss_fn_args = loss_fn_args
+        self.use_half = use_half
+        self.patience = patience
+        self.verbosity = verbosity
+
+    def _roll(
+            self,
+            cursor: np.ndarray | Tensor,
+            potential: np.ndarray | Tensor,
+            shift: int,
+            axis: int
+        ) -> None:
+        """Roll a single-entry matrix.
+
+        The method rolls the cursor until a non-zero corresponding
+        element occurs in the potential pairing or until the cursor
+        resumes to its original position.
+
+        Args:
+            cursor: A single-entry matrix that indicates a selected
+                element. Modified in place.
+            potential: Scalar matrix of potential pairings.
+            shift: Shift value (1 or -1).
+            axis: Shift axis (0 or 1)
+        """
+        for _ in range(self.N):
+            cursor[:, :] = np.roll(cursor, shift, axis)
+            if (cursor * potential).sum():
+                return
+
+    def act(
+            self,
+            tentative: np.ndarray | Tensor,
+            potential: np.ndarray | Tensor,
+            cursor: np.ndarray | Tensor,
+            actions: np.ndarray | Tensor
+        ) -> None:
+        """Modify the tentative contact matrix and cursor based on
+        actions.
+
+        Args:
+            tentative: Tentative contact matrix (i.e. the result that
+                the model is currently producing). Modified in place.
+            potential: Scalar matrix of potential pairings.
+            cursor: A single-entry matrix that indicates a selected
+                element. Modified in place.
+            actions: A probability vector containing exactly 6 elements
+                that each indicate the probability of performing the
+                following actions:
+                1. Move the cursor down.
+                2. Move the cursor up.
+                3. Move the cursor left.
+                4. Move the cursor right.
+                5. Assign 1 to the cursor in the tentative matrix.
+                6. Assign 0 to the cursor in the tentative matrix.
+        """
+        match actions.argmax():
+            case 0:
+                self._roll(cursor, potential, 1, 0)
+            case 1:
+                self._roll(cursor, potential, -1, 0)
+            case 2:
+                self._roll(cursor, potential, -1, 1)
+            case 3:
+                self._roll(cursor, potential, 1, 1)
+            case 4:
+                index = cursor.argmax(axis=None)
+                row = index // self.N
+                column = index % self.N
+                tentative[row, :] = 0
+                tentative[:, column] = 0
+                tentative[row, column] = 1
+            case 5:
+                index = cursor.argmax(axis=None)
+                tentative[index // self.N, index % self.N] = 0
