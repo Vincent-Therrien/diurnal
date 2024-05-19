@@ -27,7 +27,8 @@ packages = [
     "diurnal",
     "diurnal.utils",
     "diurnal.models",
-    "diurnal.models.networks"
+    "diurnal.models.networks",
+    "diurnal.models.reinforcement"
 ]
 
 [tool.setuptools.dynamic]

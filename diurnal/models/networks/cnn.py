@@ -9,8 +9,53 @@
 """
 
 
-from torch import nn, reshape, cat
+from torch import nn, reshape, cat, stack, squeeze, tensor
 import torch.nn.functional as F
+
+
+class MatrixToMatrixAutoencoder1(nn.Module):
+    """Neural network used to predict a contact matrix.
+
+    Input: Scalar matrix of potential pairings.
+
+    Output: Blurry contact matrix.
+    """
+    def __init__(self, n: int):
+        super().__init__()
+        kernel = 3
+        n_half = int(n / 2)
+        self.conv1 = nn.Conv2d(1, 1, kernel, padding="same")
+        self.downsize = nn.AdaptiveAvgPool2d(n_half)
+        self.activation = F.relu
+        self.linear1 = nn.Linear(n_half, n_half)
+        self.upsample = nn.Upsample(
+            scale_factor=2, mode='bilinear', align_corners=True
+        )
+        self.linear2 = nn.Linear(n, n)
+        self.linear3 = nn.Linear(n, n)
+        self.output = nn.Sigmoid()
+
+    def forward(self, input: tensor) -> tensor:
+        """Forward propagation.
+
+        Args:
+            input: Potential pairing matrix.
+
+        Returns: Blurry distance matrix.
+        """
+        input = stack((input, ), dim=1)
+        input = self.conv1(input)
+        input = self.activation(input)
+        input = self.downsize(input)
+        input = self.activation(input)
+        input = self.linear1(input)
+        input = self.upsample(input)
+        input = self.linear2(input)
+        input = self.activation(input)
+        input = self.linear3(input)
+        input = self.output(input)
+        input = squeeze(input)
+        return input
 
 
 class RNA_CNN(nn.Module):

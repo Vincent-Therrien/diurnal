@@ -1,5 +1,5 @@
 """
-    Test te diurnal.families module.
+    Test the diurnal.families module.
 
     - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
     - Affiliation: Département d'informatique, UQÀM

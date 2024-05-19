@@ -740,7 +740,7 @@ def to_half_matrix(
         matrix: np.ndarray,
         empty_element: any = 0,
         padding_element: any = -1
-    ) -> None:
+    ) -> np.ndarray:
     """Convert a matrix to a lower triangular matrix by replacing all
     elements in the upper triangle by `empty_element`.
 
@@ -749,7 +749,7 @@ def to_half_matrix(
         empty_element: Element that represents an unpaired base.
         padding_element: Element that represents an out-of-bound base.
 
-    Returns (np.ndarray): Encoded matrix of the secondary structure.
+    Returns: Encoded matrix of the secondary structure.
     """
     for i in range(matrix.shape[0]):
         for j in range(i, matrix.shape[0]):
@@ -757,4 +757,19 @@ def to_half_matrix(
                 pass
             else:
                 matrix[i, j] = empty_element
+    return matrix
+
+
+def to_full_matrix(matrix: np.ndarray) -> np.ndarray:
+    """Convert a lower triangular matrix to a full matrix by assigning
+    to each [i, j] element the sum of the [i, j] and [j, i] elements.
+
+    Args:
+        matrix: Lower triangular matrix to convert to a full matrix.
+
+    Returns: Full matrix.
+    """
+    for i in range(matrix.shape[0]):
+        for j in range(i, matrix.shape[0]):
+            matrix[i, j] = matrix[i, j] + matrix[j, i]
     return matrix
