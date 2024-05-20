@@ -14,6 +14,9 @@
     - License: MIT
 """
 
+from collections import namedtuple, deque
+import random
+
 from torch import nn, optim, Tensor
 import numpy as np
 
@@ -127,9 +130,30 @@ class BasicContactMatrixOperations:
         matrix[:, columns.argmax()] = 0
 
 
-class DQL1:
-    """Deep Q-learning model number 1 to predict RNA secondary
-    structures in a contact matrix.
+Transition = namedtuple('Transition',
+    ('state', 'action', 'next_state', 'reward')
+)
+
+
+class ReplayMemory(object):
+
+    def __init__(self, capacity):
+        self.memory = deque([], maxlen=capacity)
+
+    def push(self, *args):
+        """Save a transition"""
+        self.memory.append(Transition(*args))
+
+    def sample(self, batch_size):
+        return random.sample(self.memory, batch_size)
+
+    def __len__(self):
+        return len(self.memory)
+
+
+class SRL1:
+    """A supervised reinforcement learning model number 1 to predict RNA
+    secondary structures in a contact matrix.
 
     Environment:
 
@@ -182,38 +206,13 @@ class DQL1:
         self.patience = patience
         self.verbosity = verbosity
 
-    def _roll(
-            self,
-            cursor: np.ndarray | Tensor,
-            potential: np.ndarray | Tensor,
-            shift: int,
-            axis: int
-        ) -> None:
-        """Roll a single-entry matrix.
-
-        The method rolls the cursor until a non-zero corresponding
-        element occurs in the potential pairing or until the cursor
-        resumes to its original position.
-
-        Args:
-            cursor: A single-entry matrix that indicates a selected
-                element. Modified in place.
-            potential: Scalar matrix of potential pairings.
-            shift: Shift value (1 or -1).
-            axis: Shift axis (0 or 1)
-        """
-        for _ in range(self.N):
-            cursor[:, :] = np.roll(cursor, shift, axis)
-            if (cursor * potential).sum():
-                return
-
     def act(
             self,
             tentative: np.ndarray | Tensor,
             potential: np.ndarray | Tensor,
             cursor: np.ndarray | Tensor,
             actions: np.ndarray | Tensor
-        ) -> None:
+        ) -> np.ndarray | Tensor:
         """Modify the tentative contact matrix and cursor based on
         actions.
 
@@ -226,29 +225,55 @@ class DQL1:
             actions: A probability vector containing exactly 6 elements
                 that each indicate the probability of performing the
                 following actions:
-                1. Move the cursor down.
-                2. Move the cursor up.
-                3. Move the cursor left.
-                4. Move the cursor right.
-                5. Assign 1 to the cursor in the tentative matrix.
-                6. Assign 0 to the cursor in the tentative matrix.
+                0. Move the cursor down.
+                1. Move the cursor up.
+                2. Move the cursor left.
+                3. Move the cursor right.
+                4. Assign 1 to the cursor in the tentative matrix.
+                    Performed only if the potential matrix allows it.
+                5. Assign 0 to the cursor in the tentative matrix.
+                    Performed only if the potential matrix allows it.
         """
         match actions.argmax():
             case 0:
-                self._roll(cursor, potential, 1, 0)
+                cursor[:, :] = np.roll(cursor, 1, 0)
             case 1:
-                self._roll(cursor, potential, -1, 0)
+                cursor[:, :] = np.roll(cursor, -1, 0)
             case 2:
-                self._roll(cursor, potential, -1, 1)
+                cursor[:, :] = np.roll(cursor, -1, 1)
             case 3:
-                self._roll(cursor, potential, 1, 1)
+                cursor[:, :] = np.roll(cursor, 1, 1)
             case 4:
                 index = cursor.argmax(axis=None)
                 row = index // self.N
                 column = index % self.N
+                if potential[row, column] == 0:
+                    return
                 tentative[row, :] = 0
                 tentative[:, column] = 0
                 tentative[row, column] = 1
             case 5:
                 index = cursor.argmax(axis=None)
-                tentative[index // self.N, index % self.N] = 0
+                row = index // self.N
+                column = index % self.N
+                if potential[row, column] == 0:
+                    return
+                index = cursor.argmax(axis=None)
+                tentative[row, column] = 0
+
+    def reward(
+            self,
+            tentative: np.ndarray | Tensor,
+            contact: np.ndarray | Tensor,
+            n: int
+        ) -> float:
+        """Compute the reward after an action.
+
+        Args:
+            tentative: Approximated contact matrix.
+            contact: Real contact matrix (blurred or not).
+
+        Returns: Reward score comprised within the range (-inf, 0).
+        """
+        difference = float((contact - tentative).sum)
+        return difference / n

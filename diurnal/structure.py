@@ -79,6 +79,17 @@ class Schemes:
         "-":        -1  # Padding element (i.e. empty).
     }
 
+    IUPAC_PAIRINGS_SCALARS_ZERO_PADDING = {
+        "AU":       2,
+        "UA":       2,
+        "CG":       3,
+        "GC":       3,
+        "GU":       1,
+        "UG":       1,
+        "invalid":  0,  # Impossible pairing (e.g. AA).
+        "-":        0   # Padding element (i.e. empty).
+    }
+
     BRACKET_TO_ONEHOT = {
         "(": (1, 0, 0),
         ".": (0, 1, 0),

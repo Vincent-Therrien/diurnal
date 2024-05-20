@@ -96,9 +96,9 @@ def test_clear():
         ])
     )
 
-def test_DQL1():
-    """Test DQL1 operations."""
-    model = reinforcement.DQL1(None, 3, None, None, None, None)
+def test_SRL11():
+    """Test SRL11 operations."""
+    model = reinforcement.SRL1(None, 3, None, None, None, None)
     TENTATIVE = np.array([
         [0, 0, 0],
         [0, 0, 0],
@@ -122,19 +122,34 @@ def test_DQL1():
     model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([1, 0, 0, 0, 0, 0]))
     assert np.array_equal(
         CURSOR,
-        np.array([[0, 0, 0], [0, 0, 0], [0, 1, 0]])
+        np.array([[0, 1, 0], [0, 0, 0], [0, 0, 0]])
     )
     model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([0.5, 0, 1, 0, 0, 0]))
     assert np.array_equal(
         CURSOR,
-        np.array([[0, 0, 0], [0, 0, 0], [1, 0, 0]])
+        np.array([[1, 0, 0], [0, 0, 0], [0, 0, 0]])
     )
     model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([0, 0, 0, 0, 1, 0]))
     assert np.array_equal(
         CURSOR,
-        np.array([[0, 0, 0], [0, 0, 0], [1, 0, 0]])
+        np.array([[1, 0, 0], [0, 0, 0], [0, 0, 0]])
     )
     assert np.array_equal(
         TENTATIVE,
-        np.array([[0, 0, 0], [0, 0, 0], [1, 0, 0]])
+        np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    )
+    model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([1, 0, 0, 0, 0, 0]))
+    assert np.array_equal(
+        CURSOR,
+        np.array([[0, 0, 0], [1, 0, 0], [0, 0, 0]])
+    )
+    model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([0, 0, 0, 0, 1, 0]))
+    assert np.array_equal(
+        TENTATIVE,
+        np.array([[0, 0, 0], [1, 0, 0], [0, 0, 0]])
+    )
+    model.act(TENTATIVE, POTENTIAL, CURSOR, np.array([0, 0, 0, 0, 0, 1]))
+    assert np.array_equal(
+        TENTATIVE,
+        np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     )
