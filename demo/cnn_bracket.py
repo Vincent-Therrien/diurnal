@@ -12,7 +12,7 @@ import torch
 
 from diurnal import database, train, visualize, family
 import diurnal.models
-from diurnal.models.networks import cnn
+from diurnal.models.deep import cnn
 
 
 SIZE = 512

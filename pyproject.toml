@@ -27,7 +27,7 @@ packages = [
     "diurnal",
     "diurnal.utils",
     "diurnal.models",
-    "diurnal.models.networks",
+    "diurnal.models.deep",
     "diurnal.models.reinforcement"
 ]
 
