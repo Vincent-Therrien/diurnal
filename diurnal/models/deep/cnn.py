@@ -9,7 +9,7 @@
 """
 
 
-from torch import nn, reshape, cat, stack, squeeze, tensor
+from torch import nn, reshape, cat, stack, squeeze, Tensor
 import torch.nn.functional as F
 
 
@@ -35,27 +35,27 @@ class MatrixToMatrixAutoencoder1(nn.Module):
         self.linear3 = nn.Linear(n, n)
         self.output = nn.Sigmoid()
 
-    def forward(self, input: tensor) -> tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward propagation.
 
         Args:
-            input: Potential pairing matrix.
+            x: Potential pairing matrix.
 
         Returns: Blurry distance matrix.
         """
-        input = stack((input, ), dim=1)
-        input = self.conv1(input)
-        input = self.activation(input)
-        input = self.downsize(input)
-        input = self.activation(input)
-        input = self.linear1(input)
-        input = self.upsample(input)
-        input = self.linear2(input)
-        input = self.activation(input)
-        input = self.linear3(input)
-        input = self.output(input)
-        input = squeeze(input)
-        return input
+        x = stack((x, ), dim=1)
+        x = self.conv1(x)
+        x = self.activation(x)
+        x = self.downsize(x)
+        x = self.activation(x)
+        x = self.linear1(x)
+        x = self.upsample(x)
+        x = self.linear2(x)
+        x = self.activation(x)
+        x = self.linear3(x)
+        x = self.output(x)
+        x = squeeze(x)
+        return x
 
 
 class RNA_CNN(nn.Module):

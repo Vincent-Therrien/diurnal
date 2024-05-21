@@ -76,10 +76,10 @@ class Schemes:
         "GU":       1,
         "UG":       1,
         "invalid":  0,  # Impossible pairing (e.g. AA).
-        "-":        -1  # Padding element (i.e. empty).
+        "-":        0  # Padding element (i.e. empty).
     }
 
-    IUPAC_PAIRINGS_SCALARS_ZERO_PADDING = {
+    IUPAC_PAIRINGS_SCALARS_NEGATIVE_PADDING = {
         "AU":       2,
         "UA":       2,
         "CG":       3,
@@ -87,7 +87,7 @@ class Schemes:
         "GU":       1,
         "UG":       1,
         "invalid":  0,  # Impossible pairing (e.g. AA).
-        "-":        0   # Padding element (i.e. empty).
+        "-":        -1   # Padding element (i.e. empty).
     }
 
     BRACKET_TO_ONEHOT = {

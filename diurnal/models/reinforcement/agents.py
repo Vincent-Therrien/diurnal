@@ -14,7 +14,7 @@
     - License: MIT
 """
 
-from torch import nn, optim, Tensor
+from torch import Tensor, roll
 import numpy as np
 
 
@@ -127,8 +127,8 @@ class BasicContactMatrixOperations:
         matrix[:, columns.argmax()] = 0
 
 
-class SRL1:
-    """A supervised reinforcement learning model number 1 to predict RNA
+class SRLA1:
+    """Supervised reinforcement learning agent number 1 to predict RNA
     secondary structures in a contact matrix.
 
     Environment:
@@ -156,39 +156,13 @@ class SRL1:
     - Assign 1 to the cursor.
     - Assign 0 to the cursor.
     """
-    def __init__(
-            self,
-            q_table: nn,
-            N: int,
-            n_max_epochs: int,
-            n_max_episodes: int,
-            optimizer: optim,
-            loss_fn: nn.functional,
-            optimizer_args: dict = None,
-            loss_fn_args: dict = None,
-            use_half: bool = True,
-            patience: int = 5,
-            verbosity: int = 0
-        ) -> None:
-        self.q_table = q_table
-        self.N = N
-        self.n_max_epochs = n_max_epochs
-        self.n_max_episodes = n_max_episodes
-        self.optimizer = optimizer
-        self.loss_fn = loss_fn
-        self.optimizer_args = optimizer_args
-        self.loss_fn_args = loss_fn_args
-        self.use_half = use_half
-        self.patience = patience
-        self.verbosity = verbosity
 
     def act(
-            self,
             tentative: np.ndarray | Tensor,
             potential: np.ndarray | Tensor,
             cursor: np.ndarray | Tensor,
             actions: np.ndarray | Tensor
-        ) -> np.ndarray | Tensor:
+        ) -> None:
         """Modify the tentative contact matrix and cursor based on
         actions.
 
@@ -209,20 +183,21 @@ class SRL1:
                     Performed only if the potential matrix allows it.
                 5. Assign 0 to the cursor in the tentative matrix.
                     Performed only if the potential matrix allows it.
+            int: Sequence length
         """
         match actions.argmax():
             case 0:
-                cursor[:, :] = np.roll(cursor, 1, 0)
+                cursor[:, :] = roll(cursor, 1, 0)
             case 1:
-                cursor[:, :] = np.roll(cursor, -1, 0)
+                cursor[:, :] = roll(cursor, -1, 0)
             case 2:
-                cursor[:, :] = np.roll(cursor, -1, 1)
+                cursor[:, :] = roll(cursor, -1, 1)
             case 3:
-                cursor[:, :] = np.roll(cursor, 1, 1)
+                cursor[:, :] = roll(cursor, 1, 1)
             case 4:
                 index = cursor.argmax(axis=None)
-                row = index // self.N
-                column = index % self.N
+                row = index // len(tentative)
+                column = index % len(tentative)
                 if potential[row, column] == 0:
                     return
                 tentative[row, :] = 0
@@ -230,15 +205,14 @@ class SRL1:
                 tentative[row, column] = 1
             case 5:
                 index = cursor.argmax(axis=None)
-                row = index // self.N
-                column = index % self.N
+                row = index // len(tentative)
+                column = index % len(tentative)
                 if potential[row, column] == 0:
                     return
                 index = cursor.argmax(axis=None)
                 tentative[row, column] = 0
 
     def reward(
-            self,
             tentative: np.ndarray | Tensor,
             contact: np.ndarray | Tensor,
             n: int
@@ -248,6 +222,7 @@ class SRL1:
         Args:
             tentative: Approximated contact matrix.
             contact: Real contact matrix (blurred or not).
+            n: Sequence length
 
         Returns: Reward score comprised within the range (-inf, 0).
         """

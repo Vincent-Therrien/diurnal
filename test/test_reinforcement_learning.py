@@ -98,7 +98,7 @@ def test_clear():
 
 def test_SRL11():
     """Test SRL11 operations."""
-    model = reinforcement.SRL1(None, 3, None, None, None, None)
+    model = reinforcement.agents.SRLA1(3)
     TENTATIVE = np.array([
         [0, 0, 0],
         [0, 0, 0],
