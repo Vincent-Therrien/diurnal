@@ -14,6 +14,8 @@
     - License: MIT
 """
 
+from random import randint, choice
+
 from torch import Tensor, roll
 import numpy as np
 
@@ -187,13 +189,13 @@ class SRLA1:
         """
         match actions.argmax():
             case 0:
-                cursor[:, :] = roll(cursor, 1, 0)
+                cursor[:, :] = np.roll(cursor, 1, 0)
             case 1:
-                cursor[:, :] = roll(cursor, -1, 0)
+                cursor[:, :] = np.roll(cursor, -1, 0)
             case 2:
-                cursor[:, :] = roll(cursor, -1, 1)
+                cursor[:, :] = np.roll(cursor, -1, 1)
             case 3:
-                cursor[:, :] = roll(cursor, 1, 1)
+                cursor[:, :] = np.roll(cursor, 1, 1)
             case 4:
                 index = cursor.argmax(axis=None)
                 row = index // len(tentative)
@@ -228,3 +230,38 @@ class SRLA1:
         """
         difference = float((contact - tentative).sum)
         return difference / n
+
+    def get_best_action(
+            tentative: np.ndarray | Tensor,
+            contact: np.ndarray | Tensor,
+            cursor: np.ndarray | Tensor,
+            n: int
+        ) -> Tensor:
+        """
+        """
+        index = cursor.argmax(axis=None)
+        row = index // len(cursor)
+        column = index % len(cursor)
+        if tentative[row, column] == 0 and contact[row, column] == 1:
+            return Tensor([0, 0, 0, 0, 1, 0])
+        if tentative[row, column] == 1 and contact[row, column] == 0:
+            return Tensor([0, 0, 0, 0, 0, 1])
+        actions = Tensor([0, 0, 0, 0])
+        n = len(contact) - 1
+        actions[0] = contact[row + 1, column] if row < n else 0
+        actions[1] = contact[row - 1, column] if row > 0 else 0
+        actions[2] = contact[row, column - 1] if column > 0 else 0
+        actions[3] = contact[row, column + 1] if column < n else 0
+        result = Tensor([0, 0, 0, 0, 0, 0])
+        if actions.sum() == 0:
+            if row > n:
+                result[1] = 1
+            elif column > n:
+                result[2] = 1
+            elif column > row:
+                result[choice([0, 2])] = 1
+            else:
+                result[randint(0, 3)] = 1
+        else:
+            result[actions.argmax()] = 1
+        return result

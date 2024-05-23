@@ -124,7 +124,7 @@ class RL(Basic):
     def _predict(self, x, sequence_length) -> np.ndarray:
         self.nn.eval()
         x = tensor(x).to(self.device).half()
-        N_ACTIONS = self.length * 10
+        N_ACTIONS = self.length * 20
         initial = int(sequence_length * 0.75)
         cursor = tensor(np.zeros((self.length, self.length))).to(self.device).half()
         cursor[initial, initial] = 1

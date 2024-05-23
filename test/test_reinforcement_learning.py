@@ -10,6 +10,7 @@
 import numpy as np
 
 from diurnal.models import reinforcement
+from diurnal.models.reinforcement import agents
 
 
 def test_free_pairings():
@@ -28,11 +29,11 @@ def test_free_pairings():
     FREE_COLUMNS = np.array([0, 1, 0, 0, 1, 1])
     assert np.array_equal(
         FREE_ROWS,
-        reinforcement.BasicContactMatrixOperations.get_free_rows(CONTACT)
+        agents.BasicContactMatrixOperations.get_free_rows(CONTACT)
     )
     assert np.array_equal(
         FREE_COLUMNS,
-        reinforcement.BasicContactMatrixOperations.get_free_columns(CONTACT)
+        agents.BasicContactMatrixOperations.get_free_columns(CONTACT)
     )
 
 
@@ -45,7 +46,7 @@ def test_insert():
     ])
     ROWS = np.array([0.0, 0.1, 0.8])
     COLUMNS = np.array([0.9, 0.1, 0.8])
-    reinforcement.BasicContactMatrixOperations.insert(CONTACT, ROWS, COLUMNS)
+    agents.BasicContactMatrixOperations.insert(CONTACT, ROWS, COLUMNS)
     assert np.array_equal(
         CONTACT,
         np.array([
@@ -65,7 +66,7 @@ def test_clear():
     ])
     # Clear a row.
     ROWS = np.array([0.0, 0.1, 0.8])
-    reinforcement.BasicContactMatrixOperations.clear_row(CONTACT, ROWS)
+    agents.BasicContactMatrixOperations.clear_row(CONTACT, ROWS)
     assert np.array_equal(
         CONTACT,
         np.array([
@@ -76,7 +77,7 @@ def test_clear():
     )
     # Clear a column.
     COLUMNS = np.array([0.9, 0.99, 0.8])
-    reinforcement.BasicContactMatrixOperations.clear_column(CONTACT, COLUMNS)
+    agents.BasicContactMatrixOperations.clear_column(CONTACT, COLUMNS)
     assert np.array_equal(
         CONTACT,
         np.array([
@@ -86,7 +87,7 @@ def test_clear():
         ])
     )
     COLUMNS = np.array([0.9, 0.5, 0.8])
-    reinforcement.BasicContactMatrixOperations.clear_column(CONTACT, COLUMNS)
+    agents.BasicContactMatrixOperations.clear_column(CONTACT, COLUMNS)
     assert np.array_equal(
         CONTACT,
         np.array([
@@ -98,7 +99,7 @@ def test_clear():
 
 def test_SRL11():
     """Test SRL11 operations."""
-    model = reinforcement.agents.SRLA1(3)
+    model = agents.SRLA1
     TENTATIVE = np.array([
         [0, 0, 0],
         [0, 0, 0],
