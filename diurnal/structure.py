@@ -177,8 +177,9 @@ class Primary:
         for row in range(len(bases)):
             for col in range(len(bases)):
                 pairing = bases[row] + bases[col]
-                if (abs(row - col) < N_MINIMUM_DISTANCE
-                      or len(set(pairing)) == 1):
+                if len(set(pairing)) == 1:
+                    matrix[row][col] = map["invalid"]
+                elif abs(row - col) < N_MINIMUM_DISTANCE:
                     matrix[row][col] = map["invalid"]
                 elif pairing in map:
                     matrix[row][col] = map[pairing]
