@@ -183,7 +183,7 @@ def collapse_linearized_matrix(
     Example:
     >>> a = np.array([2, 0, 0, 0, 1, 0, 0])
     >>> collapse_linearized_matrix(a)
-    array([2, -3, 1, -2, 0, 0, 0])
+    array([2, -3, 1, -2])
     """
     crop = False
     if N is None:
@@ -274,3 +274,145 @@ def decollapse_linearized_matrix(
                 new_vector[j] = vector[i]
                 j += 1
     return new_vector
+
+
+def collapse_like(
+        collapsed: np.ndarray,
+        vector: np.ndarray,
+        collapsed_replacement: int | np.ndarray = -1,
+        vector_replacement: int | np.ndarray = 0
+    ) -> np.ndarray:
+    """Collapse a matrix in the same way as another.
+
+    Args:
+        collapsed: An already collapsed array.
+        vector: A non-collapsed array.
+        collapsed_replacement: The value used in the collapsed array to
+            replace sequences of empty elements.
+        vector_replacement: The value used in the non collapsed array
+            to replace sequences of empty elements.
+
+    Returns: Collapsed vector.
+
+    Example:
+    >>> a = np.array([2, 0, 0, 0, 1, 0, 0])
+    >>> b = collapse_linearized_matrix(a)
+    >>> c = np.array([0, 0, 0, 0, 1, 0, 0])
+    >>> d = collapse_like(a, c)
+    >>> a
+    array([2, -3, 1, -2])
+    >>> d
+    array([0, 0, 1, 0])
+    """
+    if type(vector_replacement) == int:
+        new_vector = np.zeros(len(collapsed))
+    else:
+        new_vector = np.zeros_like(collapsed)
+    j = 0
+    for i in range(len(collapsed)):
+        if type(collapsed_replacement) == int:
+            if collapsed[i] < 0:
+                n = int(-1 * collapsed[i])
+                new_vector[i] = vector_replacement * n
+                j += n
+            else:
+                new_vector[i] = vector[j]
+                j += 1
+        else:
+            if _coincident(collapsed[i], collapsed_replacement):
+                partial_sum = vector[j].copy()
+                coefficient = 0
+                while partial_sum.sum() > 0:
+                    partial_sum -= collapsed_replacement
+                    coefficient += 1
+                new_vector[i] = coefficient * vector_replacement
+                j += coefficient
+            else:
+                new_vector[i] = vector[j]
+                j += 1
+    return new_vector
+
+
+def decollapse_like(
+        collapsed: np.ndarray,
+        vector: np.ndarray,
+        N: int,
+        collapsed_replacement: int | np.ndarray = -1,
+        vector_replacement: int | np.ndarray = 0
+    ) -> np.ndarray:
+    """Decollapse a matrix in the same way as another.
+
+    Args:
+        collapsed: An already collapsed array.
+        vector: A collapsed array to decollapse.
+        N: Size of the decollapsed array.
+        collapsed_replacement: The value used in the collapsed array to
+            replace sequences of empty elements.
+        vector_replacement: The value used in the non collapsed array
+            to replace sequences of empty elements.
+
+    Returns: Decollapsed vector.
+
+    Example:
+    >>> a = np.array([2, 0, 0, 0, 1, 0, 0])
+    >>> b = collapse_linearized_matrix(a)
+    >>> c = np.array([0, 0, 0, 0, 1, 0, 0])
+    >>> d = collapse_like(a, c)
+    >>> a
+    array([2, -3, 1, -2])
+    >>> d
+    array([0, 0, 1, 0])
+    """
+    if type(vector_replacement) == int:
+        new_vector = np.zeros(N)
+    else:
+        new_vector = np.zeros((N, vector.shape[1]))
+    j = 0
+    for i in range(len(collapsed)):
+        if type(collapsed_replacement) == int:
+            if collapsed[i] < 0:
+                for _ in range(int(-1 * collapsed[i])):
+                    new_vector[j] = vector_replacement
+                    j += 1
+            else:
+                new_vector[j] = vector[i]
+                j += 1
+        else:
+            if _coincident(collapsed[i], collapsed_replacement):
+                partial_sum = collapsed[i].copy()
+                while partial_sum.sum() > 0:
+                    new_vector[j] = vector_replacement
+                    partial_sum -= collapsed_replacement
+                    j += 1
+            else:
+                new_vector[j] = vector[i]
+                j += 1
+    return new_vector
+
+
+def to_monomial_matrix(matrix: np.ndarray) -> np.ndarray:
+    """Convert a matrix to a monomial matrix by successively selecting
+    the maximum element of the array and setting the rest of the values
+    in its row and column to 0.
+
+    Args:
+        matrix: 2D array.
+
+    Returns: A monomial matrix.
+
+    Example:
+    >>> a = np.array([
+        [0, 2, 3, 2],
+        [2, 7, 2, 2],
+        [2, 2, 2, 2],
+        [2, 2, 2, 9],
+    ])
+    >>> to_monomial_matrix(a)
+    array([
+        [0, 0, 3, 0],
+        [0, 7, 0, 0],
+        [2, 0, 0, 0],
+        [0, 0, 0, 9],
+    ])
+    """
+    mask = np.ones_like(matrix)

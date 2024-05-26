@@ -103,3 +103,13 @@ def test_decollapse():
     collapsed = transform.decollapse_linearized_matrix(a, N_input=4, N_output=7)
     expected = np.array([2, 0, 0, 0, 1, 0, 0])
     assert np.array_equal(collapsed, expected)
+
+def test_collapse_like():
+    a = np.array([2, 0, 0, 0, 1, 0, 0])
+    b = transform.collapse_linearized_matrix(a)
+    c = np.array([0, 0, 0, 0, 1, 0, 0])
+    d = transform.collapse_like(b, c)
+    expected = np.array([0, 0, 1, 0])
+    assert np.array_equal(d, expected)
+    e = transform.decollapse_like(b, d, len(c))
+    assert np.array_equal(e, c)
