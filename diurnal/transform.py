@@ -396,9 +396,9 @@ def to_monomial_matrix(matrix: np.ndarray) -> np.ndarray:
     in its row and column to 0.
 
     Args:
-        matrix: 2D array.
+        matrix: 2D array. Cannot contain negative values.
 
-    Returns: A monomial matrix.
+    Returns: A monomial (i.e. generalized permutation) matrix.
 
     Example:
     >>> a = np.array([
@@ -416,3 +416,28 @@ def to_monomial_matrix(matrix: np.ndarray) -> np.ndarray:
     ])
     """
     mask = np.ones_like(matrix)
+    monomial = np.zeros_like(matrix)
+    N = len(matrix)
+    for _ in range(N):
+        probe = matrix * mask
+        index = probe.argmax(axis=None)
+        row = index // N
+        column = index % N
+        monomial[row, column] = matrix[row, column]
+        mask[row, :] = 0
+        mask[:, column] = 0
+    return monomial
+
+
+def to_binary_matrix(matrix: np.ndarray) -> np.ndarray:
+    """Transform the argument into a binary matrix.
+
+    Args:
+        matrix: 2D array.
+
+    Returns: Binary matrix.
+    """
+    binary = matrix.copy()
+    binary[binary > 0] = 1
+    binary[binary <= 0] = 0
+    return binary

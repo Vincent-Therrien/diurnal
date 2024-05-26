@@ -113,3 +113,28 @@ def test_collapse_like():
     assert np.array_equal(d, expected)
     e = transform.decollapse_like(b, d, len(c))
     assert np.array_equal(e, c)
+
+
+def test_monomial():
+    a = np.array([
+        [0, 2, 3, 2],
+        [2, 7, 2, 2],
+        [2, 2, 2, 2],
+        [2, 2, 2, 9],
+    ])
+    monomial = transform.to_monomial_matrix(a)
+    expected = np.array([
+        [0, 0, 3, 0],
+        [0, 7, 0, 0],
+        [2, 0, 0, 0],
+        [0, 0, 0, 9],
+    ])
+    assert np.array_equal(monomial, expected)
+    binary = transform.to_binary_matrix(monomial)
+    expected = np.array([
+        [0, 0, 1, 0],
+        [0, 1, 0, 0],
+        [1, 0, 0, 0],
+        [0, 0, 0, 1],
+    ])
+    assert np.array_equal(binary, expected)
