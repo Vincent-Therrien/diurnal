@@ -11,6 +11,12 @@
 
 import numpy as np
 
+from diurnal import structure
+
+
+# Approximate minimum compression rate when collapsing a structure
+COMPRESSION_RATE = 1
+
 
 def halve_matrix(
         matrix: np.ndarray,
@@ -50,7 +56,7 @@ def linearize_half_matrix(
         matrix: np.ndarray,
         n_rows: int = None,
         N: int = None,
-        offset: int = 4,
+        offset: int = 3,
         padding_element: int | np.ndarray = 0
     ) -> np.ndarray:
     """Unfold the lower half of a 2D matrix into a 1D vector according
@@ -114,7 +120,7 @@ def delinearize_half_matrix(
         vector: np.ndarray,
         n_rows: int,
         N: int = None,
-        offset: int = 4,
+        offset: int = 3,
         padding_element: int | np.ndarray = 0
     ) -> np.ndarray:
     """Fold a 1D array into a lower triangular 2D matrix.
@@ -315,6 +321,8 @@ def collapse_like(
                 n = int(-1 * collapsed[i])
                 new_vector[i] = vector_replacement * n
                 j += n
+                if j >= new_vector.shape[0]:
+                    break
             else:
                 new_vector[i] = vector[j]
                 j += 1
@@ -327,6 +335,8 @@ def collapse_like(
                     coefficient += 1
                 new_vector[i] = coefficient * vector_replacement
                 j += coefficient
+                if j >= new_vector.shape[0]:
+                    break
             else:
                 new_vector[i] = vector[j]
                 j += 1
@@ -441,3 +451,58 @@ def to_binary_matrix(matrix: np.ndarray) -> np.ndarray:
     binary[binary > 0] = 1
     binary[binary <= 0] = 0
     return binary
+
+
+def primary_collapse_formatter(
+        x: str | list[str], y: int
+    ) -> np.ndarray:
+    """Format a primary structure into a collapsed representation.
+
+    Args:
+        x: Primary structure as a sequence of characters.
+        y: Normalized size.
+
+    Returns: Collapsed array.
+    """
+    potential_pairings = structure.Primary.to_matrix(
+        x, y, structure.Schemes.IUPAC_PAIRINGS_SCALARS
+    )
+    linear_size = int(y**2 / 2 * COMPRESSION_RATE)
+    potential_pairings = linearize_half_matrix(
+        potential_pairings, len(x), N=linear_size
+    )
+    potential_pairings = collapse_linearized_matrix(
+        potential_pairings, N=linear_size
+    )
+    return potential_pairings
+
+
+def secondary_collapse_formatter(
+        x: str | list[str], y: list[int], size: int, power: int = 0
+    ) -> np.ndarray:
+    """Format a secondary structure into a collapsed representation.
+
+    Args:
+        x: Primary structure as a sequence of characters.
+        y: Secondary structure as a sequence of pairing indices.
+        size: Normalized size.
+
+    Returns: Collapsed array.
+    """
+    potential_pairings = structure.Primary.to_matrix(
+        x, size, structure.Schemes.IUPAC_PAIRINGS_SCALARS
+    )
+    linear_size = int(size**2 / 2 * COMPRESSION_RATE)
+    potential_pairings = linearize_half_matrix(
+        potential_pairings, len(x), N=linear_size
+    )
+    potential_pairings = collapse_linearized_matrix(
+        potential_pairings, N=linear_size
+    )
+    if power:
+        contact = structure.Secondary.to_matrix(y, size)
+    else:
+        contact = structure.Secondary.to_distance_matrix(y, size, power=power)
+    contact = linearize_half_matrix(contact, len(x), N=linear_size)
+    contact = collapse_like(potential_pairings, contact)
+    return contact

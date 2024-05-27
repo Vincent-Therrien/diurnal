@@ -339,10 +339,11 @@ def _is_already_encoded(
         break
     _, bases, pairings = rna_data.read_ct_file(name)
     if structure_type == "primary":
-        input = bases
+        test_array = map(bases, size)
     elif structure_type == "secondary":
-        input = pairings
-    test_array = map(input, size)
+        test_array = map(pairings, size)
+    elif structure_type == "primary_secondary":
+        test_array = map(bases, pairings, size)
     if (test_array.tolist() != array[0].tolist()):
         return False
     return True
@@ -393,13 +394,14 @@ def _format_structure(
     # Determine the shape of the data.
     _, bases, pairings = rna_data.read_ct_file(names[0])
     if structure_type == "primary":
-        input = bases
+        shape = (len(names), ) + map(bases, size).shape
     elif structure_type == "secondary":
-        input = pairings
+        shape = (len(names), ) + map(pairings, size).shape
+    elif structure_type == "primary_secondary":
+        shape = (len(names), ) + map(bases, pairings, size).shape
     else:
         log.error(f"Invalid structure type: {structure_type}")
         raise RuntimeError
-    shape = (len(names), ) + map(input, size).shape
     # Open a memory mapped file and store the data.
     file = np.lib.format.open_memmap(
         dst, dtype='float32', mode='w+', shape=shape
@@ -407,11 +409,14 @@ def _format_structure(
     for i, name in enumerate(names):
         _, bases, pairings = rna_data.read_ct_file(name)
         if structure_type == "primary":
-            input = bases
+            file[i] = map(bases, size)
+            file.flush()
         elif structure_type == "secondary":
-            input = pairings
-        file[i] = map(input, size)
-        file.flush()
+            file[i] = map(pairings, size)
+            file.flush()
+        elif structure_type == "primary_secondary":
+            file[i] = map(bases, pairings, size)
+            file.flush()
         if verbosity:
             suffix = f" {name.split('/')[-1]}"
             log.progress_bar(len(names), i, suffix)
@@ -466,6 +471,27 @@ def format_secondary_structure(
         verbosity (int): Verbosity level. `0` to disable the output.
     """
     _format_structure("secondary", names, dst, size, map, verbosity)
+
+
+def format_primary_secondary_structure(
+        names: str,
+        dst: str,
+        size: int,
+        map: Callable,
+        verbosity: int = 1
+    ) -> str:
+    """Convert a combination of primary and secondary structures into a
+    Numpy file.
+
+    Args:
+        names (list[str]): List of sequence file names.
+        dst (str): Output file name.
+        size (int): Maximum length of a sequence.
+        map (Callable): Function that transforms the sequence of bases
+            into a formatted primary structure.
+        verbosity (int): Verbosity level. `0` to disable the output.
+    """
+    _format_structure("primary_secondary", names, dst, size, map, verbosity)
 
 
 def format_basic(
