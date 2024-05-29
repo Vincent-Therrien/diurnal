@@ -9,16 +9,113 @@
 """
 
 
+from typing import Callable
+
 from torch import nn, reshape, cat, stack, squeeze, Tensor
 import torch.nn.functional as F
 
 
-class MatrixToMatrixAutoencoder1(nn.Module):
+class UNet1D(nn.Module):
+    """U-net neural network.
+
+    Input: 1D array.
+
+    Output: 1D array with elements comprised within the range (0, 1).
+    """
+    def __init__(
+            self,
+            n: int,
+            depth: int,
+            kernel: int = 3,
+            downsizer: Callable = nn.AdaptiveAvgPool1d,
+            upsizer: Callable = nn.Upsample
+        ):
+        super().__init__()
+        # Parameters.
+        self.n = n
+        self.depth = depth
+        self.kernel = kernel
+        # Network components.
+        self.activation = F.relu
+        self.conv1 = nn.Conv2d(1, 1, self.kernel, padding="same")
+        self.downsizers = []
+        self.upsizers = []
+        for _ in range(depth):
+            n /= 2
+            self.downsizers.append(downsizer(n))
+            self.upsizers.append(upsizer(scale_factor=2))
+
+    def forward(self, x: Tensor) -> Tensor:
+        # Input processing.
+        x = stack((x, ), dim=1)
+        x = self.activation(x)
+        # Downsizing.
+
+        # Upsizing.
+        x = self.conv1(x)
+        x = self.downsize(x)
+        x = self.activation(x)
+        x = self.linear1(x)
+        x = self.upsample(x)
+        x = self.linear2(x)
+        x = self.activation(x)
+        x = self.linear3(x)
+        x = self.output(x)
+        x = squeeze(x)
+        return x
+
+
+class Autoencoder1D(nn.Module):
     """Neural network used to predict a contact matrix.
 
-    Input: Scalar matrix of potential pairings.
+    Input: 1D matrix.
 
-    Output: Blurry contact matrix.
+    Output: 1D matrix with elements comprised within the range (0, 1).
+    """
+    def __init__(self, n: int):
+        super().__init__()
+        kernel = 3
+        n_half = int(n / 2)
+        self.conv1 = nn.Conv2d(1, 1, kernel, padding="same")
+        self.downsize = nn.AdaptiveAvgPool1d(n_half)
+        self.activation = F.relu
+        self.linear1 = nn.Linear(n_half, n_half)
+        self.upsample = nn.Upsample(
+            scale_factor=2, mode='bilinear', align_corners=True
+        )
+        self.linear2 = nn.Linear(n, n)
+        self.linear3 = nn.Linear(n, n)
+        self.output = nn.Sigmoid()
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward propagation.
+
+        Args:
+            x: Potential pairing matrix.
+
+        Returns: Blurry distance matrix.
+        """
+        x = stack((x, ), dim=1)
+        x = self.conv1(x)
+        x = self.activation(x)
+        x = self.downsize(x)
+        x = self.activation(x)
+        x = self.linear1(x)
+        x = self.upsample(x)
+        x = self.linear2(x)
+        x = self.activation(x)
+        x = self.linear3(x)
+        x = self.output(x)
+        x = squeeze(x)
+        return x
+
+
+class Autoencoder2D(nn.Module):
+    """Neural network used to predict a contact matrix.
+
+    Input: 2D matrix.
+
+    Output: 2D matrix with elements comprised within the range (0, 1).
     """
     def __init__(self, n: int):
         super().__init__()

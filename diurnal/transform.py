@@ -453,10 +453,51 @@ def to_binary_matrix(matrix: np.ndarray) -> np.ndarray:
     return binary
 
 
-def primary_collapse_formatter(
+def quantize(matrix: np.ndarray, is_half: bool = False) -> np.ndarray:
+    """Quantize a matrix to a monomial binary matrix.
+
+    Intended to be used to convert a pseudo energy term matrix to a
+    contact matrix.
+
+    Args:
+        matrix: Input matrix.
+        is_half: If True, the matrix is first converted into a full
+            matrix.
+
+    Result: Quantized matrix.
+    """
+    if is_half:
+        matrix = matrix + matrix.T
+    matrix = matrix * matrix.T
+    matrix = to_monomial_matrix(matrix)
+    matrix = to_binary_matrix(matrix)
+    return matrix
+
+
+def primary_linear_formatter(x: str | list[str], y: int) -> np.ndarray:
+    """Format a primary structure into a linear representation.
+
+    Args:
+        x: Primary structure as a sequence of characters.
+        y: Normalized size.
+
+    Returns: Linear array.
+    """
+    potential_pairings = structure.Primary.to_matrix(
+        x, y, structure.Schemes.IUPAC_PAIRINGS_SCALARS
+    )
+    linear_size = int(y**2 / 2 * COMPRESSION_RATE)
+    potential_pairings = linearize_half_matrix(
+        potential_pairings, len(x), N=linear_size
+    )
+    return potential_pairings
+
+
+def primary_linear_collapse_formatter(
         x: str | list[str], y: int
     ) -> np.ndarray:
-    """Format a primary structure into a collapsed representation.
+    """Format a primary structure into a collapsed linear
+    representation.
 
     Args:
         x: Primary structure as a sequence of characters.
@@ -477,10 +518,31 @@ def primary_collapse_formatter(
     return potential_pairings
 
 
-def secondary_collapse_formatter(
+def secondary_linear_formatter(
+        x: str | list[str], size: int, power: int = 0
+    ) -> np.ndarray:
+    """Format a secondary structure into a linear representation.
+
+    Args:
+        x: Secondary structure as a sequence of pairing indices.
+        size: Normalized size.
+
+    Returns: Linear array.
+    """
+    linear_size = int(size**2 / 2 * COMPRESSION_RATE)
+    if power:
+        contact = structure.Secondary.to_matrix(y, size)
+    else:
+        contact = structure.Secondary.to_distance_matrix(x, size, power=power)
+    contact = linearize_half_matrix(contact, len(x), N=linear_size)
+    return contact
+
+
+def secondary_linear_collapse_formatter(
         x: str | list[str], y: list[int], size: int, power: int = 0
     ) -> np.ndarray:
-    """Format a secondary structure into a collapsed representation.
+    """Format a secondary structure into a linear collapsed
+    representation.
 
     Args:
         x: Primary structure as a sequence of characters.

@@ -155,7 +155,10 @@ class NN(Basic):
                 value = from_numpy(np.array(i.T))
                 input_values.append(value.to(self.device))
         if len(input) == 1:
-            input_values[0] = input_values[0][None, :, :]
+            if len(input_values[0].shape) > 2:
+                input_values[0] = input_values[0][None, :, :]
+            else:
+                input_values[0] = input_values[0][None, :]
         pred = self.nn(*input_values)
         if self.device == "cuda":
             return pred.detach().cpu().numpy()

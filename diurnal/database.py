@@ -344,7 +344,8 @@ def _is_already_encoded(
         test_array = map(pairings, size)
     elif structure_type == "primary_secondary":
         test_array = map(bases, pairings, size)
-    if (test_array.tolist() != array[0].tolist()):
+    difference = test_array - array[0]
+    if abs(difference).sum() > 0.1:
         return False
     return True
 
