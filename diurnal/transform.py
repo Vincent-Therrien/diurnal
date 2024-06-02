@@ -31,12 +31,14 @@ def halve_matrix(
         empty_element: Element that represents an unpaired base.
         padding_element: Element that represents an out-of-bound base.
     """
-    for i in range(matrix.shape[0]):
-        for j in range(i, matrix.shape[0]):
-            if matrix[i, j] == padding_element:
+    half = matrix.copy()
+    for i in range(half.shape[0]):
+        for j in range(i, half.shape[0]):
+            if half[i, j] == padding_element:
                 pass
             else:
-                matrix[i, j] = empty_element
+                half[i, j] = empty_element
+    return half
 
 
 def unhalve_matrix(matrix: np.ndarray) -> np.ndarray:
@@ -47,9 +49,37 @@ def unhalve_matrix(matrix: np.ndarray) -> np.ndarray:
         matrix: Lower triangular matrix to convert to a full matrix.
             Must have at least 2 dimensions.
     """
-    for i in range(matrix.shape[0]):
-        for j in range(i, matrix.shape[0]):
-            matrix[i, j] = matrix[i, j] + matrix[j, i]
+    full = matrix.copy()
+    for i in range(full.shape[0]):
+        for j in range(i, full.shape[0]):
+            full[i, j] = full[i, j] + full[j, i]
+    return full
+
+
+def rotate_and_offset(matrix: np.ndarray, offset: int = 3) -> np.ndarray:
+    """Rotate a matrix90 degrees clockwise and shift it up.
+
+    Args:
+        matrix: Input value.
+        offset: Upper shift.
+
+    Returns: Rotated and shifted matrix.
+
+    Example:
+
+    >>> a = np.array([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 1, 0, 0],
+    ])
+    >>> rotate_and_offset(a, 2)
+    [[1, 1, 0, 0],
+     [1, 0, 0, 0],
+     [0, 0, 0, 0],
+     [0, 0, 0, 0]]
+    """
+    raise RuntimeError("Unsupported")
 
 
 def linearize_half_matrix(
@@ -468,7 +498,8 @@ def quantize(matrix: np.ndarray, is_half: bool = False) -> np.ndarray:
     """
     if is_half:
         matrix = matrix + matrix.T
-    matrix = matrix * matrix.T
+    else:
+        matrix = matrix * matrix.T
     matrix = to_monomial_matrix(matrix)
     matrix = to_binary_matrix(matrix)
     return matrix
@@ -491,6 +522,19 @@ def primary_linear_formatter(x: str | list[str], y: int) -> np.ndarray:
         potential_pairings, len(x), N=linear_size
     )
     return potential_pairings
+
+
+def to_mask(x: str | list[str], y: int) -> np.ndarray:
+    """Format a primary structure into a binary matrix whose zero
+    element indicate impossible pairings.
+
+    Args:
+        x: Primary structure as a sequence of characters.
+        y: Normalized size.
+
+    Returns: Mask.
+    """
+    return structure.Primary.to_mask(x, y)
 
 
 def primary_linear_collapse_formatter(

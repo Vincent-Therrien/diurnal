@@ -27,6 +27,8 @@ from typing import Callable
 from random import shuffle
 import json
 
+from tqdm import tqdm
+
 from diurnal.utils import file_io, log
 import diurnal.utils.rna_data as rna_data
 import diurnal.structure
@@ -268,12 +270,14 @@ def format_filenames(
     if verbosity:
         log.info(f"Extract the filenames from the directory `{src}`.")
     data = []
-    total = 0
     paths = pathlib.Path(src).rglob('*.ct')
-    for i in paths:
+    total = 0
+    for _ in paths:
         total += 1
     paths = pathlib.Path(src).rglob('*.ct')
-    for i, path in enumerate(paths):
+    if verbosity:
+        pbar = tqdm(total=total)
+    for path in paths:
         family = diurnal.family.get_name(str(path))
         if families and not family in families:
             pass
@@ -284,10 +288,9 @@ def format_filenames(
         else:
             data.append(str(path))
         if verbosity:
-            suffix = f" {path.name}"
-            log.progress_bar(total, i, suffix)
+            pbar.update(1)
     if verbosity:
-        print()
+        pbar.close()
         log.trace(f"Detected {total} files. Kept {len(data)} files.")
     if dst and os.path.exists(dst):
         with open(dst, "r") as file:
@@ -322,7 +325,8 @@ def _is_already_encoded(
         names: list[str],
         dst: str,
         size: int,
-        map: Callable
+        map: Callable,
+        epsilon: float
     ) -> bool:
     """Check if the `dst` file is already formatted."""
     # File existence.
@@ -345,7 +349,7 @@ def _is_already_encoded(
     elif structure_type == "primary_secondary":
         test_array = map(bases, pairings, size)
     difference = test_array - array[0]
-    if abs(difference).sum() > 0.1:
+    if abs(difference).sum() > epsilon:
         return False
     return True
 
@@ -356,7 +360,8 @@ def _format_structure(
         dst: str,
         size: int,
         map: Callable,
-        verbosity: int = 1
+        verbosity: int = 1,
+        epsilon: float = 0.01
     ) -> None:
     """Convert structures into a Numpy file.
 
@@ -367,6 +372,8 @@ def _format_structure(
         map (Callable): Function that transforms the sequence of bases
             into a formatted primary structure.
         verbosity (int): Verbosity level. `0` to disable the output.
+        epsilon: Maximum Manhattan distance between two matrices to
+            consider them different. Used to account for rounding.
     """
     # Preparation: Check the existence and validity of the file.
     _mkdir(dst)
@@ -389,7 +396,7 @@ def _format_structure(
         )
     if verbosity:
         log.info(f"Formatting {structure_type} structures into `{dst}`.")
-    if _is_already_encoded(structure_type, names, dst, size, map):
+    if _is_already_encoded(structure_type, names, dst, size, map, epsilon):
         log.trace(f"The file `{dst}` already contains the formatted data.")
         return
     # Determine the shape of the data.
@@ -407,6 +414,7 @@ def _format_structure(
     file = np.lib.format.open_memmap(
         dst, dtype='float32', mode='w+', shape=shape
     )
+    pbar = tqdm(total=len(names))
     for i, name in enumerate(names):
         _, bases, pairings = rna_data.read_ct_file(name)
         if structure_type == "primary":
@@ -419,10 +427,9 @@ def _format_structure(
             file[i] = map(bases, pairings, size)
             file.flush()
         if verbosity:
-            suffix = f" {name.split('/')[-1]}"
-            log.progress_bar(len(names), i, suffix)
+            pbar.update(1)
     if verbosity:
-        print()  # Change the line after the progress bar.
+        pbar.close()
         log.trace(f"Encoded {len(names)} files.")
     _format_metadata(dst,
         {
@@ -439,7 +446,8 @@ def format_primary_structure(
         dst: str,
         size: int,
         map: Callable,
-        verbosity: int = 1
+        verbosity: int = 1,
+        epsilon: float = 0.01
     ) -> str:
     """Convert primary structures into a Numpy file.
 
@@ -450,8 +458,12 @@ def format_primary_structure(
         map (Callable): Function that transforms the sequence of bases
             into a formatted primary structure.
         verbosity (int): Verbosity level. `0` to disable the output.
+        epsilon: Maximum Manhattan distance between two matrices to
+            consider them different. Used to account for rounding.
     """
-    _format_structure("primary", names, dst, size, map, verbosity)
+    _format_structure(
+        "primary", names, dst, size, map, verbosity, epsilon
+    )
 
 
 def format_secondary_structure(
@@ -459,7 +471,8 @@ def format_secondary_structure(
         dst: str,
         size: int,
         map: Callable,
-        verbosity: int = 1
+        verbosity: int = 1,
+        epsilon: float = 0.01
     ) -> str:
     """Convert secondary structures into a Numpy file.
 
@@ -470,8 +483,12 @@ def format_secondary_structure(
         map (Callable): Function that transforms the sequence of bases
             into a formatted primary structure.
         verbosity (int): Verbosity level. `0` to disable the output.
+        epsilon: Maximum Manhattan distance between two matrices to
+            consider them different. Used to account for rounding.
     """
-    _format_structure("secondary", names, dst, size, map, verbosity)
+    _format_structure(
+        "secondary", names, dst, size, map, verbosity, epsilon
+    )
 
 
 def format_primary_secondary_structure(
@@ -479,7 +496,8 @@ def format_primary_secondary_structure(
         dst: str,
         size: int,
         map: Callable,
-        verbosity: int = 1
+        verbosity: int = 1,
+        epsilon: float = 0.01
     ) -> str:
     """Convert a combination of primary and secondary structures into a
     Numpy file.
@@ -491,8 +509,12 @@ def format_primary_secondary_structure(
         map (Callable): Function that transforms the sequence of bases
             into a formatted primary structure.
         verbosity (int): Verbosity level. `0` to disable the output.
+        epsilon: Maximum Manhattan distance between two matrices to
+            consider them different. Used to account for rounding.
     """
-    _format_structure("primary_secondary", names, dst, size, map, verbosity)
+    _format_structure(
+        "primary_secondary", names, dst, size, map, verbosity, epsilon
+    )
 
 
 def format_basic(

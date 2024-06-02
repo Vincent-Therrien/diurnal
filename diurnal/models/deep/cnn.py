@@ -110,6 +110,70 @@ class Autoencoder1D(nn.Module):
         return x
 
 
+class UNet2D(nn.Module):
+    """U-net neural network with linear layers.
+
+    Input: 2D array.
+
+    Output: 2D array with elements comprised within the range (0, 1).
+    """
+    def __init__(
+            self,
+            n: int,
+            depth: int,
+            kernel: int = 3,
+            downsizer=nn.AdaptiveAvgPool2d,
+            upsizer = nn.Upsample
+        ):
+        super().__init__()
+        # Parameters.
+        self.n = n
+        self.depth = depth
+        self.kernel = kernel
+        # Network components.
+        self.activation = F.relu
+        self.conv1 = nn.Conv2d(1, 1, self.kernel, padding="same")
+        self.downsizers = []
+        self.upsizers = []
+        self.down_full_layers = []
+        self.up_full_layers = []
+        for _ in range(depth):
+            self.down_full_layers.append(nn.Linear(n, n))
+            self.up_full_layers.append(nn.Linear(n, n))
+            n = int(n / 2)
+            self.downsizers.append(downsizer(n))
+            self.upsizers.append(upsizer(
+                scale_factor=2, mode='bilinear'
+            ))
+        self.bottom = nn.Linear(n, n)
+        self.down_full_layers = nn.Sequential(*self.down_full_layers)
+        self.up_full_layers = nn.Sequential(*self.up_full_layers)
+        self.output = nn.Sigmoid()
+
+    def forward(self, x: Tensor) -> Tensor:
+        # Input processing.
+        x = stack((x, ), dim=1)
+        x = self.conv1(x)
+        reserve = []
+        # Downsizing.
+        for i in range(self.depth):
+            x = self.down_full_layers[i](x)
+            reserve.append(x.clone())
+            x = self.downsizers[i](x)
+            x = self.activation(x)
+        # Lowest layer.
+        x = self.bottom(x)
+        x = self.activation(x)
+        # Upsizing.
+        for i in range(self.depth - 1, -1, -1):
+            x = self.upsizers[i](x)
+            x = self.up_full_layers[i](x)
+            x += reserve[i]
+            x = self.activation(x)
+        x = self.output(x)
+        x = squeeze
+
+
 class Autoencoder2D(nn.Module):
     """Neural network used to predict a contact matrix.
 

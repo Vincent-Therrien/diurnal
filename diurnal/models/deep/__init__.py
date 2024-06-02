@@ -30,7 +30,6 @@ class NN(Basic):
     def __init__(
         self,
         model: nn,
-        N: int,
         n_epochs: int,
         optimizer: optim,
         loss_fn: nn.functional,
@@ -43,9 +42,9 @@ class NN(Basic):
         self.device = "cuda" if cuda.is_available() else "cpu"
         self.use_half = use_half and self.device == "cuda"
         if self.use_half:
-            self.nn = model(N).to(self.device).half()
+            self.nn = model.to(self.device).half()
         else:
-            self.nn = model(N).to(self.device)
+            self.nn = model.to(self.device)
         # Optimizer
         if optimizer_args:
             args = ""
