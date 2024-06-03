@@ -171,7 +171,8 @@ class UNet2D(nn.Module):
             x += reserve[i]
             x = self.activation(x)
         x = self.output(x)
-        x = squeeze
+        x = squeeze(x)
+        return x
 
 
 class Autoencoder2D(nn.Module):
