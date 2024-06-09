@@ -363,6 +363,8 @@ class Secondary:
                 matrix[i][pairings[i]] = 1
         return matrix
 
+
+    # TODO: Deprecate
     def to_distance_matrix(
             pairings: list,
             size: int = 0,
@@ -416,6 +418,8 @@ class Secondary:
         else:
             return contact
 
+
+    # TODO: Deprecate
     def normalize_distance_matrix(distance_matrix) -> np.ndarray:
         """Normalize the distance matrix.
 

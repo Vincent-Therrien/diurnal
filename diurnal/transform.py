@@ -5,7 +5,7 @@
 
     - Author: Vincent Therrien (therrien.vincent.2@courrier.uqam.ca)
     - Affiliation: Département d'informatique, UQÀM
-    - File creation date: June 2023
+    - File creation date: May 2024
     - License: MIT
 """
 
@@ -22,7 +22,7 @@ def halve_matrix(
         matrix: np.ndarray,
         empty_element: any = 0,
         padding_element: any = -1
-    ) -> None:
+    ) -> np.ndarray:
     """Convert a matrix to a lower triangular matrix by replacing all
     elements in the upper triangle by `empty_element`.
 
@@ -30,6 +30,8 @@ def halve_matrix(
         matrix: Matrix to halve. Must have at least 2 dimensions.
         empty_element: Element that represents an unpaired base.
         padding_element: Element that represents an out-of-bound base.
+
+    Returns: Half matrix.
     """
     half = matrix.copy()
     for i in range(half.shape[0]):
@@ -469,7 +471,7 @@ def to_monomial_matrix(matrix: np.ndarray) -> np.ndarray:
     return monomial
 
 
-def to_binary_matrix(matrix: np.ndarray) -> np.ndarray:
+def to_binary_matrix(matrix: np.ndarray, threshold: float = 0.0) -> np.ndarray:
     """Transform the argument into a binary matrix.
 
     Args:
@@ -478,8 +480,8 @@ def to_binary_matrix(matrix: np.ndarray) -> np.ndarray:
     Returns: Binary matrix.
     """
     binary = matrix.copy()
-    binary[binary > 0] = 1
-    binary[binary <= 0] = 0
+    binary[binary > threshold] = 1
+    binary[binary <= threshold] = 0
     return binary
 
 
@@ -612,3 +614,73 @@ def secondary_linear_collapse_formatter(
     contact = linearize_half_matrix(contact, len(x), N=linear_size)
     contact = collapse_like(potential_pairings, contact)
     return contact
+
+
+def to_distance(
+        matrix: np.ndarray, power: float = 1, normalize: bool = True
+    ) -> np.ndarray:
+    """Encode a secondary structure into a score contact matrix.
+
+    Transform the sequence of pairings into an `n` by `n` matrix,
+    where `n` is the number of pairings, whose elements can be `1`
+    for a paired base and `x` for unpaired bases, where `x` is
+    given by: `x = 1 - (d / n)`, in which `d` is the Manhattan
+    distance with the closest paired base.
+
+    Args:
+        matrix: Input matrix.
+        power (float): Power to apply to normalized distances.
+        normalize (bool): If True, scale distances so that
+            paired elements are 1 and the farthest elements are 0.
+
+    Returns (np.ndarray): Encoded matrix of the secondary structure.
+    """
+    n = len(matrix)
+    contact = matrix.copy()
+    contact -= 1
+    contact *= -1
+    contact *= n
+    directions = (
+        (1, 0), (1, -1), (0, -1), (-1, -1),
+        (-1, 0), (-1, 1), (0, 1), (1, 1)
+    )
+    for distance in range(n):
+        for i in range(n):
+            for j in range(n):
+                if contact[i, j] == distance:
+                    for d in directions:
+                        I = i + d[0]
+                        J = j + d[1]
+                        if I < 0 or I >= n or J < 0 or J >= n:
+                            continue
+                        value = contact[I, J]
+                        if value > distance + 1:
+                            contact[I, J] = distance + 1
+    if not normalize:
+        return contact
+    contact /= n
+    contact *= -1
+    contact += 1
+    return normalize_distance_matrix(contact) ** power
+
+
+def normalize_distance_matrix(distance_matrix: np.ndarray) -> np.ndarray:
+    """Normalize the distance matrix.
+
+    This function returns a new distance matrix whose elements are
+    normalized within the range 0.0 (farthest from a paired base)
+    to 1.0 (paired base).
+
+    Args:
+        distance_matrix (np.ndarray): Result of the function
+            `to_distance_matrix`.
+
+    Returns (np.ndarray): Normalized distance matrix.
+    """
+    normalized = distance_matrix.copy()
+    normalized -= 1
+    normalized *= -1
+    normalized /= np.amax(normalized)
+    normalized -= 1
+    normalized *= -1
+    return normalized

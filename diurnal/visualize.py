@@ -264,7 +264,7 @@ def secondary_structure(
 
 def heatmap(
         matrices: np.ndarray,
-        title: str = "Aggregated heatmaps",
+        title: str = "",
         label: bool = False
     ) -> None:
     """Visualize heatmaps.

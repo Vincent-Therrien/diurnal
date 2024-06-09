@@ -37,7 +37,8 @@ class NN(Basic):
         loss_fn_args: dict = None,
         use_half: bool = True,
         patience: int = 5,
-        verbosity: int = 0
+        verbosity: int = 0,
+        batch: int = 16
     ) -> None:
         self.device = "cuda" if cuda.is_available() else "cpu"
         self.use_half = use_half and self.device == "cuda"
@@ -64,7 +65,7 @@ class NN(Basic):
         # Other parameters
         self.n_epochs = n_epochs
         self.verbosity = verbosity
-        self.batch = 16
+        self.batch = batch
         self.PATIENCE = patience
 
     def _train(self) -> None:
@@ -161,7 +162,6 @@ class NN(Basic):
         pred = self.nn(*input_values)
         if self.device == "cuda":
             return pred.detach().cpu().numpy()
-        print(pred.shape)
         return pred
 
     def _save(self, path: str) -> None:

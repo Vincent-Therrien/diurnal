@@ -517,6 +517,16 @@ def format_primary_secondary_structure(
     )
 
 
+def save(matrix: np.ndarray, name: str) -> None:
+    """Save a matrix into a file.
+
+    Args:
+        matrix: Input
+        name: Complete filename. Directories are created.
+    """
+    np.save(name, matrix)
+
+
 def format_basic(
         src: str,
         dst: str,
