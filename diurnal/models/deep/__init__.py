@@ -152,8 +152,12 @@ class NN(Basic):
         else:
             input_values = []
             for i in input:
-                value = from_numpy(np.array(i.T))
-                input_values.append(value.to(self.device))
+                if len(input) > 1:
+                    value = from_numpy(np.array([i.T]))
+                    input_values.append(value.to(self.device))
+                else:
+                    value = from_numpy(np.array(i.T))
+                    input_values.append(value.to(self.device))
         if len(input) == 1:
             if len(input_values[0].shape) > 2:
                 input_values[0] = input_values[0][None, :, :]
