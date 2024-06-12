@@ -176,43 +176,59 @@ class UNet2D(nn.Module):
 
 
 class UNet2DRefiner(nn.Module):
-    def __init__(self, n: int):
+    def __init__(self, n: int, depth: int):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 1, 3, padding="same")
-        self.conv2 = nn.Conv2d(2, 1, 3, padding="same")
-        self.linear1 = nn.Linear(n, n)
-        self.down = nn.AdaptiveAvgPool2d(int(n / 2))
-        self.linear2 = nn.Linear(int(n / 2), int(n / 2))
-        self.up = nn.Upsample(scale_factor=2, mode='bilinear')
-        self.linear3 = nn.Linear(n, n)
+        self.convInput = nn.Conv2d(2, 1, 1, padding="same")
+        # Parameters.
+        self.n = n
+        self.depth = depth
+        self.kernel = 3
+        # Network components.
         self.activation = F.relu
+        self.conv1 = nn.Conv2d(1, 1, self.kernel, padding="same")
+        self.downsizers = []
+        self.upsizers = []
+        self.down_full_layers = []
+        self.up_full_layers = []
+        for _ in range(depth):
+            self.down_full_layers.append(nn.Linear(n, n))
+            self.up_full_layers.append(nn.Linear(n, n))
+            n = int(n / 2)
+            self.downsizers.append(nn.AdaptiveAvgPool2d(n))
+            self.upsizers.append(nn.Upsample(
+                scale_factor=2, mode='bilinear'
+            ))
+        self.bottom = nn.Linear(n, n)
+        self.down_full_layers = nn.Sequential(*self.down_full_layers)
+        self.up_full_layers = nn.Sequential(*self.up_full_layers)
         self.output = nn.Sigmoid()
 
-    def forward(self, x, y):
+    def forward(self, x: Tensor, y: Tensor) -> Tensor:
+        # Input processing.
         x = stack((x, ), dim=1)
         y = stack((y, ), dim=1)
-        x = self.conv1(x)
-        x = self.activation(x)
-        y = self.conv1(y)
-        y = self.activation(y)
         z = cat((x, y), 1)
-
-        z = self.conv2(z)
-        z = self.activation(z)
-        z = self.linear1(z)
-        z = self.down(z)
-        z = self.linear2(z)
-        z = self.activation(z)
-        z = self.conv1(z)
-        z = self.activation(z)
-        z = self.up(z)
-        z = self.linear3(z)
-        z = self.activation(z)
-        z = self.conv1(z)
-
-        z = self.output(z)
-        z = squeeze(z)
-        return z
+        z = self.convInput(z)
+        x = self.conv1(z)
+        reserve = []
+        # Downsizing.
+        for i in range(self.depth):
+            x = self.down_full_layers[i](x)
+            reserve.append(x.clone())
+            x = self.downsizers[i](x)
+            x = self.activation(x)
+        # Lowest layer.
+        x = self.bottom(x)
+        x = self.activation(x)
+        # Upsizing.
+        for i in range(self.depth - 1, -1, -1):
+            x = self.upsizers[i](x)
+            x = self.up_full_layers[i](x)
+            x += reserve[i]
+            x = self.activation(x)
+        x = self.output(x)
+        x = squeeze(x)
+        return x
 
 
 class Autoencoder2D(nn.Module):
