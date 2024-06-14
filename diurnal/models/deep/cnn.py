@@ -133,6 +133,7 @@ class UNet2D(nn.Module):
         # Network components.
         self.activation = F.relu
         self.conv1 = nn.Conv2d(1, 1, self.kernel, padding="same")
+        self.conv2 = nn.Conv2d(1, 1, self.kernel, padding="same")
         self.downsizers = []
         self.upsizers = []
         self.down_full_layers = []
@@ -154,10 +155,12 @@ class UNet2D(nn.Module):
         # Input processing.
         x = stack((x, ), dim=1)
         x = self.conv1(x)
+        x = self.activation(x)
         reserve = []
         # Downsizing.
         for i in range(self.depth):
             x = self.down_full_layers[i](x)
+            x = self.conv2(x)
             reserve.append(x.clone())
             x = self.downsizers[i](x)
             x = self.activation(x)
@@ -167,6 +170,7 @@ class UNet2D(nn.Module):
         # Upsizing.
         for i in range(self.depth - 1, -1, -1):
             x = self.upsizers[i](x)
+            x = self.conv2(x)
             x = self.up_full_layers[i](x)
             x += reserve[i]
             x = self.activation(x)
@@ -214,6 +218,7 @@ class UNet2DRefiner(nn.Module):
         # Downsizing.
         for i in range(self.depth):
             x = self.down_full_layers[i](x)
+            x = self.conv1(x)
             reserve.append(x.clone())
             x = self.downsizers[i](x)
             x = self.activation(x)
@@ -223,6 +228,7 @@ class UNet2DRefiner(nn.Module):
         # Upsizing.
         for i in range(self.depth - 1, -1, -1):
             x = self.upsizers[i](x)
+            x = self.conv1(x)
             x = self.up_full_layers[i](x)
             x += reserve[i]
             x = self.activation(x)
