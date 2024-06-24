@@ -139,6 +139,7 @@ class NN(Basic):
                         print()
                 else:
                     log.progress_bar(self.n_epochs, epoch)
+                    print()
         if self.verbosity:
             print()
 

@@ -143,3 +143,22 @@ def select(names: list[str], families: str | list[str]) -> list[str]:
     if type(families) == str:
         families = [families]
     return [n for n in names if get_name(n) in families]
+
+
+def split(names: list[str]) -> dict:
+    """Split a list of molecule names into a dictionary of names
+    organized by family.
+
+    Args:
+        names: List of molecule names.
+
+    Returns: Dictionary formatted as {"family": [names]}.
+    """
+    families = {}
+    for name in names:
+        family_name = get_name(name)
+        if family_name in families:
+            families[family_name].append(name)
+        else:
+            families[family_name] = [name]
+    return families

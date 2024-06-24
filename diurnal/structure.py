@@ -187,11 +187,7 @@ class Primary:
                     matrix[row][col] = map["invalid"]
         return np.array(matrix)
 
-    def to_mask(
-            pairings: np.ndarray,
-            size: int = 0,
-            map: dict = Schemes.IUPAC_ONEHOT_PAIRINGS_VECTOR
-        ) -> np.ndarray:
+    def to_mask(pairings: np.ndarray,size: int = 0) -> np.ndarray:
         """Make a primary structure pairing mask.
 
         Return the a copy of the input matrix in which impossible
@@ -201,32 +197,12 @@ class Primary:
             pairings (np.ndarray): Primary structure potential pairing
                 matrix.
             size (int): Matrix dimension. `0` for no padding.
-            map (dict): Dictionary that assigns a type of pairing to an
-                encoding.
 
         Returns (np.ndarray): Pairing matrix mask.
         """
-        # Convert the input into an array, if required.
-        if type(pairings) == str:
-            pairings = Primary.to_matrix(pairings, size)
-        if type(pairings) == list and type(pairings[0]) == str:
-            pairings = Primary.to_matrix(pairings, size)
-        # Create the mask.
-        inv_constraints = {v: k for k, v in map.items()}
-        output = np.zeros((len(pairings), len(pairings)))
-        for i in range(output.shape[0]):
-            for j in range(output.shape[1]):
-                pairing = pairings[i][j]
-                if type(pairing) in (float, int):
-                    pairing = int(pairing)
-                else:
-                    pairing = tuple(pairing)
-                constraint = inv_constraints[pairing]
-                if constraint in ("invalid", "-"):
-                    output[i][j] = 0
-                else:
-                    output[i][j] = 1
-        return output
+        mask = Primary.to_matrix(pairings, size, Schemes.IUPAC_PAIRINGS_SCALARS)
+        mask[mask > 1] = 1
+        return mask
 
     def to_sequence(
             vector, strip: bool = True, map: dict = Schemes.IUPAC_TO_ONEHOT
