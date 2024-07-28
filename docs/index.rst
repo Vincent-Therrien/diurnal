@@ -107,55 +107,8 @@ network utilization.
 Basic Usage
 -----------
 
-**Install** the library with the following command:
-
-.. code-block:: bash
-
-   pip install diurnal
-
-The code snippet below illustrates how to use the library to fetch data, train
-a CNN-based model, and evaluate the model. More advanced usage is explained in
-the :ref:`user-guide`. You can test this example by copying it in a file and
-executing it as a Python script.
-
-.. code-block:: python
-
-   import torch
-   from diurnal import database, family, train
-   import diurnal.models
-   from diurnal.models.networks import cnn
-
-   SIZE = 512  # Maximum length of molecules used for training.
-
-   # Download the `archiveII` dataset in the `data/` directory.
-   database.download("./data/", "archiveII")
-   # Format the raw data from the `archiveII` dataset into Numpy vectors.
-   database.format_basic(
-       "./data/archiveII",  # Directory of the raw data to format.
-       "./data/formatted",  # Formatted data output directory.
-       SIZE  # Normalized size.
-   )
-
-   # Use the `5s` family as the test set and others as the training set.
-   test_family = "5s"
-   train_families = family.all_but(test_family)
-   test_set = train.load_families("./data/formatted", test_family)
-   train_set = train.load_families("./data/formatted", train_families)
-
-   # Create a predictive model.
-   model = diurnal.models.NN(
-       model=cnn.Dot_Bracket,
-       N=SIZE,
-       n_epochs=3,
-       optimizer=torch.optim.Adam,
-       loss_fn=torch.nn.MSELoss,
-       optimizer_args={"eps": 1e-4},
-       loss_fn_args=None,
-       verbosity=1)
-   model.train(train_set)  # Train the model.
-
-   f = model.test(test_set)  # Test the model.
-   print(f"Average F1-score: {sum(f)/len(f):.4}")
+Consult the reference notebook at https://github.com/Vincent-Therrien/diurnal/blob/main/demo/example.ipynb
+for a complete use case of the library.
 
 
 Indices and tables

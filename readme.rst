@@ -16,9 +16,9 @@ help develop new prediction models.
 
 Features:
 
-- Download RNA datasets (ArchiveII, RNASTRalign, and RNA_STRAND)
+- Download RNA datasets (ArchiveII, RNASTRalign, and RNA STRAND)
 - Pre-process data for training
-- Train neural network
+- Train neural networks
 - Evaluate performances
 - Visualize results
 
@@ -32,6 +32,8 @@ environment, you can install the ``diurnal`` library with ``pip``:
 
 .. code-block:: bash
 
+   git clone https://github.com/Vincent-Therrien/diurnal.git
+   cd diurnal
    pip install .
 
 
@@ -71,7 +73,7 @@ secondaires de molécules d'ARN et à développer de nouveaux modèles.
 
 Fonctionnalités :
 
-- Télécharger des ensembles de données (ArchiveII, RNASTRalign, et RNA_STRAND)
+- Télécharger des ensembles de données (ArchiveII, RNASTRalign, et RNA STRAND)
 - Pré-traiter les données en vue de l'entraînement
 - Concevoir et entraîner des réseaux neuronaux
 - Évaluer les performances
@@ -88,6 +90,7 @@ suivantes :
 
 .. code-block:: bash
 
+   git clone https://github.com/Vincent-Therrien/diurnal.git
    cd diurnal
    pip install .
 
