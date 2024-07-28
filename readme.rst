@@ -49,7 +49,7 @@ presents a full use case of the library. You can find more examples in the
 Documentation
 `````````````
 
-The documentation is available `here <diurnal: https://vincent-therrien.github.io/diurnal/index.html>`_.
+The documentation is available `here <https://vincent-therrien.github.io/diurnal/index.html>`_.
 You can access the documentation source code in the directory ``docs``.
 
 
@@ -107,7 +107,7 @@ exemples commentés d'utilisation de la bibliothèque.
 Documentation
 ``````````````
 
-La documentation est disponible `ici <diurnal: https://vincent-therrien.github.io/diurnal/index.html>`_.
+La documentation est disponible `ici <https://vincent-therrien.github.io/diurnal/index.html>`_.
 
 
 Cadre de tests
