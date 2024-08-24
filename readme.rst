@@ -1,4 +1,4 @@
-diurnal
+diuRNAl
 =======
 
 - `English (en) <#Predict-RNA-Secondary-Structures>`_
